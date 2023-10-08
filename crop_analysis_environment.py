@@ -68,13 +68,10 @@ class CropAnalysisEnvironment:
         # Declare instance attributes
         self.actions = []
         self.menu = self.tr(u'&Lallemand - Crop Analysis Environment')
-        # TODO: We are going to let the user set this up in a future iteration
         self.toolbar = self.iface.addToolBar(u'CropAnalysisEnvironment')
         self.toolbar.setObjectName(u'CropAnalysisEnvironment')
 
-        # print "** INITIALIZING CropAnalysisEnvironment"
-
-        self.pluginIsActive = False
+        self.first_start = None
         self.main_widget = None
 
     # noinspection PyMethodMayBeStatic
@@ -175,23 +172,10 @@ class CropAnalysisEnvironment:
             callback=self.run,
             parent=self.iface.mainWindow())
 
+        # will be set False in run()
+        self.first_start = True
+
     # --------------------------------------------------------------------------
-
-    def onClosePlugin(self):
-        """Cleanup necessary items here when plugin dockwidget is closed"""
-
-        # print "** CLOSING CropAnalysisEnvironment"
-
-        # disconnects
-        self.main_widget.closingPlugin.disconnect(self.onClosePlugin)
-
-        # remove this statement if dockwidget is to remain
-        # for reuse if plugin is reopened
-        # Commented next statement since it causes QGIS crashe
-        # when closing the docked window:
-        # self.dockwidget = None
-
-        self.pluginIsActive = False
 
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
@@ -211,17 +195,16 @@ class CropAnalysisEnvironment:
     def run(self):
         """Run method that loads and starts the plugin"""
 
-        if not self.pluginIsActive:
-            self.pluginIsActive = True
+        if self.first_start:
+            self.first_start = False
+            self.main_widget = CropAnalysisEnvironmentUi(self.iface, self.project)
 
-            # print "** STARTING CropAnalysisEnvironment"
-
-            # widget may not exist if:
-            #    first run of plugin
-            #    removed on close (see self.onClosePlugin method)
-            if self.main_widget is None:
-                # Create the widget (after translation) and keep reference
-                self.main_widget = CropAnalysisEnvironmentUi(self.iface, self.project)
-
-            # show the widget
-            self.main_widget.show()
+        # show the widget
+        self.main_widget.show()
+        # Run the dialog event loop
+        result = self.main_widget.exec_()
+        # See if OK was pressed
+        if result:
+            # Do something useful here - delete the line containing pass and
+            # substitute with your code.
+            pass
