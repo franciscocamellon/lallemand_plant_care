@@ -24,44 +24,70 @@
 import os
 from qgis.core import QgsProject, QgsVectorLayer, QgsLayerTreeGroup, QgsLayerTreeLayer
 
+from .message_service import MessageService
+
 
 class LayerService:
 
     def __init__(self, iface):
         self.iface = iface
+        self.message_service = MessageService(self.iface)
 
     def load_shape_file(self, project, group_name, file_path):
 
-        layer = self.create_vector_layer(self.get_file_name(file_path), file_path)
-        QgsProject.instance().addMapLayer(layer, False)
+        try:
+            layer = self.create_vector_layer(self.get_file_name(file_path), file_path)
 
-        if not layer:
-            print("Layer failed to load!")
+            if group_name is None:
+                project.instance().addMapLayer(layer)
+            else:
+                project.instance().addMapLayer(layer, False)
+                root = self.create_layer_tree_group(project, group_name)
+                group = root.findGroup(group_name)
+                group.addLayer(layer)
 
-        root = self.create_layer_tree_group(project, group_name)
-        group = root.findGroup(group_name)
-        group.addLayer(layer)
+        except Exception as load_file_exception:
+            error_message = f'Error loading shape file: {str(load_file_exception)}'
+            self.message_service.show_message(error_message, 'Error')
 
-    @staticmethod
-    def create_vector_layer(layer_name, file_path, crs=None):
-        layer = QgsVectorLayer(file_path, layer_name, "ogr")
+    def create_vector_layer(self, layer_name, file_path, crs=None):
 
-        if not layer.isValid():
-            print("Layer failed to load!")
+        try:
+            layer = QgsVectorLayer(file_path, layer_name, "ogr")
 
-        if crs is not None:
-            layer.setCrs(crs)
-        return layer
+            if not layer.isValid():
+                raise Exception('Layer is not valid.')
 
-    @staticmethod
-    def create_layer_tree_group(qgs_project, group_name):
-        root = qgs_project.instance().layerTreeRoot()
-        group = QgsLayerTreeGroup(group_name)
-        root.addChildNode(group)
-        return root
+            if crs is not None:
+                layer.setCrs(crs)
+            return layer
 
-    @staticmethod
-    def get_file_name(file_path):
-        return os.path.splitext(os.path.basename(file_path))[0]
+        except Exception as create_layer_exception:
+            error_message = f'Error creating layer {layer_name} -> {str(create_layer_exception)}'
+            self.message_service.show_message(error_message, 'Error')
+            return None
+
+    def create_layer_tree_group(self, qgs_project, group_name):
+
+        try:
+            root = qgs_project.instance().layerTreeRoot()
+            group = QgsLayerTreeGroup(group_name)
+            root.addChildNode(group)
+            return root
+
+        except Exception as group_exception:
+            error_message = f'Error creating layer tree group: {str(group_exception)}'
+            self.message_service.show_message(error_message, 'Error')
+            return None
+
+    def get_file_name(self, file_path):
+
+        try:
+            return os.path.splitext(os.path.basename(file_path))[0]
+
+        except Exception as file_name_exception:
+            error_message = f'Error getting file name: {str(file_name_exception)}'
+            self.message_service.show_message(error_message, 'Error')
+            return None
 
 
