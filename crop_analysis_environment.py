@@ -28,12 +28,11 @@ from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 
-from .gui.crop_analysis_environment_ui import CropAnalysisEnvironmentUi
 # Initialize Qt resources from file resources.py
 from .resources import *
 
-# Import the code for the DockWidget
-from .crop_analysis_environment_dockwidget import CropAnalysisEnvironmentDockWidget
+# Import the code for the Widget
+from .gui.crop_analysis_environment_ui import CropAnalysisEnvironmentUi
 
 
 class CropAnalysisEnvironment:

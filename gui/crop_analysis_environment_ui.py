@@ -56,9 +56,15 @@ class CropAnalysisEnvironmentUi(QtWidgets.QDialog, Ui_CropAnalysisEnvironmentFor
         self.project.write(f'{self.project_directory_fw.filePath()}/{self.project_name_le.text()}.qgs')
 
     def load_shape_file(self):
-        group_name = self.layer_services.retrieve_group_name(self.harvester_rb.isChecked(), self.gps_rb.isChecked())
-        # group = self.layer_services.create_layer_tree_group(self.project, group_name)
-        self.layer_services.load_shape_file(self.project, 'group_name', self.load_file_fw.filePath())
+        group_name = self.retrieve_group_name(self.harvester_rb.isChecked(), self.gps_rb.isChecked())
+        self.layer_services.load_shape_file(self.project, group_name, self.load_file_fw.filePath())
 
-
+    @staticmethod
+    def retrieve_group_name(harvester, gps):
+        if harvester:
+            return 'Harvester points'
+        elif gps:
+            return 'GPS points'
+        else:
+            pass
 

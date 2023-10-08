@@ -33,45 +33,35 @@ class LayerService:
     def load_shape_file(self, project, group_name, file_path):
 
         layer = self.create_vector_layer(self.get_file_name(file_path), file_path)
-        # QgsProject.instance().addMapLayer(layer)
+        QgsProject.instance().addMapLayer(layer, False)
+
         if not layer:
             print("Layer failed to load!")
-        #
-        # group = root.findGroup(group_name)
-        # group.addLayer(layer)
-        # self.create_layer_tree_group(project, group_name, layer)
-        root = project.instance().layerTreeRoot()
-        group = QgsLayerTreeGroup(group_name)
-        root.addChildNode(group)
-        group.insertChildNode(0, QgsLayerTreeLayer(layer))
-        project.layerTreeRoot().addLayer(layer)
-        # project.layerTreeRoot().refreshLayer(layer)
 
+        root = self.create_layer_tree_group(project, group_name)
+        group = root.findGroup(group_name)
+        group.addLayer(layer)
 
     @staticmethod
-    def create_vector_layer(layer_name, data_source, crs=None):
-        layer = QgsVectorLayer(data_source, layer_name, "ogr")
+    def create_vector_layer(layer_name, file_path, crs=None):
+        layer = QgsVectorLayer(file_path, layer_name, "ogr")
+
+        if not layer.isValid():
+            print("Layer failed to load!")
+
         if crs is not None:
             layer.setCrs(crs)
         return layer
 
     @staticmethod
-    def create_layer_tree_group(qgs_project, group_name, layer):
+    def create_layer_tree_group(qgs_project, group_name):
         root = qgs_project.instance().layerTreeRoot()
         group = QgsLayerTreeGroup(group_name)
         root.addChildNode(group)
-        group.insertChildNode(0, QgsLayerTreeLayer(layer))
-        # return group
+        return root
 
     @staticmethod
     def get_file_name(file_path):
         return os.path.splitext(os.path.basename(file_path))[0]
 
-    @staticmethod
-    def retrieve_group_name(harvester, gps):
-        if harvester:
-            return 'Harvester points'
-        elif gps:
-            return 'GPS points'
-        else:
-            pass
+
