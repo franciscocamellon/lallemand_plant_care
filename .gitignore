@@ -58,7 +58,7 @@ tags
 .project
 .pydevproject
 .vscode/
-/.idea/
+.idea/
 
 # Caching formats and other file handling temporary files
 # =========================
