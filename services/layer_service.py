@@ -22,15 +22,16 @@
  ***************************************************************************/
 """
 import os
-from qgis.core import QgsProject, QgsVectorLayer, QgsLayerTreeGroup, QgsLayerTreeLayer
+from qgis.core import QgsProject, QgsVectorLayer, QgsLayerTreeGroup, QgsLayerTreeLayer, QgsCoordinateTransform
 
 from .message_service import MessageService
 
 
 class LayerService:
 
-    def __init__(self, iface):
+    def __init__(self, iface, default_crs=None):
         self.iface = iface
+        self.default_crs = default_crs
         self.message_service = MessageService(self.iface)
 
     def load_shape_file(self, project, group_name, file_path):
@@ -50,9 +51,13 @@ class LayerService:
             error_message = f'Error loading shape file: {str(load_file_exception)}'
             self.message_service.show_message(error_message, 'Error')
 
-    def create_vector_layer(self, layer_name, file_path, crs=None):
+    def create_vector_layer(self, layer_name, file_path, use_default_crs=True):
 
         try:
+            if use_default_crs:
+                crs = self.default_crs
+            else:
+                crs = None
             layer = QgsVectorLayer(file_path, layer_name, "ogr")
 
             if not layer.isValid():
@@ -66,6 +71,32 @@ class LayerService:
             error_message = f'Error creating layer {layer_name} -> {str(create_layer_exception)}'
             self.message_service.show_message(error_message, 'Error')
             return None
+
+    def convert_layer_crs(self, layer, target_crs):
+        try:
+            if not layer.isValid():
+                raise Exception('Invalid layer for CRS conversion.')
+
+            if target_crs is None:
+                raise Exception('Target CRS is not specified.')
+
+            source_crs = layer.crs()
+            transform_context = QgsCoordinateTransform.Context()
+            transform = QgsCoordinateTransform(source_crs, target_crs, transform_context)
+
+            for feature in layer.getFeatures():
+                geometry = feature.geometry()
+                if not geometry.isEmpty():
+                    geometry.transform(transform)
+                    feature.setGeometry(geometry)
+                    layer.updateFeature(feature)
+
+            return True
+
+        except Exception as e:
+            error_message = f'Error converting layer CRS: {str(e)}'
+            self.message_service.show_message(error_message, 'Error')
+            return False
 
     def create_layer_tree_group(self, qgs_project, group_name):
 

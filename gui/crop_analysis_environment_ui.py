@@ -30,6 +30,7 @@ from qgis.PyQt import QtWidgets
 from .crop_analysis_environment_form import Ui_CropAnalysisEnvironmentForm
 from ..services.layer_service import LayerService
 
+
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 # FORM_CLASS, _ = uic.loadUiType(os.path.join(
 #     os.path.dirname(__file__), 'crop_analysis_environment_ui.ui'))
@@ -63,8 +64,7 @@ class CropAnalysisEnvironmentUi(QtWidgets.QDialog, Ui_CropAnalysisEnvironmentFor
     def retrieve_group_name(harvester, gps):
         if harvester:
             return 'Harvester points'
-        elif gps:
-            return 'GPS points'
+        elif harvester is False and gps is False:
+            return None
         else:
-            pass
-
+            return 'GPS points'
