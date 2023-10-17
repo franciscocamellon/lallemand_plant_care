@@ -31,11 +31,13 @@ from qgis.PyQt.QtCore import QObject, Qt, pyqtSignal, pyqtSlot
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QToolButton, QMenu, QAction, QWidget
 
+from .layer_manager.create_project import CreateProject
+from .layer_manager.load_files import LoadFiles
 from .toolbar_ui import Ui_Form
 
 
 class ToolbarManager(QWidget, Ui_Form):
-    def __init__(self, iface, toolbar=None):
+    def __init__(self, iface, project, toolbar=None):
         """Constructor.
         :param iface: An interface instance that will be passed to this class
             which provides the hook by which you can manipulate the QGIS
@@ -46,12 +48,15 @@ class ToolbarManager(QWidget, Ui_Form):
         super(ToolbarManager, self).__init__()
         self.setupUi(self)
         self.iface = iface
+        self.project = project
         self.icon_base_path = ":/plugins/crop_analysis_environment/icons/"
         self.actions = []
         self.managerList = []
         self.menuList = []
         self.toolbar = toolbar
         self.splitter.hide()
+        self.create_project_pb.clicked.connect(self.create_project)
+        self.load_file_pb.clicked.connect(self.load_files)
 
     def create_tool_button(self, parent, text):
         """
@@ -86,3 +91,22 @@ class ToolbarManager(QWidget, Ui_Form):
             self.splitter.show()
         else:
             self.splitter.hide()
+
+    def create_project(self):
+        """
+        Shows the dialog that loads layers from server
+        """
+        dlg = CreateProject(self.iface, self.project)
+        dlg.show()
+        result = dlg.exec_()
+        if result:
+            pass
+    def load_files(self):
+        """
+        Shows the dialog that loads layers from server
+        """
+        dlg = LoadFiles(self.iface, self.project)
+        dlg.show()
+        result = dlg.exec_()
+        if result:
+            pass
