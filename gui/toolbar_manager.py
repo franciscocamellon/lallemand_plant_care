@@ -52,7 +52,6 @@ class ToolbarManager(QWidget, Ui_Form):
         self.menuList = []
         self.toolbar = toolbar
         self.splitter.hide()
-        self.create_tool_button(self.toolbar, "teste")
 
     def create_tool_button(self, parent, text):
         """
