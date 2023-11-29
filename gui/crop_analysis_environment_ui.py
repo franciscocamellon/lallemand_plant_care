@@ -27,7 +27,7 @@ import os
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
 
-from .crop_analysis_environment_form import Ui_CropAnalysisEnvironmentForm
+from .crop_analysis_environment_ui_form import Ui_CropAnalysisEnvironmentForm
 from ..services.layer_service import LayerService
 
 

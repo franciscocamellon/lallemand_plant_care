@@ -32,6 +32,7 @@ FORM_CLASS, _ = uic.loadUiType(
     os.path.join(os.path.dirname(__file__), 'create_project_dialog.ui')
 )
 
+
 class CreateProject(QtWidgets.QDialog, FORM_CLASS):
 
     def __init__(self, iface, project, parent=None):

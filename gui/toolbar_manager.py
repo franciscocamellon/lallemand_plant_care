@@ -31,6 +31,7 @@ from qgis.PyQt.QtCore import QObject, Qt, pyqtSignal, pyqtSlot
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QToolButton, QMenu, QAction, QWidget
 
+from .crop_analysis_environment_ui import CropAnalysisEnvironmentUi
 from .layer_manager.create_project import CreateProject
 from .layer_manager.load_files import LoadFiles
 from .toolbar_ui import Ui_Form
@@ -96,7 +97,8 @@ class ToolbarManager(QWidget, Ui_Form):
         """
         Shows the dialog that loads layers from server
         """
-        dlg = CreateProject(self.iface, self.project)
+        # dlg = CreateProject(self.iface, self.project)
+        dlg = CropAnalysisEnvironmentUi(self.iface, self.project)
         dlg.show()
         result = dlg.exec_()
         if result:
