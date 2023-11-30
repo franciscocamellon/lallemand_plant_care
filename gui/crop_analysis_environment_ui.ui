@@ -1290,7 +1290,7 @@
           </spacer>
          </item>
          <item>
-          <widget class="QPushButton" name="creiateTrialBt">
+          <widget class="QPushButton" name="createTrialBt">
            <property name="minimumSize">
             <size>
              <width>100</width>

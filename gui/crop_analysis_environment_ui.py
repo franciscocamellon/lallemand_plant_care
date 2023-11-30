@@ -49,12 +49,12 @@ class CropAnalysisEnvironmentUi(QtWidgets.QDialog, Ui_CropAnalysisEnvironmentFor
         self.iface = iface
         self.project = project
         self.layer_services = LayerService(self.iface)
-        self.save_pb.clicked.connect(self.save_qgs_project)
-        self.load_pb.clicked.connect(self.load_shape_file)
+        self.createTrialBt.clicked.connect(self.saveQgisProject)
+        self.cancelTrialBt.clicked.connect(self.load_shape_file)
 
-    def save_qgs_project(self):
-        self.project.setCrs(self.project_crs_sw.crs())
-        self.project.write(f'{self.project_directory_fw.filePath()}/{self.project_name_le.text()}.qgs')
+    def saveQgisProject(self):
+        self.project.setCrs(self.trialQgisProjectCrs.crs())
+        self.project.write(f'{self.trialDirectory.filePath()}/{self.trialQgisProjectName.text()}.qgs')
 
     def load_shape_file(self):
         group_name = self.retrieve_group_name(self.harvester_rb.isChecked(), self.gps_rb.isChecked())
