@@ -21,7 +21,7 @@
  *                                                                         *
  ***************************************************************************/
 """
-
+import os, sqlite3
 from qgis.core import QgsDataSourceUri, QgsVectorLayer, QgsProject
 
 
