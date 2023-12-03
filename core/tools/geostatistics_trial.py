@@ -28,6 +28,7 @@ from qgis.PyQt import QtCore, QtWidgets
 from .register_lpc_team import RegisterLpcTeam
 from ..services.layer_service import LayerService
 from ..factories.postgres_factory import PostgresFactory
+from ..services.message_service import MessageService
 from ...gui.geostatistics_trial.ui_geostatistics_trial import Ui_GeostatisticsTrialInformation
 
 
@@ -203,11 +204,16 @@ class GeostatisticsTrial(QtWidgets.QDialog, Ui_GeostatisticsTrialInformation):
 
             if table == 'farmer':
                 result = self.runInsertSql(connection, self.prepareFarmerData())
+                msg = 'New farmer successfully created!'
             elif table == 'crop_trial':
                 result = self.runInsertSql(connection, self.prepareCropData())
+                msg = 'New crop successfully created!'
             else:
                 result = self.runInsertSql(connection, self.prepareTrialData())
+                msg = 'New trial successfully created!'
             print(result)
+            MessageService(self.iface).show_message(msg, 'success')
             if not result:
+                MessageService(self.iface).show_message(result, 'error')
                 break
 

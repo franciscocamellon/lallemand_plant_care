@@ -75,7 +75,7 @@ class PostgresFactory:
             error_message = f"Error executing SQL: {e}"
             logging.error(error_message)
             self.close_connection(connection)
-            return False
+            return False, error_message
 
     @staticmethod
     def close_connection(connection):
