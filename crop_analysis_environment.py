@@ -32,9 +32,6 @@ from .gui.toolbar_manager import ToolbarManager
 # Initialize Qt resources from file resources.py
 from .resources import *
 
-# Import the code for the Widget
-from .gui.crop_analysis_environment_ui import CropAnalysisEnvironmentUi
-
 
 class CropAnalysisEnvironment:
     """QGIS Plugin Implementation."""
@@ -72,10 +69,7 @@ class CropAnalysisEnvironment:
         self.menu = self.tr(u'&Lallemand - Crop Analysis Environment')
 
         self.toolbar = None
-        self.toolbar_widget = None
-        self.first_start = None
-        self.gui_manager = None
-        self.main_widget = None
+        self.toolbarWidget = None
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -168,17 +162,17 @@ class CropAnalysisEnvironment:
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
-        self.toolbar_widget = ToolbarManager(self.iface, self.project, toolbar=self.toolbar)
+        self.toolbarWidget = ToolbarManager(self.iface, self.project, toolbar=self.toolbar)
         self.toolbar = self.iface.addToolBar(u'CropAnalysisEnvironment')
         self.toolbar.setObjectName(u'CropAnalysisEnvironment')
-        self.toolbar.addWidget(self.toolbar_widget)
+        self.toolbar.addWidget(self.toolbarWidget)
 
     # --------------------------------------------------------------------------
 
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
 
-        self.toolbar_widget.unload()
+        self.toolbarWidget.unload()
 
         for action in self.actions:
             self.iface.removePluginMenu(
