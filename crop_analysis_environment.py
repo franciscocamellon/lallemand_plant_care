@@ -69,7 +69,10 @@ class CropAnalysisEnvironment:
         self.menu = self.tr(u'&Lallemand - Crop Analysis Environment')
 
         self.toolbar = None
-        self.toolbarWidget = None
+        self.toolbar_widget = None
+        self.first_start = None
+        self.gui_manager = None
+        self.main_widget = None
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -87,16 +90,16 @@ class CropAnalysisEnvironment:
         return QCoreApplication.translate('CropAnalysisEnvironment', message)
 
     def add_action(
-        self,
-        icon_path,
-        text,
-        callback,
-        enabled_flag=True,
-        add_to_menu=True,
-        add_to_toolbar=True,
-        status_tip=None,
-        whats_this=None,
-        parent=None):
+            self,
+            icon_path,
+            text,
+            callback,
+            enabled_flag=True,
+            add_to_menu=True,
+            add_to_toolbar=True,
+            status_tip=None,
+            whats_this=None,
+            parent=None):
         """Add a toolbar icon to the toolbar.
 
         :param icon_path: Path to the icon for this action. Can be a resource
@@ -162,17 +165,17 @@ class CropAnalysisEnvironment:
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
-        self.toolbarWidget = ToolbarManager(self.iface, self.project, toolbar=self.toolbar)
+        self.toolbar_widget = ToolbarManager(self.iface, self.project, toolbar=self.toolbar)
         self.toolbar = self.iface.addToolBar(u'CropAnalysisEnvironment')
         self.toolbar.setObjectName(u'CropAnalysisEnvironment')
-        self.toolbar.addWidget(self.toolbarWidget)
+        self.toolbar.addWidget(self.toolbar_widget)
 
     # --------------------------------------------------------------------------
 
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
 
-        self.toolbarWidget.unload()
+        self.toolbar_widget.unload()
 
         for action in self.actions:
             self.iface.removePluginMenu(
