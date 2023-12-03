@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'toolbar_form.ui'
+# Form implementation generated from reading ui file 'toolbar_manager.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -11,10 +11,10 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class Ui_Form(object):
+class ToolbarManagerUiForm(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
-        Form.resize(450, 36)
+        Form.resize(471, 36)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.MinimumExpanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -25,23 +25,23 @@ class Ui_Form(object):
         self.horizontalLayout = QtWidgets.QHBoxLayout(Form)
         self.horizontalLayout.setContentsMargins(2, 0, 2, 0)
         self.horizontalLayout.setObjectName("horizontalLayout")
-        self.show_toolbar_pb = QtWidgets.QPushButton(Form)
-        self.show_toolbar_pb.setEnabled(True)
+        self.showToolbarPushButton = QtWidgets.QPushButton(Form)
+        self.showToolbarPushButton.setEnabled(True)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.show_toolbar_pb.sizePolicy().hasHeightForWidth())
-        self.show_toolbar_pb.setSizePolicy(sizePolicy)
-        self.show_toolbar_pb.setMinimumSize(QtCore.QSize(30, 30))
-        self.show_toolbar_pb.setMaximumSize(QtCore.QSize(30, 30))
-        self.show_toolbar_pb.setText("")
+        sizePolicy.setHeightForWidth(self.showToolbarPushButton.sizePolicy().hasHeightForWidth())
+        self.showToolbarPushButton.setSizePolicy(sizePolicy)
+        self.showToolbarPushButton.setMinimumSize(QtCore.QSize(30, 30))
+        self.showToolbarPushButton.setMaximumSize(QtCore.QSize(30, 30))
+        self.showToolbarPushButton.setText("")
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(":/plugins/crop_analysis_environment/icons/lallemand.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.show_toolbar_pb.setIcon(icon)
-        self.show_toolbar_pb.setIconSize(QtCore.QSize(24, 24))
-        self.show_toolbar_pb.setCheckable(True)
-        self.show_toolbar_pb.setObjectName("show_toolbar_pb")
-        self.horizontalLayout.addWidget(self.show_toolbar_pb)
+        self.showToolbarPushButton.setIcon(icon)
+        self.showToolbarPushButton.setIconSize(QtCore.QSize(24, 24))
+        self.showToolbarPushButton.setCheckable(True)
+        self.showToolbarPushButton.setObjectName("showToolbarPushButton")
+        self.horizontalLayout.addWidget(self.showToolbarPushButton)
         spacerItem = QtWidgets.QSpacerItem(15, 20, QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem)
         self.splitter = QtWidgets.QSplitter(Form)
@@ -53,26 +53,27 @@ class Ui_Form(object):
         self.horizontalLayoutWidget.setObjectName("horizontalLayoutWidget")
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout(self.horizontalLayoutWidget)
         self.horizontalLayout_2.setContentsMargins(0, 0, 0, 0)
+        self.horizontalLayout_2.setSpacing(5)
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-        self.create_project_pb = QtWidgets.QPushButton(self.horizontalLayoutWidget)
-        self.create_project_pb.setMinimumSize(QtCore.QSize(0, 0))
-        self.create_project_pb.setMaximumSize(QtCore.QSize(30, 30))
-        self.create_project_pb.setText("")
+        self.createTrialPushButton = QtWidgets.QPushButton(self.horizontalLayoutWidget)
+        self.createTrialPushButton.setMinimumSize(QtCore.QSize(0, 0))
+        self.createTrialPushButton.setMaximumSize(QtCore.QSize(30, 30))
+        self.createTrialPushButton.setText("")
         icon1 = QtGui.QIcon()
         icon1.addPixmap(QtGui.QPixmap(":/plugins/crop_analysis_environment/icons/save.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.create_project_pb.setIcon(icon1)
-        self.create_project_pb.setIconSize(QtCore.QSize(20, 20))
-        self.create_project_pb.setObjectName("create_project_pb")
-        self.horizontalLayout_2.addWidget(self.create_project_pb)
-        self.load_file_pb = QtWidgets.QPushButton(self.horizontalLayoutWidget)
-        self.load_file_pb.setMaximumSize(QtCore.QSize(30, 30))
-        self.load_file_pb.setText("")
+        self.createTrialPushButton.setIcon(icon1)
+        self.createTrialPushButton.setIconSize(QtCore.QSize(20, 20))
+        self.createTrialPushButton.setObjectName("createTrialPushButton")
+        self.horizontalLayout_2.addWidget(self.createTrialPushButton)
+        self.loadFilePushButton = QtWidgets.QPushButton(self.horizontalLayoutWidget)
+        self.loadFilePushButton.setMaximumSize(QtCore.QSize(30, 30))
+        self.loadFilePushButton.setText("")
         icon2 = QtGui.QIcon()
         icon2.addPixmap(QtGui.QPixmap(":/plugins/crop_analysis_environment/icons/load.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.load_file_pb.setIcon(icon2)
-        self.load_file_pb.setIconSize(QtCore.QSize(20, 20))
-        self.load_file_pb.setObjectName("load_file_pb")
-        self.horizontalLayout_2.addWidget(self.load_file_pb)
+        self.loadFilePushButton.setIcon(icon2)
+        self.loadFilePushButton.setIconSize(QtCore.QSize(20, 20))
+        self.loadFilePushButton.setObjectName("loadFilePushButton")
+        self.horizontalLayout_2.addWidget(self.loadFilePushButton)
         self.report_pb = QtWidgets.QPushButton(self.horizontalLayoutWidget)
         self.report_pb.setMaximumSize(QtCore.QSize(30, 30))
         self.report_pb.setText("")
@@ -92,4 +93,3 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Form"))
-

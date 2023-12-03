@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>450</width>
+    <width>471</width>
     <height>36</height>
    </rect>
   </property>
@@ -45,7 +45,7 @@
     <number>0</number>
    </property>
    <item>
-    <widget class="QPushButton" name="show_toolbar_pb">
+    <widget class="QPushButton" name="showToolbarPushButton">
      <property name="enabled">
       <bool>true</bool>
      </property>
@@ -120,8 +120,11 @@
      </property>
      <widget class="QWidget" name="horizontalLayoutWidget">
       <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <property name="spacing">
+        <number>5</number>
+       </property>
        <item>
-        <widget class="QPushButton" name="create_project_pb_2">
+        <widget class="QPushButton" name="createTrialPushButton">
          <property name="minimumSize">
           <size>
            <width>0</width>
@@ -150,7 +153,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="load_file_pb">
+        <widget class="QPushButton" name="loadFilePushButton">
          <property name="maximumSize">
           <size>
            <width>30</width>
@@ -173,7 +176,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="report_pb">
+        <widget class="QPushButton" name="reportPushButton">
          <property name="maximumSize">
           <size>
            <width>30</width>
