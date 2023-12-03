@@ -71,7 +71,7 @@
       <string/>
      </property>
      <property name="icon">
-      <iconset resource="../resources.qrc">
+      <iconset resource="../../resources.qrc">
        <normaloff>:/plugins/crop_analysis_environment/icons/lallemand.png</normaloff>:/plugins/crop_analysis_environment/icons/lallemand.png</iconset>
      </property>
      <property name="iconSize">
@@ -141,7 +141,7 @@
           <string/>
          </property>
          <property name="icon">
-          <iconset resource="../resources.qrc">
+          <iconset resource="../../resources.qrc">
            <normaloff>:/plugins/crop_analysis_environment/icons/save.png</normaloff>:/plugins/crop_analysis_environment/icons/save.png</iconset>
          </property>
          <property name="iconSize">
@@ -164,7 +164,7 @@
           <string/>
          </property>
          <property name="icon">
-          <iconset resource="../resources.qrc">
+          <iconset resource="../../resources.qrc">
            <normaloff>:/plugins/crop_analysis_environment/icons/load.png</normaloff>:/plugins/crop_analysis_environment/icons/load.png</iconset>
          </property>
          <property name="iconSize">
@@ -187,7 +187,7 @@
           <string/>
          </property>
          <property name="icon">
-          <iconset resource="../resources.qrc">
+          <iconset resource="../../resources.qrc">
            <normaloff>:/plugins/crop_analysis_environment/icons/report.png</normaloff>:/plugins/crop_analysis_environment/icons/report.png</iconset>
          </property>
          <property name="iconSize">
@@ -221,7 +221,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="../resources.qrc"/>
+  <include location="../../resources.qrc"/>
  </resources>
  <connections/>
 </ui>
