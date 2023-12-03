@@ -25,9 +25,9 @@
 from qgis.PyQt.QtCore import pyqtSlot
 from qgis.PyQt.QtWidgets import QWidget
 
-from .crop_analysis_environment_ui import CropAnalysisEnvironmentUi
 from .layer_manager.load_files import LoadFiles
 from .toolbar.ui_toolbar_manager import ToolbarManagerUiForm
+from ..core.tools.geostatistics_trial import GeostatisticsTrial
 
 
 class ToolbarManager(QWidget, ToolbarManagerUiForm):
@@ -72,7 +72,7 @@ class ToolbarManager(QWidget, ToolbarManagerUiForm):
         """
         Shows the dialog that loads layers from server
         """
-        dlg = CropAnalysisEnvironmentUi(self.iface, self.project)
+        dlg = GeostatisticsTrial(self.iface, self.project)
         dlg.show()
         result = dlg.exec_()
         if result:

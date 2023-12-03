@@ -25,8 +25,7 @@ import os
 
 from qgis.PyQt import QtWidgets, uic
 
-from ...services.layer_service import LayerService
-from .create_project_dialog_ui import Ui_CreateProjectDialog
+from ...core.services.layer_service import LayerService
 
 FORM_CLASS, _ = uic.loadUiType(
     os.path.join(os.path.dirname(__file__), 'create_project_dialog.ui')
