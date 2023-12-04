@@ -27,8 +27,9 @@ from qgis.PyQt import QtCore, QtWidgets
 
 from .register_lpc_team import RegisterLpcTeam
 from ..services.layer_service import LayerService
-from ..factories.postgres_factory import PostgresFactory
+from ..services.system_service import SystemService
 from ..services.message_service import MessageService
+from ..factories.postgres_factory import PostgresFactory
 from ...gui.geostatistics_trial.ui_geostatistics_trial import Ui_GeostatisticsTrialInformation
 
 
@@ -55,11 +56,14 @@ class GeostatisticsTrial(QtWidgets.QDialog, Ui_GeostatisticsTrialInformation):
         self.cancelTrialBt.clicked.connect(self.fetchLpcTeam)
         self.toNextTabPushButton.clicked.connect(self.goToNextTab)
         self.tabWidget.currentChanged.connect(self.setTrialInformation)
+        self.trialFieldNameLineEdit.editingFinished.connect(self.setQgisProjectName)
 
     def saveQgisProject(self):
-        # self.project.setCrs(self.trialQgisProjectCrs.crs())
-        # self.project.write(f'{self.trialDirectory.filePath()}/{self.trialQgisProjectName.text()}.qgs')
-        pass
+        self.project.setCrs(self.qgisProjectCrsWidget.crs())
+        self.project.write(f'{self.qgisProjectDirectoryFileWidget.filePath()}/{self.qgisProjectLineEdit.text()}.qgs')
+
+        if self.trialDirectoryStructureCheckBox.isChecked():
+            SystemService().createDirectoryStructure(self.qgisProjectDirectoryFileWidget.filePath())
 
     def registerLpcTeam(self):
         """
@@ -106,6 +110,9 @@ class GeostatisticsTrial(QtWidgets.QDialog, Ui_GeostatisticsTrialInformation):
             self.trialIrrigatedComboBox.addItems(domains)
             return True
 
+    def setQgisProjectName(self):
+        self.updateLabel(self.qgisProjectLineEdit, self.trialFieldNameLineEdit.text())
+
     def setTrialInformation(self, index):
         if index == 1:
             newProfessionalLabel = f'Professional:  {self.lpcTeamComboBox.currentText()}'
@@ -127,9 +134,6 @@ class GeostatisticsTrial(QtWidgets.QDialog, Ui_GeostatisticsTrialInformation):
     def createDate():
         createDate = datetime.datetime.now()
         return createDate.strftime('%Y-%m-%d %H:%M:%S')
-
-    def getDataToSql(self):
-        pass
 
     def prepareFarmerData(self):
         table = 'farmer'
@@ -187,8 +191,6 @@ class GeostatisticsTrial(QtWidgets.QDialog, Ui_GeostatisticsTrialInformation):
     @staticmethod
     def runInsertSql(connection, params):
         sql = f"INSERT INTO geostatistics.{params[0]} {params[1]} VALUES {params[2]};"
-        print(sql)
-        print(params[2])
         return PostgresFactory().postSqlExecutor(connection, sql)
 
     @staticmethod
@@ -211,9 +213,11 @@ class GeostatisticsTrial(QtWidgets.QDialog, Ui_GeostatisticsTrialInformation):
             else:
                 result = self.runInsertSql(connection, self.prepareTrialData())
                 msg = 'New trial successfully created!'
-            print(result)
+
             MessageService(self.iface).show_message(msg, 'success')
+
             if not result:
                 MessageService(self.iface).show_message(result, 'error')
                 break
 
+        self.saveQgisProject()

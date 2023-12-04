@@ -613,7 +613,7 @@ class Ui_GeostatisticsTrialInformation(object):
         self.gridLayout.addWidget(self.tabWidget, 0, 0, 1, 1)
 
         self.retranslateUi(GeostatisticsTrialInformation)
-        self.tabWidget.setCurrentIndex(1)
+        self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(GeostatisticsTrialInformation)
         GeostatisticsTrialInformation.setTabOrder(self.tabWidget, self.lpcTeamComboBox)
         GeostatisticsTrialInformation.setTabOrder(self.lpcTeamComboBox, self.addLpcTeamPushButton)
