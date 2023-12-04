@@ -1,0 +1,50 @@
+ERROR:root:Error executing SQL: syntax error at or near "'crop_name'"
+LINE 1: INSERT INTO geostatistics.crop_trial ('crop_name', 'sowing_d...
+                                              ^
+
+ERROR:root:Error executing SQL: connection already closed
+ERROR:root:Error executing SQL: connection already closed
+ERROR:root:Error executing SQL: syntax error at or near "'lpc_team'"
+LINE 1: INSERT INTO geostatistics.geostatistic_trial ('lpc_team', 'f...
+                                                      ^
+
+ERROR:root:Error executing SQL: connection already closed
+ERROR:root:Error executing SQL: connection already closed
+ERROR:root:Error executing SQL: column "lpc_team" is of type uuid but expression is of type boolean
+LINE 1: ...ield_irrigation, field_soil, create_date) VALUES (True, Fals...
+                                                             ^
+HINT:  You will need to rewrite or cast the expression.
+
+ERROR:root:Error executing SQL: connection already closed
+ERROR:root:Error executing SQL: connection already closed
+ERROR:root:Error executing SQL: syntax error at or near "["
+LINE 1: ...ield_irrigation, field_soil, create_date) VALUES ([], 'Error...
+                                                             ^
+
+ERROR:root:Error executing SQL: connection already closed
+ERROR:root:Error executing SQL: connection already closed
+ERROR:root:Error executing SQL: syntax error at or near "["
+LINE 1: ...ield_irrigation, field_soil, create_date) VALUES ([('3fcdc19...
+                                                             ^
+
+ERROR:root:Error executing SQL: connection already closed
+ERROR:root:Error executing SQL: connection already closed
+ERROR:root:Error executing SQL: invalid input syntax for type uuid: "Error executing SQL: connection already closed"
+LINE 1: ...) VALUES ('3fcdc194-f1f0-4901-bcf7-f2df7eb5c3b9', 'Error exe...
+                                                             ^
+
+ERROR:root:Error executing SQL: connection already closed
+ERROR:root:Error executing SQL: connection already closed
+ERROR:root:Error executing SQL: syntax error at or near "["
+LINE 1: ...ield_irrigation, field_soil, create_date) VALUES ([('b79fd3b...
+                                                             ^
+
+ERROR:root:Error executing SQL: syntax error at or near "["
+LINE 1: ...) VALUES ('b79fd3bb-5d94-4118-9d97-65970f5df35e', [], [], ''...
+                                                             ^
+
+ERROR:root:Error executing SQL: syntax error at or near "["
+LINE 1: ...) VALUES ('b79fd3bb-5d94-4118-9d97-65970f5df35e', [('d6dd629...
+                                                             ^
+
+ERROR:root:Error executing SQL: connection already closed

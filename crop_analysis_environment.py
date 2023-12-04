@@ -28,11 +28,9 @@ from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 
+from .gui.toolbar_manager import ToolbarManager
 # Initialize Qt resources from file resources.py
 from .resources import *
-
-# Import the code for the Widget
-from .gui.crop_analysis_environment_ui import CropAnalysisEnvironmentUi
 
 
 class CropAnalysisEnvironment:
@@ -47,6 +45,7 @@ class CropAnalysisEnvironment:
         :type iface: QgsInterface
         """
         # Save reference to the QGIS interface
+
         self.iface = iface
         self.project = QgsProject.instance()
 
@@ -68,13 +67,11 @@ class CropAnalysisEnvironment:
         # Declare instance attributes
         self.actions = []
         self.menu = self.tr(u'&Lallemand - Crop Analysis Environment')
-        # TODO: We are going to let the user set this up in a future iteration
-        self.toolbar = self.iface.addToolBar(u'CropAnalysisEnvironment')
-        self.toolbar.setObjectName(u'CropAnalysisEnvironment')
 
-        # print "** INITIALIZING CropAnalysisEnvironment"
-
-        self.pluginIsActive = False
+        self.toolbar = None
+        self.toolbar_widget = None
+        self.first_start = None
+        self.gui_manager = None
         self.main_widget = None
 
     # noinspection PyMethodMayBeStatic
@@ -168,35 +165,17 @@ class CropAnalysisEnvironment:
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
-        icon_path = ':/plugins/crop_analysis_environment/icon.png'
-        self.add_action(
-            icon_path,
-            text=self.tr(u''),
-            callback=self.run,
-            parent=self.iface.mainWindow())
+        self.toolbar_widget = ToolbarManager(self.iface, self.project, toolbar=self.toolbar)
+        self.toolbar = self.iface.addToolBar(u'CropAnalysisEnvironment')
+        self.toolbar.setObjectName(u'CropAnalysisEnvironment')
+        self.toolbar.addWidget(self.toolbar_widget)
 
     # --------------------------------------------------------------------------
-
-    def onClosePlugin(self):
-        """Cleanup necessary items here when plugin dockwidget is closed"""
-
-        # print "** CLOSING CropAnalysisEnvironment"
-
-        # disconnects
-        self.main_widget.closingPlugin.disconnect(self.onClosePlugin)
-
-        # remove this statement if dockwidget is to remain
-        # for reuse if plugin is reopened
-        # Commented next statement since it causes QGIS crashe
-        # when closing the docked window:
-        # self.dockwidget = None
-
-        self.pluginIsActive = False
 
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
 
-        # print "** UNLOAD CropAnalysisEnvironment"
+        self.toolbar_widget.unload()
 
         for action in self.actions:
             self.iface.removePluginMenu(
@@ -205,23 +184,3 @@ class CropAnalysisEnvironment:
             self.iface.removeToolBarIcon(action)
         # remove the toolbar
         del self.toolbar
-
-    # --------------------------------------------------------------------------
-
-    def run(self):
-        """Run method that loads and starts the plugin"""
-
-        if not self.pluginIsActive:
-            self.pluginIsActive = True
-
-            # print "** STARTING CropAnalysisEnvironment"
-
-            # widget may not exist if:
-            #    first run of plugin
-            #    removed on close (see self.onClosePlugin method)
-            if self.main_widget is None:
-                # Create the widget (after translation) and keep reference
-                self.main_widget = CropAnalysisEnvironmentUi(self.iface, self.project)
-
-            # show the widget
-            self.main_widget.show()

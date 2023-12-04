@@ -29,14 +29,14 @@ class MessageService:
     def __init__(self, iface):
         self.iface = iface
 
-    def show_message(self, message, message_type="Info"):
+    def show_message(self, message, message_type='info'):
         message_level = 0
 
-        if message_type == "Error":
+        if message_type == 'error':
             message_level = 2
-        elif message_type == "Warning":
+        elif message_type == 'warning':
             message_level = 1
-        elif message_type == "Success":
+        elif message_type == 'success':
             message_level = 3
 
         self.iface.messageBar().pushMessage(message_type, message, level=message_level, duration=5)

@@ -31,7 +31,7 @@ class CropAnalysisEnvironmentDialogTest(unittest.TestCase):
 
     def test_icon_png(self):
         """Test we can click OK."""
-        path = ':/plugins/CropAnalysisEnvironment/icon.png'
+        path = ':/plugins/CropAnalysisEnvironment/lallemand.png'
         icon = QIcon(path)
         self.assertFalse(icon.isNull())
 
