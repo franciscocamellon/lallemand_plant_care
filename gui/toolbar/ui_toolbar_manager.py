@@ -11,7 +11,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class ToolbarManagerUiForm(object):
+class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
         Form.resize(471, 36)
@@ -60,29 +60,38 @@ class ToolbarManagerUiForm(object):
         self.createTrialPushButton.setMaximumSize(QtCore.QSize(30, 30))
         self.createTrialPushButton.setText("")
         icon1 = QtGui.QIcon()
-        icon1.addPixmap(QtGui.QPixmap(":/plugins/crop_analysis_environment/icons/save.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon1.addPixmap(QtGui.QPixmap(":/plugins/crop_analysis_environment/icons/new_experiment.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.createTrialPushButton.setIcon(icon1)
-        self.createTrialPushButton.setIconSize(QtCore.QSize(20, 20))
+        self.createTrialPushButton.setIconSize(QtCore.QSize(24, 24))
         self.createTrialPushButton.setObjectName("createTrialPushButton")
         self.horizontalLayout_2.addWidget(self.createTrialPushButton)
         self.loadFilePushButton = QtWidgets.QPushButton(self.horizontalLayoutWidget)
         self.loadFilePushButton.setMaximumSize(QtCore.QSize(30, 30))
         self.loadFilePushButton.setText("")
         icon2 = QtGui.QIcon()
-        icon2.addPixmap(QtGui.QPixmap(":/plugins/crop_analysis_environment/icons/load.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon2.addPixmap(QtGui.QPixmap(":/plugins/crop_analysis_environment/icons/upload_file.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.loadFilePushButton.setIcon(icon2)
-        self.loadFilePushButton.setIconSize(QtCore.QSize(20, 20))
+        self.loadFilePushButton.setIconSize(QtCore.QSize(24, 24))
         self.loadFilePushButton.setObjectName("loadFilePushButton")
         self.horizontalLayout_2.addWidget(self.loadFilePushButton)
-        self.report_pb = QtWidgets.QPushButton(self.horizontalLayoutWidget)
-        self.report_pb.setMaximumSize(QtCore.QSize(30, 30))
-        self.report_pb.setText("")
+        self.reportPushButton = QtWidgets.QPushButton(self.horizontalLayoutWidget)
+        self.reportPushButton.setMaximumSize(QtCore.QSize(30, 30))
+        self.reportPushButton.setText("")
         icon3 = QtGui.QIcon()
         icon3.addPixmap(QtGui.QPixmap(":/plugins/crop_analysis_environment/icons/report.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.report_pb.setIcon(icon3)
-        self.report_pb.setIconSize(QtCore.QSize(20, 20))
-        self.report_pb.setObjectName("report_pb")
-        self.horizontalLayout_2.addWidget(self.report_pb)
+        self.reportPushButton.setIcon(icon3)
+        self.reportPushButton.setIconSize(QtCore.QSize(24, 24))
+        self.reportPushButton.setObjectName("reportPushButton")
+        self.horizontalLayout_2.addWidget(self.reportPushButton)
+        self.settingsPushButton = QtWidgets.QPushButton(self.horizontalLayoutWidget)
+        self.settingsPushButton.setMaximumSize(QtCore.QSize(30, 30))
+        self.settingsPushButton.setText("")
+        icon4 = QtGui.QIcon()
+        icon4.addPixmap(QtGui.QPixmap(":/plugins/crop_analysis_environment/icons/settings.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.settingsPushButton.setIcon(icon4)
+        self.settingsPushButton.setIconSize(QtCore.QSize(24, 24))
+        self.settingsPushButton.setObjectName("settingsPushButton")
+        self.horizontalLayout_2.addWidget(self.settingsPushButton)
         spacerItem1 = QtWidgets.QSpacerItem(300, 20, QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_2.addItem(spacerItem1)
         self.horizontalLayout.addWidget(self.splitter)
@@ -93,3 +102,14 @@ class ToolbarManagerUiForm(object):
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Form"))
+import resources_rc
+
+
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    Form = QtWidgets.QWidget()
+    ui = Ui_Form()
+    ui.setupUi(Form)
+    Form.show()
+    sys.exit(app.exec_())
