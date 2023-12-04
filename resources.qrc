@@ -1,5 +1,9 @@
 <RCC>
     <qresource prefix="/plugins/crop_analysis_environment" >
-        <file>icon.png</file>
+        <file>icons/lallemand.png</file>
+        <file>icons/new_experiment.png</file>
+        <file>icons/upload_file.png</file>
+        <file>icons/report.png</file>
+        <file>icons/settings.png</file>
     </qresource>
 </RCC>

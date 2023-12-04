@@ -21,22 +21,31 @@
  *                                                                         *
  ***************************************************************************/
 """
+import os
+
 from qgis.core import Qgis
 from qgis.gui import QgsMessageBar
 
 
-class MessageService:
-    def __init__(self, iface):
-        self.iface = iface
+class SystemService:
 
-    def show_message(self, message, message_type="Info"):
-        message_level = 0
+    def __init__(self):
+        """
+        Constructor for the SystemService class.
+        """
+        pass
 
-        if message_type == "Error":
-            message_level = 2
-        elif message_type == "Warning":
-            message_level = 1
-        elif message_type == "Success":
-            message_level = 3
+    @staticmethod
+    def createDirectoryStructure(path):
+        directory_list = ['00_Data',
+                          '01_Kriging',
+                          '02_Validation',
+                          '03_Error_Compensation',
+                          '04_Gain_Surface',
+                          '05_Results']
 
-        self.iface.messageBar().pushMessage(message_type, message, level=message_level, duration=5)
+        full_paths = [os.path.join(path, directory) for directory in directory_list]
+
+        for full_path in full_paths:
+            os.makedirs(full_path, exist_ok=True)
+

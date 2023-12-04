@@ -1,9 +1,9 @@
 # coding=utf-8
 import unittest
-from unittest.mock import Mock, patch
-from qgis.core import QgsProject, QgsVectorLayer, QgsLayerTreeGroup, QgsCoordinateReferenceSystem, QgsMessageBar
-from ..services.layer_service import LayerService
-from ..services.message_service import MessageService
+from unittest.mock import Mock
+from qgis.core import QgsProject, QgsCoordinateReferenceSystem, QgsMessageBar
+from core.services import LayerService
+from core.services.message_service import MessageService
 
 
 class TestLayerService(unittest.TestCase):
