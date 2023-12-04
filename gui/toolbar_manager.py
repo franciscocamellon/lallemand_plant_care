@@ -26,11 +26,11 @@ from qgis.PyQt.QtCore import pyqtSlot
 from qgis.PyQt.QtWidgets import QWidget
 
 from .layer_manager.load_files import LoadFiles
-from .toolbar.ui_toolbar_manager import ToolbarManagerUiForm
+from .toolbar.ui_toolbar_manager import Ui_Form
 from ..core.tools.geostatistics_trial import GeostatisticsTrial
 
 
-class ToolbarManager(QWidget, ToolbarManagerUiForm):
+class ToolbarManager(QWidget, Ui_Form):
     def __init__(self, iface, project, toolbar=None):
         """Constructor.
         :param iface: An interface instance that will be passed to this class

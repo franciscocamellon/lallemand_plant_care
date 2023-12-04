@@ -142,12 +142,12 @@
          </property>
          <property name="icon">
           <iconset resource="../../resources.qrc">
-           <normaloff>:/plugins/crop_analysis_environment/icons/save.png</normaloff>:/plugins/crop_analysis_environment/icons/save.png</iconset>
+           <normaloff>:/plugins/crop_analysis_environment/icons/new_experiment.png</normaloff>:/plugins/crop_analysis_environment/icons/new_experiment.png</iconset>
          </property>
          <property name="iconSize">
           <size>
-           <width>20</width>
-           <height>20</height>
+           <width>24</width>
+           <height>24</height>
           </size>
          </property>
         </widget>
@@ -165,12 +165,12 @@
          </property>
          <property name="icon">
           <iconset resource="../../resources.qrc">
-           <normaloff>:/plugins/crop_analysis_environment/icons/load.png</normaloff>:/plugins/crop_analysis_environment/icons/load.png</iconset>
+           <normaloff>:/plugins/crop_analysis_environment/icons/upload_file.png</normaloff>:/plugins/crop_analysis_environment/icons/upload_file.png</iconset>
          </property>
          <property name="iconSize">
           <size>
-           <width>20</width>
-           <height>20</height>
+           <width>24</width>
+           <height>24</height>
           </size>
          </property>
         </widget>
@@ -192,8 +192,31 @@
          </property>
          <property name="iconSize">
           <size>
-           <width>20</width>
-           <height>20</height>
+           <width>24</width>
+           <height>24</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="settingsPushButton">
+         <property name="maximumSize">
+          <size>
+           <width>30</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="../../resources.qrc">
+           <normaloff>:/plugins/crop_analysis_environment/icons/settings.png</normaloff>:/plugins/crop_analysis_environment/icons/settings.png</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>24</width>
+           <height>24</height>
           </size>
          </property>
         </widget>
