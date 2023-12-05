@@ -48,3 +48,7 @@ LINE 1: ...) VALUES ('b79fd3bb-5d94-4118-9d97-65970f5df35e', [('d6dd629...
                                                              ^
 
 ERROR:root:Error executing SQL: connection already closed
+ERROR:root:Error executing SQL: invalid input syntax for type double precision: "d"
+LINE 1: ...e3', 'a64f6eef-8742-4ad9-ac33-2096b814d926', 'd', 'd', 0, 'd...
+                                                             ^
+

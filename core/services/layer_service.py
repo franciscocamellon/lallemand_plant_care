@@ -111,6 +111,12 @@ class LayerService:
             self.message_service.show_message(error_message, 'Error')
             return None
 
+    @staticmethod
+    def addLayerToTreeGroup(project, layer, groupName):
+        root = project.instance().layerTreeRoot()
+        group = root.findGroup(groupName)
+        group.addLayer(layer)
+
     def get_file_name(self, file_path):
 
         try:

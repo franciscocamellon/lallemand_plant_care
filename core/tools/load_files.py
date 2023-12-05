@@ -25,10 +25,10 @@ import os
 
 from qgis.PyQt import QtWidgets, uic
 
-from ...core.services.layer_service import LayerService
+from core.services.layer_service import LayerService
 
 FORM_CLASS, _ = uic.loadUiType(
-    os.path.join(os.path.dirname(__file__), 'load_files_dialog.ui')
+    os.path.join(os.path.dirname(__file__), '../../gui/layer_manager/load_files_dialog.ui')
 )
 
 class LoadFiles(QtWidgets.QDialog, FORM_CLASS):
