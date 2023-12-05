@@ -26,6 +26,8 @@ import os
 from qgis.core import Qgis
 from qgis.gui import QgsMessageBar
 
+from ..constants import DIRECTORY_STRUCTURE
+
 
 class SystemService:
 
@@ -37,14 +39,8 @@ class SystemService:
 
     @staticmethod
     def createDirectoryStructure(path):
-        directory_list = ['00_Data',
-                          '01_Kriging',
-                          '02_Validation',
-                          '03_Error_Compensation',
-                          '04_Gain_Surface',
-                          '05_Results']
 
-        full_paths = [os.path.join(path, directory) for directory in directory_list]
+        full_paths = [os.path.join(path, directory) for directory in DIRECTORY_STRUCTURE]
 
         for full_path in full_paths:
             os.makedirs(full_path, exist_ok=True)
