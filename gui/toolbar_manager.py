@@ -25,7 +25,7 @@
 from qgis.PyQt.QtCore import pyqtSlot
 from qgis.PyQt.QtWidgets import QWidget
 
-from .layer_manager.load_files import LoadFiles
+from core.tools.load_files import LoadFiles
 from .toolbar.ui_toolbar_manager import Ui_Form
 from ..core.tools.geostatistics_trial import GeostatisticsTrial
 
