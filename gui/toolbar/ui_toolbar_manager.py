@@ -36,7 +36,7 @@ class Ui_Form(object):
         self.showToolbarPushButton.setMaximumSize(QtCore.QSize(30, 30))
         self.showToolbarPushButton.setText("")
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(":/plugins/crop_analysis_environment/icons/lallemand.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(":/plugins/lallemand_plant_care/icons/lallemand.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.showToolbarPushButton.setIcon(icon)
         self.showToolbarPushButton.setIconSize(QtCore.QSize(24, 24))
         self.showToolbarPushButton.setCheckable(True)
@@ -60,7 +60,7 @@ class Ui_Form(object):
         self.createTrialPushButton.setMaximumSize(QtCore.QSize(30, 30))
         self.createTrialPushButton.setText("")
         icon1 = QtGui.QIcon()
-        icon1.addPixmap(QtGui.QPixmap(":/plugins/crop_analysis_environment/icons/new_experiment.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon1.addPixmap(QtGui.QPixmap(":/plugins/lallemand_plant_care/icons/new_experiment.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.createTrialPushButton.setIcon(icon1)
         self.createTrialPushButton.setIconSize(QtCore.QSize(24, 24))
         self.createTrialPushButton.setObjectName("createTrialPushButton")
@@ -69,7 +69,7 @@ class Ui_Form(object):
         self.loadFilePushButton.setMaximumSize(QtCore.QSize(30, 30))
         self.loadFilePushButton.setText("")
         icon2 = QtGui.QIcon()
-        icon2.addPixmap(QtGui.QPixmap(":/plugins/crop_analysis_environment/icons/upload_file.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon2.addPixmap(QtGui.QPixmap(":/plugins/lallemand_plant_care/icons/upload_file.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.loadFilePushButton.setIcon(icon2)
         self.loadFilePushButton.setIconSize(QtCore.QSize(24, 24))
         self.loadFilePushButton.setObjectName("loadFilePushButton")
@@ -78,7 +78,7 @@ class Ui_Form(object):
         self.reportPushButton.setMaximumSize(QtCore.QSize(30, 30))
         self.reportPushButton.setText("")
         icon3 = QtGui.QIcon()
-        icon3.addPixmap(QtGui.QPixmap(":/plugins/crop_analysis_environment/icons/report.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon3.addPixmap(QtGui.QPixmap(":/plugins/lallemand_plant_care/icons/report.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.reportPushButton.setIcon(icon3)
         self.reportPushButton.setIconSize(QtCore.QSize(24, 24))
         self.reportPushButton.setObjectName("reportPushButton")
@@ -87,7 +87,7 @@ class Ui_Form(object):
         self.settingsPushButton.setMaximumSize(QtCore.QSize(30, 30))
         self.settingsPushButton.setText("")
         icon4 = QtGui.QIcon()
-        icon4.addPixmap(QtGui.QPixmap(":/plugins/crop_analysis_environment/icons/settings.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon4.addPixmap(QtGui.QPixmap(":/plugins/lallemand_plant_care/icons/settings.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.settingsPushButton.setIcon(icon4)
         self.settingsPushButton.setIconSize(QtCore.QSize(24, 24))
         self.settingsPushButton.setObjectName("settingsPushButton")
@@ -101,5 +101,15 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
-        Form.setWindowTitle(_translate("Form", "Toolbar Manager"))
+        Form.setWindowTitle(_translate("Form", "Form"))
+import resources_rc
 
+
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    Form = QtWidgets.QWidget()
+    ui = Ui_Form()
+    ui.setupUi(Form)
+    Form.show()
+    sys.exit(app.exec_())
