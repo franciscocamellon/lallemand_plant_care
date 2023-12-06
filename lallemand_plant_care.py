@@ -33,7 +33,7 @@ from .gui.toolbar_manager import ToolbarManager
 from .resources import *
 
 
-class CropAnalysisEnvironment:
+class LallemandPlantCare:
     """QGIS Plugin Implementation."""
 
     def __init__(self, iface):
@@ -57,7 +57,7 @@ class CropAnalysisEnvironment:
         locale_path = os.path.join(
             self.plugin_dir,
             'i18n',
-            'CropAnalysisEnvironment_{}.qm'.format(locale))
+            'LallemandPlantCare{}.qm'.format(locale))
 
         if os.path.exists(locale_path):
             self.translator = QTranslator()
@@ -66,7 +66,7 @@ class CropAnalysisEnvironment:
 
         # Declare instance attributes
         self.actions = []
-        self.menu = self.tr(u'&Lallemand - Crop Analysis Environment')
+        self.menu = self.tr(u'&Lallemand Plant Care')
 
         self.toolbar = None
         self.toolbar_widget = None
