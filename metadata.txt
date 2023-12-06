@@ -3,9 +3,9 @@
 # This file should be included when you package your plugin.# Mandatory items:
 
 [general]
-name=Lallemand - Crop Analysis Environment
-qgisMinimumVersion=3.0
-description=Lallemand - Crop Analysis Environment
+name=Lallemand Plant Care
+qgisMinimumVersion=3.22
+description=Lallemand Plant Care
 version=0.1
 author=CamellOnCase
 email=camelloncase@gmail.com
@@ -27,7 +27,7 @@ tags=python
 
 homepage=http://homepage
 category=Plugins
-icon=icon.png
+icon=icons/icon.png
 # experimental flag
 experimental=False
 

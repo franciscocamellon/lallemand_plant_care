@@ -1,7 +1,7 @@
 #/***************************************************************************
-# CropAnalysisEnvironment
+# LallemandPlantCare
 #
-# Lallemand - Crop Analysis Environment
+# Lallemand Plant Care
 #							 -------------------
 #		begin				: 2023-10-07
 #		git sha				: $Format:%H$
@@ -38,17 +38,17 @@ LOCALES =
 # translation
 SOURCES = \
 	__init__.py \
-	crop_analysis_environment.py crop_analysis_environment_dockwidget.py
+	lallemand_plant_care.py
 
-PLUGINNAME = crop_analysis_environment
+PLUGINNAME = lallemand_plant_care
 
 PY_FILES = \
 	__init__.py \
-	crop_analysis_environment.py crop_analysis_environment_dockwidget.py
+	lallemand_plant_care.py
 
-UI_FILES = crop_analysis_environment_dockwidget_base.ui
+UI_FILES = gui/toolbar_manager.ui
 
-EXTRAS = metadata.txt icon.png
+EXTRAS = metadata.txt icons/icon.png
 
 EXTRA_DIRS =
 
