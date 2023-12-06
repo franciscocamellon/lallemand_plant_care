@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/plugins/crop_analysis_environment" >
+    <qresource prefix="/plugins/lallemand_plant_care" >
         <file>icons/lallemand.png</file>
         <file>icons/new_experiment.png</file>
         <file>icons/upload_file.png</file>
