@@ -22,7 +22,8 @@
  ***************************************************************************/
 """
 import os
-from qgis.core import QgsProject, QgsVectorLayer, QgsLayerTreeGroup, QgsLayerTreeLayer, QgsCoordinateTransform
+
+from qgis.core import QgsProject, QgsVectorLayer, QgsFeature, QgsGeometry, QgsPointXY, QgsLayerTreeGroup, QgsLayerTreeLayer, QgsCoordinateTransform
 
 from .message_service import MessageService
 
@@ -127,4 +128,32 @@ class LayerService:
             self.message_service.show_message(error_message, 'Error')
             return None
 
+    def getSuggestedCrs(self, layer, zoneFile):
 
+        # Check if the layer is valid
+        if not layer.isValid():
+            print('Layer not valid!')
+        else:
+            # Get the extent (bounding box) of the entire layer
+            layer_extent = layer.extent()
+
+            # Create a bounding box polygon from the layer extent
+            bounding_box_polygon = QgsGeometry.fromRect(layer_extent)
+
+            # Extract the centroid of the bounding box
+            centroid = bounding_box_polygon.centroid().asPoint()
+
+            # Print the centroid coordinates
+            print('Centroid Coordinates:', centroid.x(), centroid.y())
+
+            for feature in zoneFile.getFeatures():
+                polygon_geometry = feature.geometry()
+
+                # Check if the centroid is within the polygon
+                if polygon_geometry.contains(centroid):
+                    # If the centroid is within the polygon, print the attributes
+                    attributes = feature.attributes()
+                    print('Attributes of the containing polygon:', attributes)
+                    break  # Stop iterating if found within one polygon
+            else:
+                print('Centroid is not within any polygon in layer2')
