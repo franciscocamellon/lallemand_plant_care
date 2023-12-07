@@ -7,13 +7,13 @@
     <x>0</x>
     <y>0</y>
     <width>550</width>
-    <height>382</height>
+    <height>450</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
     <width>550</width>
-    <height>360</height>
+    <height>450</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -87,237 +87,6 @@
           </size>
          </property>
         </spacer>
-       </item>
-       <item row="2" column="0">
-        <widget class="QGroupBox" name="groupBox">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>130</height>
-          </size>
-         </property>
-         <property name="font">
-          <font>
-           <weight>75</weight>
-           <bold>true</bold>
-          </font>
-         </property>
-         <property name="title">
-          <string>Actions</string>
-         </property>
-         <layout class="QGridLayout" name="gridLayout_4">
-          <property name="leftMargin">
-           <number>10</number>
-          </property>
-          <property name="topMargin">
-           <number>10</number>
-          </property>
-          <property name="rightMargin">
-           <number>10</number>
-          </property>
-          <property name="bottomMargin">
-           <number>10</number>
-          </property>
-          <property name="spacing">
-           <number>5</number>
-          </property>
-          <item row="2" column="0">
-           <layout class="QVBoxLayout" name="verticalLayout_2">
-            <property name="spacing">
-             <number>5</number>
-            </property>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_4">
-              <property name="spacing">
-               <number>5</number>
-              </property>
-              <item>
-               <widget class="QLabel" name="actionsLabel">
-                <property name="font">
-                 <font>
-                  <family>MS Shell Dlg 2</family>
-                  <pointsize>8</pointsize>
-                  <weight>50</weight>
-                  <italic>false</italic>
-                  <bold>false</bold>
-                 </font>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
-                </property>
-                <property name="text">
-                 <string>Reprojection</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_5">
-              <property name="spacing">
-               <number>5</number>
-              </property>
-              <property name="leftMargin">
-               <number>5</number>
-              </property>
-              <item>
-               <widget class="QCheckBox" name="reprojectCheckBox">
-                <property name="styleSheet">
-                 <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
-                </property>
-                <property name="text">
-                 <string>Yes</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <spacer name="horizontalSpacer_4">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeType">
-                 <enum>QSizePolicy::Fixed</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>25</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-              <item>
-               <widget class="QLabel" name="label">
-                <property name="styleSheet">
-                 <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
-                </property>
-                <property name="text">
-                 <string>Suggested CRS:</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <spacer name="horizontalSpacer_6">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeType">
-                 <enum>QSizePolicy::Fixed</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>5</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-              <item>
-               <widget class="QgsProjectionSelectionWidget" name="mQgsProjectionSelectionWidget">
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>23</height>
-                 </size>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>16777215</width>
-                  <height>23</height>
-                 </size>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <spacer name="verticalSpacer_3">
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-              <property name="sizeType">
-               <enum>QSizePolicy::Fixed</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>5</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_8">
-              <property name="spacing">
-               <number>5</number>
-              </property>
-              <property name="topMargin">
-               <number>5</number>
-              </property>
-              <item>
-               <widget class="QLabel" name="actionsLabel_2">
-                <property name="font">
-                 <font>
-                  <family>MS Shell Dlg 2</family>
-                  <pointsize>8</pointsize>
-                  <weight>50</weight>
-                  <italic>false</italic>
-                  <bold>false</bold>
-                 </font>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
-                </property>
-                <property name="text">
-                 <string>Polygons</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_6">
-              <property name="spacing">
-               <number>5</number>
-              </property>
-              <property name="leftMargin">
-               <number>5</number>
-              </property>
-              <item>
-               <widget class="QCheckBox" name="treatmentCheckBox">
-                <property name="styleSheet">
-                 <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
-                </property>
-                <property name="text">
-                 <string>Create treatment polygons</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QCheckBox" name="boundaryCheckBox">
-                <property name="styleSheet">
-                 <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
-                </property>
-                <property name="text">
-                 <string>Create boundary polygon</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-           </layout>
-          </item>
-         </layout>
-        </widget>
        </item>
        <item row="0" column="0">
         <layout class="QVBoxLayout" name="verticalLayout">
@@ -496,6 +265,293 @@
          </property>
         </spacer>
        </item>
+       <item row="2" column="0">
+        <widget class="QGroupBox" name="groupBox">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>130</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="title">
+          <string>Actions</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_4">
+          <property name="leftMargin">
+           <number>10</number>
+          </property>
+          <property name="topMargin">
+           <number>10</number>
+          </property>
+          <property name="rightMargin">
+           <number>10</number>
+          </property>
+          <property name="bottomMargin">
+           <number>10</number>
+          </property>
+          <property name="spacing">
+           <number>5</number>
+          </property>
+          <item row="2" column="0">
+           <layout class="QVBoxLayout" name="verticalLayout_2">
+            <property name="spacing">
+             <number>5</number>
+            </property>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_4">
+              <property name="spacing">
+               <number>5</number>
+              </property>
+              <item>
+               <widget class="QCheckBox" name="reprojectCheckBox">
+                <property name="styleSheet">
+                 <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+                </property>
+                <property name="text">
+                 <string>Reprojection</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_5">
+              <property name="spacing">
+               <number>5</number>
+              </property>
+              <property name="leftMargin">
+               <number>15</number>
+              </property>
+              <item>
+               <widget class="QLabel" name="label">
+                <property name="styleSheet">
+                 <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+                </property>
+                <property name="text">
+                 <string>Suggested CRS:</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_6">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeType">
+                 <enum>QSizePolicy::Fixed</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>5</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QgsProjectionSelectionWidget" name="suggestedCrsSelectionWidget">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>23</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>23</height>
+                 </size>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <spacer name="verticalSpacer_3">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Fixed</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>5</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <layout class="QVBoxLayout" name="verticalLayout_5">
+              <property name="spacing">
+               <number>5</number>
+              </property>
+              <property name="topMargin">
+               <number>5</number>
+              </property>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_8">
+                <property name="spacing">
+                 <number>5</number>
+                </property>
+                <property name="topMargin">
+                 <number>0</number>
+                </property>
+                <item>
+                 <widget class="QCheckBox" name="treatmentCheckBox">
+                  <property name="styleSheet">
+                   <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+                  </property>
+                  <property name="text">
+                   <string>Create treatment polygons</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_17">
+                <property name="spacing">
+                 <number>5</number>
+                </property>
+                <property name="leftMargin">
+                 <number>10</number>
+                </property>
+                <property name="topMargin">
+                 <number>0</number>
+                </property>
+                <item>
+                 <widget class="QLabel" name="methodLabel">
+                  <property name="font">
+                   <font>
+                    <family>MS Shell Dlg 2</family>
+                    <pointsize>8</pointsize>
+                    <weight>50</weight>
+                    <italic>false</italic>
+                    <bold>false</bold>
+                   </font>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+                  </property>
+                  <property name="text">
+                   <string>Method</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="sortingLabel">
+                  <property name="font">
+                   <font>
+                    <family>MS Shell Dlg 2</family>
+                    <pointsize>8</pointsize>
+                    <weight>50</weight>
+                    <italic>false</italic>
+                    <bold>false</bold>
+                   </font>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+                  </property>
+                  <property name="text">
+                   <string>Sorting variable</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_18">
+                <property name="spacing">
+                 <number>7</number>
+                </property>
+                <property name="leftMargin">
+                 <number>10</number>
+                </property>
+                <item>
+                 <widget class="QComboBox" name="methodComboBox">
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>23</height>
+                   </size>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QgsFieldComboBox" name="sortingFieldComboBox">
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>23</height>
+                   </size>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <spacer name="verticalSpacer_8">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Fixed</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>5</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_6">
+              <property name="spacing">
+               <number>5</number>
+              </property>
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="topMargin">
+               <number>5</number>
+              </property>
+              <item>
+               <widget class="QCheckBox" name="boundaryCheckBox">
+                <property name="styleSheet">
+                 <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+                </property>
+                <property name="text">
+                 <string>Create boundary polygon</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
       </layout>
      </widget>
      <widget class="QWidget" name="harvesterTab">
@@ -543,7 +599,7 @@
             <number>10</number>
            </property>
            <item>
-            <widget class="QgsFileWidget" name="gpsFileWidget_2">
+            <widget class="QgsFileWidget" name="harvesterFileWidget">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -597,7 +653,7 @@
             </spacer>
            </item>
            <item>
-            <widget class="QLabel" name="gpsCRSLabel_2">
+            <widget class="QLabel" name="harvesterCRSLabel">
              <property name="styleSheet">
               <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
              </property>
@@ -623,7 +679,7 @@
             </spacer>
            </item>
            <item>
-            <widget class="QLabel" name="crsWarningLabel_2">
+            <widget class="QLabel" name="harvesterCrsWarningLabel">
              <property name="font">
               <font>
                <family>MS Shell Dlg 2</family>
@@ -753,7 +809,7 @@
                <number>5</number>
               </property>
               <item>
-               <widget class="QCheckBox" name="reprojectCheckBox_2">
+               <widget class="QCheckBox" name="harvesterReprojectCheckBox">
                 <property name="styleSheet">
                  <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
                 </property>
@@ -805,7 +861,7 @@
                </spacer>
               </item>
               <item>
-               <widget class="QgsProjectionSelectionWidget" name="mQgsProjectionSelectionWidget_2">
+               <widget class="QgsProjectionSelectionWidget" name="harvesterCrsSelectionWidget">
                 <property name="minimumSize">
                  <size>
                   <width>0</width>
@@ -950,7 +1006,7 @@
           </spacer>
          </item>
          <item>
-          <widget class="QPushButton" name="load_pb_2">
+          <widget class="QPushButton" name="loadHarvesterPointsPushButton">
            <property name="minimumSize">
             <size>
              <width>100</width>
@@ -980,6 +1036,11 @@
   </layout>
  </widget>
  <customwidgets>
+  <customwidget>
+   <class>QgsFieldComboBox</class>
+   <extends>QComboBox</extends>
+   <header>qgsfieldcombobox.h</header>
+  </customwidget>
   <customwidget>
    <class>QgsFileWidget</class>
    <extends>QWidget</extends>

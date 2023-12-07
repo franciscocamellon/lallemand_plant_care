@@ -22,9 +22,13 @@
  ***************************************************************************/
 """
 import os
+import processing
 
 from qgis.PyQt import QtWidgets, uic
+from qgis.core import QgsLayerTreeGroup
 
+from .algorithm_runner import AlgorithmRunner
+from ..constants import QGIS_TOC_GROUPS, POLYGONS_BUILDER_METHODS, OPERATION
 from ..services.layer_service import LayerService
 
 FORM_CLASS, _ = uic.loadUiType(
@@ -48,33 +52,85 @@ class LoadFiles(QtWidgets.QDialog, FORM_CLASS):
         self.layer_services = LayerService(self.iface)
 
         self.crsWarningLabel.hide()
-        self.gpsFileWidget.fileChanged.connect(self.updateCrsLabel)
-        self.loadGpsPointsPushButton.clicked.connect(self.load_shape_file)
+        self.suggestedCrsSelectionWidget.setEnabled(False)
+        self.methodComboBox.insertItems(0, POLYGONS_BUILDER_METHODS)
+        self.methodComboBox.setEnabled(False)
+        self.sortingFieldComboBox.setEnabled(False)
+        self.reprojectCheckBox.stateChanged.connect(self.enableReprojectChildren)
+        self.treatmentCheckBox.stateChanged.connect(self.enableTreatmentChildren)
+        self.gpsFileWidget.fileChanged.connect(self.updateGpsUI)
+        self.harvesterFileWidget.fileChanged.connect(self.updateGpsUI)
+        self.loadGpsPointsPushButton.clicked.connect(self.loadGpsPoints)
+        self.loadHarvesterPointsPushButton.clicked.connect(self.loadHarvesterPoints)
 
-    def load_shape_file(self):
-        # group_name = self.retrieve_group_name(self.harvester_rb.isChecked(), self.gps_rb.isChecked())
-        # crs = self.layer_services.load_shape_file(self.project, 'Raw_Data', self.gpsFileWidget.filePath())
-        layer = self.layer_services.create_vector_layer(self.layer_services.get_file_name(self.gpsFileWidget.filePath()), self.gpsFileWidget.filePath())
+    def loadGpsPoints(self):
+        filePath = self.gpsFileWidget.filePath()
+        fileName = self.layer_services.get_file_name(self.gpsFileWidget.filePath())
+        layer = self.layer_services.create_vector_layer(fileName, filePath)
+        self.loadPointFile(layer, QGIS_TOC_GROUPS[0])
+
+        epsg = self.suggestedCrsSelectionWidget.crs().authid()
+
+        if self.reprojectCheckBox.isChecked():
+            reprojected = self.reprojectLayer(layer, epsg, OPERATION[epsg])
+            zone = self.suggestedCrsSelectionWidget.crs().description().split()
+            print(zone)
+            reprojected.setName(f'{fileName}_{zone[-1]}')
+
+            self.loadPointFile(reprojected, QGIS_TOC_GROUPS[1])
+
+        # if self.treatmentCheckBox.isChecked():
+        #     polygons = self.createTreatmentPolygons(layer, self.methodComboBox.currentIndex(),
+        #                                             self.sortingFieldComboBox.currentField())
+        #     print(polygons)
+        #
+
+    def loadHarvesterPoints(self):
+        filePath = self.harvesterFileWidget.filePath()
+        fileName = self.layer_services.get_file_name(self.harvesterFileWidget.filePath())
+        layer = self.layer_services.create_vector_layer(fileName, filePath)
+        self.loadPointFile(layer)
+
+    def loadPointFile(self, layer, groupName):
 
         root = self.project.instance().layerTreeRoot()
-        group = root.findGroup('Raw_sdffdfggData')
+        group = root.findGroup(groupName)
         if group is not None:
             self.project.instance().addMapLayer(layer, False)
             group.addLayer(layer)
+        else:
+            group = QgsLayerTreeGroup(groupName)
+            root.addChildNode(group)
+            self.project.instance().addMapLayer(layer, False)
+            group.addLayer(layer)
 
-        self.project.instance().addMapLayer(layer)
+    @staticmethod
+    def createTreatmentPolygons(layer, method, sorting):
+        return AlgorithmRunner().runWaypointsPolygonsBuilder(layer, method, sorting)
 
-    def updateCrsLabel(self, path):
+    @staticmethod
+    def reprojectLayer(layer, targetCrs, operation):
+        return AlgorithmRunner().runReprojectLayer(layer, targetCrs, operation)
+
+    def updateGpsUI(self, path):
         layer = self.layer_services.create_vector_layer(self.layer_services.get_file_name(path), path)
+        self.sortingFieldComboBox.setFields(layer.fields())
         if layer.crs().isGeographic():
             self.crsWarningLabel.show()
         self.gpsCRSLabel.setText(f'CRS -> {layer.crs().authid()}')
 
-    @staticmethod
-    def retrieve_group_name(harvester, gps):
-        if harvester:
-            return 'Harvester points'
-        elif harvester is False and gps is False:
-            return None
+        del layer
+
+    def enableReprojectChildren(self, state):
+        if state == 0:
+            self.suggestedCrsSelectionWidget.setEnabled(False)
         else:
-            return 'GPS points'
+            self.suggestedCrsSelectionWidget.setEnabled(True)
+
+    def enableTreatmentChildren(self, state):
+        if state == 0:
+            self.methodComboBox.setEnabled(False)
+            self.sortingFieldComboBox.setEnabled(False)
+        else:
+            self.methodComboBox.setEnabled(True)
+            self.sortingFieldComboBox.setEnabled(True)
