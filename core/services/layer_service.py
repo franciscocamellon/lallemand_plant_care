@@ -23,7 +23,8 @@
 """
 import os
 
-from qgis.core import QgsProject, QgsVectorLayer, QgsFeature, QgsGeometry, QgsPointXY, QgsLayerTreeGroup, QgsLayerTreeLayer, QgsCoordinateTransform
+from qgis.core import QgsProject, QgsVectorLayer, QgsFeature, QgsGeometry, QgsPointXY, QgsLayerTreeGroup, \
+    QgsLayerTreeLayer, QgsCoordinateTransform
 
 from .message_service import MessageService
 
@@ -33,7 +34,7 @@ class LayerService:
     def __init__(self, iface, default_crs=None):
         self.iface = iface
         self.default_crs = default_crs
-        self.message_service = MessageService(self.iface)
+        self.message_service = MessageService()
 
     def load_shape_file(self, project, group_name, file_path):
 
@@ -128,32 +129,29 @@ class LayerService:
             self.message_service.show_message(error_message, 'Error')
             return None
 
-    def getSuggestedCrs(self, layer, zoneFile):
+    def getSuggestedCrs(self, layer):
 
-        # Check if the layer is valid
+        worldZoneFileDirectory = self.getWorldZonesPath()
+        zoneFile = self.create_vector_layer('world_zones', worldZoneFileDirectory)
+
         if not layer.isValid():
             print('Layer not valid!')
         else:
-            # Get the extent (bounding box) of the entire layer
+
             layer_extent = layer.extent()
-
-            # Create a bounding box polygon from the layer extent
             bounding_box_polygon = QgsGeometry.fromRect(layer_extent)
-
-            # Extract the centroid of the bounding box
             centroid = bounding_box_polygon.centroid().asPoint()
-
-            # Print the centroid coordinates
-            print('Centroid Coordinates:', centroid.x(), centroid.y())
 
             for feature in zoneFile.getFeatures():
                 polygon_geometry = feature.geometry()
 
-                # Check if the centroid is within the polygon
                 if polygon_geometry.contains(centroid):
-                    # If the centroid is within the polygon, print the attributes
-                    attributes = feature.attributes()
-                    print('Attributes of the containing polygon:', attributes)
-                    break  # Stop iterating if found within one polygon
+                    return feature.attributes()
             else:
                 print('Centroid is not within any polygon in layer2')
+
+    @staticmethod
+    def getWorldZonesPath():
+        currentDirectory = os.path.dirname(__file__)
+        parentDirectory = os.path.join(currentDirectory, '..')
+        return os.path.join(parentDirectory, 'resources', 'world_zones.geojson')

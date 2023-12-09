@@ -25,7 +25,7 @@
 import datetime
 from qgis.PyQt import QtCore, QtWidgets
 
-from .register_lpc_team import RegisterLpcTeam
+from ...gui.lpc_team.register_lpc_team import RegisterLpcTeam
 from ..services.layer_service import LayerService
 from ..services.system_service import SystemService
 from ..services.message_service import MessageService
@@ -214,10 +214,10 @@ class GeostatisticsTrial(QtWidgets.QDialog, Ui_GeostatisticsTrialInformation):
                 result = self.runInsertSql(connection, self.prepareTrialData())
                 msg = 'New trial successfully created!'
 
-            MessageService(self.iface).show_message(msg, 'success')
+            MessageService().show_message(msg, 'success')
 
             if not result:
-                MessageService(self.iface).show_message(result, 'error')
+                MessageService().show_message(result, 'error')
                 break
 
         self.saveQgisProject()

@@ -25,7 +25,7 @@ import os
 import processing
 
 from qgis.PyQt import QtWidgets, uic
-from qgis.core import QgsLayerTreeGroup
+from qgis.core import QgsLayerTreeGroup, QgsCoordinateReferenceSystem
 
 from .algorithm_runner import AlgorithmRunner
 from ..constants import QGIS_TOC_GROUPS, POLYGONS_BUILDER_METHODS, OPERATION
@@ -50,6 +50,7 @@ class LoadFiles(QtWidgets.QDialog, FORM_CLASS):
         self.iface = iface
         self.project = project
         self.layer_services = LayerService(self.iface)
+        self.crsOperations = ''
 
         self.crsWarningLabel.hide()
         self.suggestedCrsSelectionWidget.setEnabled(False)
@@ -67,15 +68,16 @@ class LoadFiles(QtWidgets.QDialog, FORM_CLASS):
         filePath = self.gpsFileWidget.filePath()
         fileName = self.layer_services.get_file_name(self.gpsFileWidget.filePath())
         layer = self.layer_services.create_vector_layer(fileName, filePath)
+
         self.loadPointFile(layer, QGIS_TOC_GROUPS[0])
 
         epsg = self.suggestedCrsSelectionWidget.crs().authid()
 
         if self.reprojectCheckBox.isChecked():
-            reprojected = self.reprojectLayer(layer, epsg, OPERATION[epsg])
-            zone = self.suggestedCrsSelectionWidget.crs().description().split()
-            print(zone)
-            reprojected.setName(f'{fileName}_{zone[-1]}')
+
+            reprojected = self.reprojectLayer(layer, epsg, self.crsOperations[2])
+
+            reprojected.setName(f'{fileName}_{self.crsOperations[0]}')
 
             self.loadPointFile(reprojected, QGIS_TOC_GROUPS[1])
 
@@ -113,8 +115,14 @@ class LoadFiles(QtWidgets.QDialog, FORM_CLASS):
         return AlgorithmRunner().runReprojectLayer(layer, targetCrs, operation)
 
     def updateGpsUI(self, path):
+
         layer = self.layer_services.create_vector_layer(self.layer_services.get_file_name(path), path)
+        crsInfo = self.layer_services.getSuggestedCrs(layer)
+        self.crsOperations = crsInfo
+        self.suggestedCrsSelectionWidget.setOptionVisible(5, False)
+        self.suggestedCrsSelectionWidget.setCrs(QgsCoordinateReferenceSystem(crsInfo[1]))
         self.sortingFieldComboBox.setFields(layer.fields())
+
         if layer.crs().isGeographic():
             self.crsWarningLabel.show()
         self.gpsCRSLabel.setText(f'CRS -> {layer.crs().authid()}')

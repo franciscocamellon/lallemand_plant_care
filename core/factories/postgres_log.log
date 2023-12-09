@@ -52,3 +52,39 @@ ERROR:root:Error executing SQL: invalid input syntax for type double precision: 
 LINE 1: ...e3', 'a64f6eef-8742-4ad9-ac33-2096b814d926', 'd', 'd', 0, 'd...
                                                              ^
 
+ERROR:root:Error executing SQL: syntax error at or near "ac90f5b9"
+LINE 1: ... update_date = '2023-12-08 15:44:41' WHERE id = ''ac90f5b9-3...
+                                                             ^
+
+ERROR:root:Error executing SQL: syntax error at or near "ac90f5b9"
+LINE 1: ... update_date = '2023-12-08 15:47:05' WHERE id = ''ac90f5b9-3...
+                                                             ^
+
+ERROR:root:Error executing SQL: syntax error at or near "id"
+LINE 1: DELETE FROM geostatistics.lpc_team WHEREa id = 'd8159cd8-83f...
+                                                  ^
+
+ERROR:root:Error executing SQL: syntax error at or near "id"
+LINE 1: DELETE FROM geostatistics.lpc_team WHEREa id = 'd8159cd8-83f...
+                                                  ^
+
+ERROR:root:Error executing SQL: syntax error at or near "id"
+LINE 1: DELETE FROM geostatistics.lpc_team WHEREa id = 'd8159cd8-83f...
+                                                  ^
+
+ERROR:root:Error executing SQL: column "first_name" of relation "crop_trial" does not exist
+LINE 1: INSERT INTO geostatistics.crop_trial (first_name, last_name,...
+                                              ^
+
+ERROR:root:Error executing SQL: column "first_name" of relation "crop_trial" does not exist
+LINE 1: INSERT INTO geostatistics.crop_trial (first_name, last_name,...
+                                              ^
+
+ERROR:root:Error executing SQL: invalid input syntax for type uuid: "2023-12-08 22:22:01"
+LINE 1: ... = '70482-877', update_date = 'QUibut' WHERE id = '2023-12-0...
+                                                             ^
+
+ERROR:root:Error executing SQL: invalid input syntax for type uuid: "2023-12-08 22:30:45"
+LINE 1: ...er_ro_cm = 'sorgo', update_date = 27.0 WHERE id = '2023-12-0...
+                                                             ^
+

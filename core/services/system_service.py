@@ -22,9 +22,7 @@
  ***************************************************************************/
 """
 import os
-
-from qgis.core import Qgis
-from qgis.gui import QgsMessageBar
+import datetime
 
 from ..constants import DIRECTORY_STRUCTURE
 
@@ -44,4 +42,9 @@ class SystemService:
 
         for full_path in full_paths:
             os.makedirs(full_path, exist_ok=True)
+
+    @staticmethod
+    def createDate():
+        createDate = datetime.datetime.now()
+        return createDate.strftime('%Y-%m-%d %H:%M:%S')
 
