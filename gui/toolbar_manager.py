@@ -22,15 +22,24 @@
  ***************************************************************************/
 """
 
+import os
+
+from qgis.PyQt import uic
 from qgis.PyQt.QtCore import pyqtSlot
 from qgis.PyQt.QtWidgets import QWidget
 
+from .lpc_team.farmer_manager import FarmerManager
+from .lpc_team.register_lpc_team import RegisterLpcTeam
 from ..core.tools.load_files import LoadFiles
 from .toolbar.ui_toolbar_manager import Ui_Form
 from ..core.tools.geostatistics_trial import GeostatisticsTrial
 
+FORM_CLASS, _ = uic.loadUiType(
+    os.path.join(os.path.dirname(__file__), 'toolbar/toolbar_manager.ui')
+)
 
-class ToolbarManager(QWidget, Ui_Form):
+
+class ToolbarManager(QWidget, FORM_CLASS):
     def __init__(self, iface, project, toolbar=None):
         """Constructor.
         :param iface: An interface instance that will be passed to this class
@@ -47,6 +56,8 @@ class ToolbarManager(QWidget, Ui_Form):
         self.splitter.hide()
         self.createTrialPushButton.clicked.connect(self.createTrialProject)
         self.loadFilePushButton.clicked.connect(self.loadFiles)
+        self.lpcTeamPushButton.clicked.connect(self.manageLpcTeam)
+        self.farmerPushButton.clicked.connect(self.manageFarmer)
 
     @staticmethod
     def initGui():
@@ -57,9 +68,9 @@ class ToolbarManager(QWidget, Ui_Form):
         return True
 
     @pyqtSlot(bool, name="on_showToolbarPushButton_toggled")
-    def toggleBar(self, toggled=None):
+    def toggleToolbar(self, toggled=None):
         """
-        Shows/Hides the toolbar
+        Shows/Hides the toolbar showAccountPushButton
         """
         if toggled is None:
             toggled = self.showToolbarPushButton.isChecked()
@@ -83,6 +94,20 @@ class ToolbarManager(QWidget, Ui_Form):
         Shows the dialog that loads layers from server
         """
         dlg = LoadFiles(self.iface, self.project)
+        dlg.show()
+        result = dlg.exec_()
+        if result:
+            pass
+
+    def manageLpcTeam(self):
+        dlg = RegisterLpcTeam()
+        dlg.show()
+        result = dlg.exec_()
+        if result:
+            pass
+
+    def manageFarmer(self):
+        dlg = FarmerManager()
         dlg.show()
         result = dlg.exec_()
         if result:
