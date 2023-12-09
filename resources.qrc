@@ -5,5 +5,10 @@
         <file>icons/upload_file.png</file>
         <file>icons/report.png</file>
         <file>icons/settings.png</file>
+        <file>icons/manage_accounts.png</file>
+        <file>icons/user.png</file>
+        <file>icons/farmer.png</file>
+        <file>icons/delete.png</file>
+        <file>icons/edit.png</file>
     </qresource>
 </RCC>
