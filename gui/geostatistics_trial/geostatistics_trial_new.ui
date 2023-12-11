@@ -6,16 +6,22 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>653</height>
+    <width>715</width>
+    <height>660</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>715</width>
+    <height>660</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout">
    <item>
-    <widget class="QGroupBox" name="farmersGroupBox">
+    <widget class="QGroupBox" name="trialsListGroupBox">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
        <horstretch>0</horstretch>
@@ -41,7 +47,7 @@
       </font>
      </property>
      <property name="title">
-      <string>Farmers</string>
+      <string>Geostatistic trial list</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_5">
       <property name="leftMargin">
@@ -60,12 +66,12 @@
        <number>5</number>
       </property>
       <item row="0" column="0">
-       <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <layout class="QHBoxLayout" name="horizontalLayout_1">
         <property name="spacing">
          <number>5</number>
         </property>
         <item>
-         <widget class="QTableWidget" name="farmerTableWidget">
+         <widget class="QTableWidget" name="trialTableWidget">
           <property name="styleSheet">
            <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
           </property>
@@ -75,14 +81,15 @@
           <property name="alternatingRowColors">
            <bool>true</bool>
           </property>
+          <property name="showGrid">
+           <bool>true</bool>
+          </property>
           <property name="sortingEnabled">
            <bool>true</bool>
           </property>
-          <row>
-           <property name="text">
-            <string/>
-           </property>
-          </row>
+          <attribute name="verticalHeaderVisible">
+           <bool>true</bool>
+          </attribute>
           <column>
            <property name="text">
             <string>Id</string>
@@ -90,32 +97,42 @@
           </column>
           <column>
            <property name="text">
-            <string>First name</string>
+            <string>Field name</string>
            </property>
           </column>
           <column>
            <property name="text">
-            <string>Last name</string>
+            <string>Area</string>
            </property>
           </column>
           <column>
            <property name="text">
-            <string>Address</string>
+            <string>Irrigated</string>
            </property>
           </column>
           <column>
            <property name="text">
-            <string>Zipcode</string>
+            <string>Soil type</string>
            </property>
           </column>
           <column>
            <property name="text">
-            <string>Town</string>
+            <string>LPC Team</string>
            </property>
           </column>
           <column>
            <property name="text">
-            <string>Country</string>
+            <string>Farmer</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Crop field</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Contour</string>
            </property>
           </column>
           <column>
@@ -128,16 +145,6 @@
             <string>Update date</string>
            </property>
           </column>
-          <item row="0" column="1">
-           <property name="text">
-            <string>a</string>
-           </property>
-          </item>
-          <item row="0" column="2">
-           <property name="text">
-            <string>a</string>
-           </property>
-          </item>
          </widget>
         </item>
        </layout>
@@ -161,6 +168,12 @@
          <height>150</height>
         </size>
        </property>
+       <property name="maximumSize">
+        <size>
+         <width>340</width>
+         <height>16777215</height>
+        </size>
+       </property>
        <property name="font">
         <font>
          <weight>75</weight>
@@ -168,7 +181,7 @@
         </font>
        </property>
        <property name="title">
-        <string>Geostatistic Trial</string>
+        <string>Add trial</string>
        </property>
        <layout class="QGridLayout" name="gridLayout_6">
         <property name="leftMargin">
@@ -187,14 +200,14 @@
          <number>5</number>
         </property>
         <item row="0" column="0">
-         <layout class="QVBoxLayout" name="verticalLayout_13">
+         <layout class="QVBoxLayout" name="verticalLayout_1">
           <property name="spacing">
            <number>5</number>
           </property>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_19">
+           <layout class="QHBoxLayout" name="horizontalLayout_3">
             <item>
-             <widget class="QLabel" name="trialFieldNameLabel_3">
+             <widget class="QLabel" name="farmerNameLabel">
               <property name="styleSheet">
                <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
               </property>
@@ -204,7 +217,14 @@
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="trialAreaLabel_2">
+             <widget class="QLabel" name="label">
+              <property name="text">
+               <string>TextLabel</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="cropFieldAreaLabel">
               <property name="styleSheet">
                <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
               </property>
@@ -213,27 +233,40 @@
               </property>
              </widget>
             </item>
+            <item>
+             <widget class="QLabel" name="label_2">
+              <property name="text">
+               <string>TextLabel</string>
+              </property>
+             </widget>
+            </item>
            </layout>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_27">
+           <layout class="QHBoxLayout" name="horizontalLayout_4">
             <item>
-             <widget class="QComboBox" name="comboBox_2">
+             <widget class="QComboBox" name="farmerComboBox">
               <property name="minimumSize">
                <size>
                 <width>0</width>
                 <height>23</height>
                </size>
               </property>
+              <property name="styleSheet">
+               <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+              </property>
              </widget>
             </item>
             <item>
-             <widget class="QComboBox" name="comboBox">
+             <widget class="QComboBox" name="cropFieldComboBox">
               <property name="minimumSize">
                <size>
                 <width>0</width>
                 <height>23</height>
                </size>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
               </property>
              </widget>
             </item>
@@ -242,12 +275,12 @@
          </layout>
         </item>
         <item row="3" column="0">
-         <layout class="QVBoxLayout" name="verticalLayout_9">
+         <layout class="QVBoxLayout" name="verticalLayout_2">
           <property name="spacing">
            <number>5</number>
           </property>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_22">
+           <layout class="QHBoxLayout" name="horizontalLayout_5">
             <property name="spacing">
              <number>5</number>
             </property>
@@ -283,7 +316,7 @@
            </layout>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_25">
+           <layout class="QHBoxLayout" name="horizontalLayout_6">
             <property name="spacing">
              <number>5</number>
             </property>
@@ -330,7 +363,7 @@
          </layout>
         </item>
         <item row="4" column="0">
-         <layout class="QHBoxLayout" name="horizontalLayout_10">
+         <layout class="QHBoxLayout" name="horizontalLayout_7">
           <property name="spacing">
            <number>5</number>
           </property>
@@ -338,7 +371,7 @@
            <number>5</number>
           </property>
           <item>
-           <widget class="QLabel" name="farmerIDLabel">
+           <widget class="QLabel" name="trialIDLabel">
             <property name="enabled">
              <bool>true</bool>
             </property>
@@ -364,7 +397,7 @@
            </spacer>
           </item>
           <item>
-           <widget class="QPushButton" name="farmerAddPushButton">
+           <widget class="QPushButton" name="trialAddPushButton">
             <property name="minimumSize">
              <size>
               <width>110</width>
@@ -392,12 +425,12 @@
          </layout>
         </item>
         <item row="2" column="0">
-         <layout class="QVBoxLayout" name="verticalLayout_8">
+         <layout class="QVBoxLayout" name="verticalLayout_3">
           <property name="spacing">
            <number>5</number>
           </property>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_14">
+           <layout class="QHBoxLayout" name="horizontalLayout_8">
             <item>
              <widget class="QLabel" name="trialFieldNameLabel">
               <property name="styleSheet">
@@ -421,7 +454,7 @@
            </layout>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_15">
+           <layout class="QHBoxLayout" name="horizontalLayout_9">
             <item>
              <widget class="QLineEdit" name="trialFieldNameLineEdit">
               <property name="minimumSize">
@@ -459,14 +492,14 @@
          </layout>
         </item>
         <item row="1" column="0">
-         <layout class="QVBoxLayout" name="verticalLayout_12">
+         <layout class="QVBoxLayout" name="verticalLayout_4">
           <property name="spacing">
            <number>5</number>
           </property>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_16">
+           <layout class="QHBoxLayout" name="horizontalLayout_10">
             <item>
-             <widget class="QLabel" name="trialFieldNameLabel_2">
+             <widget class="QLabel" name="lpcTeamNameLabel">
               <property name="styleSheet">
                <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
               </property>
@@ -475,17 +508,27 @@
               </property>
              </widget>
             </item>
+            <item>
+             <widget class="QLabel" name="label_3">
+              <property name="text">
+               <string>TextLabel</string>
+              </property>
+             </widget>
+            </item>
            </layout>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_18">
+           <layout class="QHBoxLayout" name="horizontalLayout_11">
             <item>
-             <widget class="QComboBox" name="comboBox_3">
+             <widget class="QComboBox" name="lpcTeamComboBox">
               <property name="minimumSize">
                <size>
                 <width>0</width>
                 <height>23</height>
                </size>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
               </property>
              </widget>
             </item>
@@ -497,7 +540,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QGroupBox" name="farmerManagerGroupBox">
+      <widget class="QGroupBox" name="trialManagerGroupBox">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
          <horstretch>0</horstretch>
@@ -512,8 +555,8 @@
        </property>
        <property name="maximumSize">
         <size>
-         <width>16777215</width>
-         <height>120</height>
+         <width>340</width>
+         <height>16777215</height>
         </size>
        </property>
        <property name="font">
@@ -523,7 +566,7 @@
         </font>
        </property>
        <property name="title">
-        <string>Manage farmer</string>
+        <string>Manage trial</string>
        </property>
        <layout class="QGridLayout" name="gridLayout_8">
         <property name="leftMargin">
@@ -542,7 +585,7 @@
          <number>5</number>
         </property>
         <item row="0" column="0">
-         <layout class="QHBoxLayout" name="horizontalLayout_17">
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
           <property name="spacing">
            <number>15</number>
           </property>
@@ -553,7 +596,7 @@
            <number>15</number>
           </property>
           <item>
-           <widget class="QPushButton" name="farmerEditPushButton">
+           <widget class="QPushButton" name="trialEditPushButton">
             <property name="minimumSize">
              <size>
               <width>100</width>
@@ -585,7 +628,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="farmerDeletePushButton">
+           <widget class="QPushButton" name="trialDeletePushButton">
             <property name="minimumSize">
              <size>
               <width>100</width>
@@ -626,6 +669,9 @@
        <property name="orientation">
         <enum>Qt::Vertical</enum>
        </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Fixed</enum>
+       </property>
        <property name="sizeHint" stdset="0">
         <size>
          <width>20</width>
@@ -641,6 +687,12 @@
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>340</width>
+         <height>16777215</height>
+        </size>
        </property>
        <property name="font">
         <font>
@@ -668,12 +720,12 @@
          <number>5</number>
         </property>
         <item row="5" column="0">
-         <layout class="QVBoxLayout" name="verticalLayout_10">
+         <layout class="QVBoxLayout" name="verticalLayout_5">
           <property name="spacing">
            <number>5</number>
           </property>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_20">
+           <layout class="QHBoxLayout" name="horizontalLayout_12">
             <item>
              <widget class="QLabel" name="qgisProjectDirectoryLabel">
               <property name="styleSheet">
@@ -687,7 +739,7 @@
            </layout>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_21">
+           <layout class="QHBoxLayout" name="horizontalLayout_13">
             <item>
              <widget class="QgsFileWidget" name="qgisProjectDirectoryFileWidget">
               <property name="sizePolicy">
@@ -721,12 +773,12 @@
          </layout>
         </item>
         <item row="2" column="0">
-         <layout class="QVBoxLayout" name="verticalLayout_11">
+         <layout class="QVBoxLayout" name="verticalLayout_6">
           <property name="spacing">
            <number>5</number>
           </property>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_24">
+           <layout class="QHBoxLayout" name="horizontalLayout_14">
             <item>
              <widget class="QLabel" name="qgisProjectName">
               <property name="styleSheet">
@@ -750,7 +802,7 @@
            </layout>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_26">
+           <layout class="QHBoxLayout" name="horizontalLayout_15">
             <item>
              <widget class="QLineEdit" name="qgisProjectLineEdit">
               <property name="sizePolicy">
@@ -800,7 +852,7 @@
          </layout>
         </item>
         <item row="4" column="0">
-         <layout class="QHBoxLayout" name="horizontalLayout_9">
+         <layout class="QHBoxLayout" name="horizontalLayout_16">
           <property name="spacing">
            <number>5</number>
           </property>
@@ -823,7 +875,7 @@
          </layout>
         </item>
         <item row="3" column="0">
-         <spacer name="verticalSpacer_6">
+         <spacer name="verticalSpacer_3">
           <property name="orientation">
            <enum>Qt::Vertical</enum>
           </property>
@@ -839,12 +891,12 @@
          </spacer>
         </item>
         <item row="6" column="0">
-         <layout class="QHBoxLayout" name="horizontalLayout_23">
+         <layout class="QHBoxLayout" name="horizontalLayout_17">
           <property name="spacing">
            <number>5</number>
           </property>
           <item>
-           <spacer name="horizontalSpacer_4">
+           <spacer name="horizontalSpacer">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
@@ -864,13 +916,16 @@
               <height>30</height>
              </size>
             </property>
+            <property name="styleSheet">
+             <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+            </property>
             <property name="text">
              <string>Cancel</string>
             </property>
            </widget>
           </item>
           <item>
-           <spacer name="horizontalSpacer_5">
+           <spacer name="horizontalSpacer_3">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
@@ -893,6 +948,9 @@
               <height>30</height>
              </size>
             </property>
+            <property name="styleSheet">
+             <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+            </property>
             <property name="text">
              <string>Create Trial</string>
             </property>
@@ -907,6 +965,9 @@
       <spacer name="verticalSpacer_2">
        <property name="orientation">
         <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Fixed</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
@@ -932,6 +993,24 @@
    <header>qgsprojectionselectionwidget.h</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>trialTableWidget</tabstop>
+  <tabstop>farmerComboBox</tabstop>
+  <tabstop>cropFieldComboBox</tabstop>
+  <tabstop>lpcTeamComboBox</tabstop>
+  <tabstop>trialFieldNameLineEdit</tabstop>
+  <tabstop>trialFieldAreaLineEdit</tabstop>
+  <tabstop>trialIrrigatedComboBox</tabstop>
+  <tabstop>trialSoilTypeLineEdit</tabstop>
+  <tabstop>trialAddPushButton</tabstop>
+  <tabstop>trialEditPushButton</tabstop>
+  <tabstop>trialDeletePushButton</tabstop>
+  <tabstop>qgisProjectLineEdit</tabstop>
+  <tabstop>qgisProjectCrsWidget</tabstop>
+  <tabstop>trialDirectoryStructureCheckBox</tabstop>
+  <tabstop>cancelTrialBt</tabstop>
+  <tabstop>createTrialBt</tabstop>
+ </tabstops>
  <resources>
   <include location="../../resources.qrc"/>
  </resources>

@@ -31,8 +31,7 @@ from qgis.PyQt.QtWidgets import QWidget
 from .lpc_team.farmer_manager import FarmerManager
 from .lpc_team.register_lpc_team import RegisterLpcTeam
 from ..core.tools.load_files import LoadFiles
-from .toolbar.ui_toolbar_manager import Ui_Form
-from ..core.tools.geostatistics_trial import GeostatisticsTrial
+from .geostatistics_trial.geostatistics_trial import GeostatisticsTrial
 
 FORM_CLASS, _ = uic.loadUiType(
     os.path.join(os.path.dirname(__file__), 'toolbar/toolbar_manager.ui')

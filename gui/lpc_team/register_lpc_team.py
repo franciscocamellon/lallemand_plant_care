@@ -28,6 +28,9 @@ from qgis.PyQt import QtWidgets, QtCore, QtGui, uic
 from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtWidgets import QHeaderView
 
+from ...core.services.system_service import SystemService
+from ...core.services.widget_service import WidgetService
+from ...core.constants import FETCH_ALL_TEAM, DELETE_TEAM_SQL, UPDATE_TEAM_SQL, INSERT_TEAM_SQL
 from ...core.services.message_service import MessageService
 from ...core.factories.postgres_factory import PostgresFactory
 
@@ -46,120 +49,71 @@ class RegisterLpcTeam(QtWidgets.QDialog, FORM_CLASS):
         self.tableWidget.setHorizontalHeaderLabels(['Id', "First name", "Last name", "Create date"])
         self.tableWidget.setColumnHidden(0, True)
         self.tableWidget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-        self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.lpcTeamIDLabel.hide()
         self.lpcTeamAddPushButton.clicked.connect(self.register)
         self.deletePushButton.clicked.connect(self.deleteTeamMember)
-        self.editPushButton.clicked.connect(self.updateUI)
+        self.editPushButton.clicked.connect(self.updateTeamWidget)
         self.loadData()
 
     def register(self):
         connection = PostgresFactory().open_connection_to_db('BD_GEOSTAT_LPC')
-        firstName = self.lpcTeamFirstNameLineEdit.text()
-        lastName = self.lpcTeamLastNameLineEdit.text()
-        dateTime = datetime.datetime.now()
         buttonType = self.lpcTeamAddPushButton.text()
 
         if buttonType == 'Update':
-            memberId = self.lpcTeamIDLabel.text()
-            sql = "UPDATE geostatistics.lpc_team SET first_name = %s, last_name = %s, update_date = %s WHERE id = %s;"
-            data = (firstName, lastName, dateTime.strftime('%Y-%m-%d %H:%M:%S'), memberId)
+            sql = UPDATE_TEAM_SQL
+            data = self.prepareTeamData()
             self.lpcTeamAddPushButton.setText('Add')
             self.addGroupBox.setTitle('Add professional')
         else:
-            sql = "INSERT INTO geostatistics.lpc_team (first_name, last_name, create_date) VALUES (%s, %s, %s);"
-            data = (firstName, lastName, dateTime.strftime('%Y-%m-%d %H:%M:%S'))
+            sql = INSERT_TEAM_SQL
+            data = self.prepareTeamData()
 
         result = PostgresFactory().postSqlExecutor(connection, sql, data)
-
-        print(result)
         self.loadData()
         self.lpcTeamLastNameLineEdit.clear()
         self.lpcTeamFirstNameLineEdit.clear()
-        if isinstance(result, bool):
-            MessageService().messageBox('LPC Team Management', 'Data deleted successfully!', 3, 1)
-        else:
-            MessageService().messageBox('LPC Team Management', result, 5, 1)
+        MessageService().resultMessage(result, 'LPC Team Management', 'Data saved successfully!')
+
+    def prepareTeamData(self):
+
+        trialData = [
+            self.lpcTeamFirstNameLineEdit.text(),
+            self.lpcTeamLastNameLineEdit.text(),
+            SystemService().createDate()
+        ]
+        if self.lpcTeamIDLabel.text() != 'noid':
+            trialData.append(self.lpcTeamIDLabel.text())
+
+        return tuple(trialData)
 
     def loadData(self):
         connection = PostgresFactory().open_connection_to_db('BD_GEOSTAT_LPC')
-        result = PostgresFactory().getSqlExecutor(connection, 'SELECT * FROM geostatistics.lpc_team')
+        result = PostgresFactory().getSqlExecutor(connection, FETCH_ALL_TEAM)
 
-        tableRow = 0
-        self.tableWidget.setRowCount(len(result))
-
-        for row in result:
-            # Assuming row[3] and row[4] are date or datetime objects
-            date_col3 = row[3].strftime("%d/%m/%Y") if row[3] is not None else ""
-            date_col4 = row[4].strftime("%d/%m/%Y") if row[4] is not None else ""
-
-            # Create QTableWidgetItems and set data using setData method
-            item0 = QtWidgets.QTableWidgetItem()
-            item0.setData(Qt.DisplayRole, row[0])
-
-            item1 = QtWidgets.QTableWidgetItem()
-            item1.setData(Qt.DisplayRole, row[1])
-
-            item2 = QtWidgets.QTableWidgetItem()
-            item2.setData(Qt.DisplayRole, row[2])
-
-            item3 = QtWidgets.QTableWidgetItem()
-            item3.setData(Qt.DisplayRole, date_col3)
-
-            item4 = QtWidgets.QTableWidgetItem()
-            item4.setData(Qt.DisplayRole, date_col4)
-
-            # Set the items in the tableWidget
-            self.tableWidget.setItem(tableRow, 0, item0)
-            self.tableWidget.setItem(tableRow, 1, item1)
-            self.tableWidget.setItem(tableRow, 2, item2)
-            self.tableWidget.setItem(tableRow, 3, item3)
-            self.tableWidget.setItem(tableRow, 4, item4)
-            tableRow += 1
+        WidgetService().populateTable(result, self.tableWidget)
 
     def deleteTeamMember(self):
-        currentRow, data = self.getSelectedData()
-        connection = PostgresFactory().open_connection_to_db('BD_GEOSTAT_LPC')
+        selectedData = WidgetService().getSelectedData(self.tableWidget, 5, 'Deleting data')
 
-        sql = f"DELETE FROM geostatistics.lpc_team WHERE id = '{data[0]}';"
-        result = PostgresFactory().postSqlExecutor(connection, sql)
-
-        self.loadData()
-        if isinstance(result, bool):
-            MessageService().messageBox('LPC Team Management', 'Data deleted successfully!', 3, 1)
+        if selectedData:
+            currentRow, data = selectedData
+            connection = PostgresFactory().open_connection_to_db('BD_GEOSTAT_LPC')
+            result = PostgresFactory().postSqlExecutor(connection, DELETE_TEAM_SQL.format(data[0]))
+            self.loadData()
+            MessageService().resultMessage(result, 'Deleting data', 'Data deleted successfully!')
         else:
-            MessageService().messageBox('LPC Team Management', result[1], 5, 1)
-        print(result)
+            MessageService().messageBox('Deleting data', 'No data selected.', 5, 1)
 
-    def updateUI(self):
-        currentRow, data = self.getSelectedData()
-        self.lpcTeamFirstNameLineEdit.setText(data[1])
-        self.lpcTeamLastNameLineEdit.setText(data[2])
-        self.lpcTeamAddPushButton.setText('Update')
-        self.addGroupBox.setTitle('Update professional')
-        self.lpcTeamIDLabel.setText(data[0])
+    def updateTeamWidget(self):
+        selectedData = WidgetService().getSelectedData(self.tableWidget, 5, 'Updating data')
 
-    def getSelectedData(self):
-        currentRow = self.tableWidget.currentRow()
-        selectedItems = self.tableWidget.selectedItems()
-
-        if not selectedItems:
-            print("No row selected.")
-            return
-
-        totalColumns = 5
-
-        if len(selectedItems) > 0:
-            data = []
-            for column in range(totalColumns):
-
-                item = self.tableWidget.item(currentRow, column)
-                data.append(item.text())
-
-            return currentRow, data
+        if selectedData:
+            currentRow, data = selectedData
+            self.lpcTeamFirstNameLineEdit.setText(data[1])
+            self.lpcTeamLastNameLineEdit.setText(data[2])
+            self.lpcTeamAddPushButton.setText('Update')
+            self.addGroupBox.setTitle('Update professional')
+            self.lpcTeamIDLabel.setText(data[0])
         else:
-            print("Unexpected number of selected items.")
-
-    def handleButtonClick(self, result):
-        if result:
-            self.accept()
+            MessageService().messageBox('Updating data', 'No data selected.', 5, 1)

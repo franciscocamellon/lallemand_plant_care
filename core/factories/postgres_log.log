@@ -88,3 +88,31 @@ ERROR:root:Error executing SQL: invalid input syntax for type uuid: "2023-12-08 
 LINE 1: ...er_ro_cm = 'sorgo', update_date = 27.0 WHERE id = '2023-12-0...
                                                              ^
 
+ERROR:root:Error executing SQL: column "field_name" of relation "farmer" does not exist
+LINE 1: INSERT INTO geostatistics.farmer (field_name, field_area, fi...
+                                          ^
+
+ERROR:root:Error executing SQL: column "field_name" of relation "farmer" does not exist
+LINE 1: INSERT INTO geostatistics.farmer (field_name, field_area, fi...
+                                          ^
+
+ERROR:root:Error executing SQL: column "field_name" of relation "farmer" does not exist
+LINE 1: INSERT INTO geostatistics.farmer (field_name, field_area, fi...
+                                          ^
+
+ERROR:root:Error executing SQL: invalid input syntax for type double precision: "sadasdasdas"
+LINE 1: ...ial, id_contour, create_date) VALUES ('asdasdas', 'sadasdasd...
+                                                             ^
+
+ERROR:root:Error executing SQL: invalid input syntax for type double precision: "fgfdg"
+LINE 1: ..._trial, id_contour, create_date) VALUES ('fgdfg', 'fgfdg', 0...
+                                                             ^
+
+ERROR:root:Error executing SQL: invalid input syntax for type uuid: "None"
+LINE 1: ...ETE FROM geostatistics.geostatistic_trial WHERE id = 'None';
+                                                                ^
+
+ERROR:root:Error executing SQL: invalid input syntax for type uuid: "None"
+LINE 1: ...ETE FROM geostatistics.geostatistic_trial WHERE id = 'None';
+                                                                ^
+

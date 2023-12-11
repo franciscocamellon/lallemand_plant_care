@@ -31,7 +31,15 @@ class MessageService:
     def __init__(self):
         pass
 
-    def show_message(self, iface, message, message_type='info'):
+    @staticmethod
+    def resultMessage(result, title, message):
+        if isinstance(result, bool):
+            MessageService().messageBox(title, message, 3, 1)
+        else:
+            MessageService().messageBox(title, result[1], 5, 1)
+
+    @staticmethod
+    def show_message(iface, message, message_type='info'):
         message_level = 0
 
         if message_type == 'error':

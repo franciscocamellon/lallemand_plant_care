@@ -27,9 +27,9 @@ import os
 from qgis.PyQt import QtWidgets, QtCore, QtGui, uic
 from qgis.PyQt.QtWidgets import QHeaderView
 
+from ...core.services.widget_service import WidgetService
 from ...core.services.system_service import SystemService
-from ...core.constants import CROP_COLUMN_NAMES, FARMER_COLUMN_NAMES, INSERT_CROP_SQL, UPDATE_CROP_SQL, \
-    INSERT_FARMER_SQL, UPDATE_FARMER_SQL
+from ...core.constants import *
 from ...core.services.message_service import MessageService
 from ...core.factories.postgres_factory import PostgresFactory
 
@@ -63,18 +63,6 @@ class FarmerManager(QtWidgets.QDialog, FORM_CLASS):
         self.farmerTableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.farmerIDLabel.hide()
 
-    def updateFarmerWidget(self):
-        currentRow, data = self.getSelectedData(self.farmerTableWidget, 9)
-        self.farmerGroupBox.setTitle('Update farmer')
-        self.farmerIDLabel.setText(data[0])
-        self.farmerFirstNameLineEdit.setText(data[1])
-        self.farmerLastNameLineEdit.setText(data[2])
-        self.farmerAddressLineEdit.setText(data[3])
-        self.farmerTown.setText(data[4])
-        self.farmerCountry.setText(data[5])
-        self.farmerZipCode.setText(data[6])
-        self.farmerAddPushButton.setText('Update')
-
     def clearFarmerWidget(self):
         self.farmerFirstNameLineEdit.clear()
         self.farmerLastNameLineEdit.clear()
@@ -82,6 +70,23 @@ class FarmerManager(QtWidgets.QDialog, FORM_CLASS):
         self.farmerTown.clear()
         self.farmerCountry.clear()
         self.farmerZipCode.clear()
+
+    def updateFarmerWidget(self):
+        selectedData = WidgetService.getSelectedData(self.farmerTableWidget, 9, 'Updating data')
+
+        if selectedData:
+            currentRow, data = selectedData
+            self.farmerGroupBox.setTitle('Update farmer')
+            self.farmerIDLabel.setText(data[0])
+            self.farmerFirstNameLineEdit.setText(data[1])
+            self.farmerLastNameLineEdit.setText(data[2])
+            self.farmerAddressLineEdit.setText(data[3])
+            self.farmerTown.setText(data[4])
+            self.farmerCountry.setText(data[5])
+            self.farmerZipCode.setText(data[6])
+            self.farmerAddPushButton.setText('Update')
+        else:
+            MessageService().messageBox('Updating data', 'No data selected.', 5, 1)
 
     def setCropWidget(self):
         self.cropTableWidget.setHorizontalHeaderLabels(CROP_COLUMN_NAMES)
@@ -92,23 +97,28 @@ class FarmerManager(QtWidgets.QDialog, FORM_CLASS):
         self.cropHarvestingDate.setDateTime(QtCore.QDateTime.currentDateTime())
         self.cropIDLabel.hide()
 
-    def updateCropWidget(self):
-        currentRow, data = self.getSelectedData(self.cropTableWidget, 8)
-        self.registerCropGroupBox.setTitle('Update crop')
-        self.cropIDLabel.setText(data[0])
-        self.cropNameLineEdit.setText(data[1])
-        self.cropSowingDate.setDate(QtCore.QDate.fromString(data[2], 'yyyy-MM-dd'))
-        self.cropHarvestingDate.setDate(QtCore.QDate.fromString(data[3], 'yyyy-MM-dd'))
-        self.cropVarietyLineEdit.setText(data[4])
-        self.cropInterRoCMSpinBox.setValue(float(data[5]))
-        self.cropAddPushButton.setText('Update')
-
     def clearCropWidget(self):
         self.cropNameLineEdit.clear()
         self.cropSowingDate.setDateTime(QtCore.QDateTime.currentDateTime())
         self.cropHarvestingDate.setDateTime(QtCore.QDateTime.currentDateTime())
         self.cropVarietyLineEdit.clear()
         self.cropInterRoCMSpinBox.setValue(float(0))
+
+    def updateCropWidget(self):
+        selectedData = WidgetService.getSelectedData(self.cropTableWidget, 8, 'Updating data')
+
+        if selectedData:
+            currentRow, data = selectedData
+            self.registerCropGroupBox.setTitle('Update crop')
+            self.cropIDLabel.setText(data[0])
+            self.cropNameLineEdit.setText(data[1])
+            self.cropSowingDate.setDate(QtCore.QDate.fromString(data[2], 'yyyy-MM-dd'))
+            self.cropHarvestingDate.setDate(QtCore.QDate.fromString(data[3], 'yyyy-MM-dd'))
+            self.cropVarietyLineEdit.setText(data[4])
+            self.cropInterRoCMSpinBox.setValue(float(data[5]))
+            self.cropAddPushButton.setText('Update')
+        else:
+            MessageService().messageBox('Updating data', 'No data selected.', 5, 1)
 
     def registerCrop(self):
         self.register('crop')
@@ -134,7 +144,7 @@ class FarmerManager(QtWidgets.QDialog, FORM_CLASS):
             result = PostgresFactory().postSqlExecutor(connection, sql, data)
             self.loadCropData()
             self.clearCropWidget()
-            self.resultMessage(result, 'Crop field management', 'Data saved successfully!')
+            MessageService().resultMessage(result, 'Crop field management', 'Data saved successfully!')
 
         elif registerType == 'farmer':
             buttonType = self.farmerAddPushButton.text()
@@ -152,14 +162,7 @@ class FarmerManager(QtWidgets.QDialog, FORM_CLASS):
             print(result)
             self.loadFarmerData()
             self.clearFarmerWidget()
-            self.resultMessage(result, 'Farmer management', 'Data saved successfully!')
-
-    @staticmethod
-    def resultMessage(result, title, message):
-        if isinstance(result, bool):
-            MessageService().messageBox(title, message, 3, 1)
-        else:
-            MessageService().messageBox(title, result[1], 5, 1)
+            MessageService().resultMessage(result, 'Farmer management', 'Data saved successfully!')
 
     def prepareCropData(self):
         cropData = [self.cropNameLineEdit.text(),
@@ -191,79 +194,34 @@ class FarmerManager(QtWidgets.QDialog, FORM_CLASS):
         connection = PostgresFactory().open_connection_to_db('BD_GEOSTAT_LPC')
         result = PostgresFactory().getSqlExecutor(connection, 'SELECT * FROM geostatistics.crop_trial')
 
-        self.populateTable(result, self.cropTableWidget)
+        WidgetService().populateTable(result, self.cropTableWidget)
 
     def loadFarmerData(self):
         connection = PostgresFactory().open_connection_to_db('BD_GEOSTAT_LPC')
         result = PostgresFactory().getSqlExecutor(connection, 'SELECT * FROM geostatistics.farmer')
 
-        self.populateTable(result, self.farmerTableWidget)
-
-    @staticmethod
-    def populateTable(result, tableWidget):
-        tableWidget.clearContents()
-        tableWidget.setRowCount(len(result))
-        tableWidget.setColumnCount(len(result[0]))  # Assumindo que todas as linhas têm o mesmo comprimento
-
-        for rowIdx, row in enumerate(result):
-            for colIdx, value in enumerate(row):
-                # Converte date ou datetime para string formatada, se necessário
-                if colIdx == len(row) - 2 or colIdx == len(row) - 1:
-                    if value is not None:
-                        value = value.strftime("%d/%m/%Y")
-
-                item = QtWidgets.QTableWidgetItem(str(value))
-                tableWidget.setItem(rowIdx, colIdx, item)
-
-    def deleteTeamMember(self):
-        currentRow, data = self.getSelectedData()
-        connection = PostgresFactory().open_connection_to_db('BD_GEOSTAT_LPC')
-
-        sql = f"DELETE FROM geostatistics.lpc_team WHERE id = '{data[0]}';"
-        result = PostgresFactory().postSqlExecutor(connection, sql)
-
-        self.loadData()
-        if isinstance(result, bool):
-            MessageService().messageBox('LPC Team Management', 'Data deleted successfully!', 3, 1)
-        else:
-            MessageService().messageBox('LPC Team Management', result[1], 5, 1)
-        print(result)
+        WidgetService().populateTable(result, self.farmerTableWidget)
 
     def deleteFarmer(self):
-        currentRow, data = self.getSelectedData(self.farmerTableWidget, 9)
-        connection = PostgresFactory().open_connection_to_db('BD_GEOSTAT_LPC')
-        sql = f"DELETE FROM geostatistics.farmer WHERE id = '{data[0]}';"
-        result = PostgresFactory().postSqlExecutor(connection, sql)
+        selectedData = WidgetService().getSelectedData(self.farmerTableWidget, 9, 'Deleting data')
 
-        self.loadFarmerData()
-        self.resultMessage(result, 'Farmer management', 'Data deleted successfully!')
+        if selectedData:
+            currentRow, data = selectedData
+            connection = PostgresFactory().open_connection_to_db('BD_GEOSTAT_LPC')
+            result = PostgresFactory().postSqlExecutor(connection, DELETE_FARMER_SQL.format(data[0]))
+            self.loadFarmerData()
+            MessageService().resultMessage(result, 'Farmer management', 'Data deleted successfully!')
+        else:
+            MessageService().messageBox('Deleting data', 'No data selected.', 5, 1)
 
     def deleteCrop(self):
-        currentRow, data = self.getSelectedData(self.cropTableWidget, 8)
+        selectedData = WidgetService.getSelectedData(self.cropTableWidget, 8, 'Deleting data')
 
-        if data is None:
-            self.resultMessage(False, 'Selecting data', 'No row selected!')
-        else:
+        if selectedData:
+            currentRow, data = selectedData
             connection = PostgresFactory().open_connection_to_db('BD_GEOSTAT_LPC')
-            sql = f"DELETE FROM geostatistics.crop_trial WHERE id = '{data[0]}';"
-            result = PostgresFactory().postSqlExecutor(connection, sql)
-
+            result = PostgresFactory().postSqlExecutor(connection, DELETE_CROP_SQL.format(data[0]))
             self.loadCropData()
-            self.resultMessage(result, 'Farmer management', 'Data deleted successfully!')
-
-    def getSelectedData(self, tableWidget, totalColumns):
-        currentRow = tableWidget.currentRow()
-        selectedItems = tableWidget.selectedItems()
-
-        if not selectedItems:
-            return
-
-        if len(selectedItems) > 0:
-            data = []
-            for column in range(totalColumns):
-                item = tableWidget.item(currentRow, column)
-                data.append(item.text())
-
-            return currentRow, data
+            MessageService().resultMessage(result, 'Crop management', 'Data deleted successfully!')
         else:
-            self.resultMessage(False, 'Selecting data', 'Unexpected number of selected items.')
+            MessageService().messageBox('Deleting data', 'No data selected.', 5, 1)

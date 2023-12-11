@@ -24,6 +24,7 @@
 import os
 
 import psycopg2
+import psycopg2.extras
 import logging
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
@@ -49,7 +50,7 @@ class PostgresFactory:
 
     def getSqlExecutor(self, connection, sql):
         try:
-            with connection.cursor() as curs:
+            with connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as curs:
                 curs.execute(sql)
                 result = curs.fetchall()
                 curs.close()

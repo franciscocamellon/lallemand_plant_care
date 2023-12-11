@@ -23,7 +23,7 @@
    <item row="0" column="0">
     <widget class="QTabWidget" name="farmerTabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="farmerTab">
       <attribute name="title">
@@ -94,11 +94,6 @@
               <property name="sortingEnabled">
                <bool>true</bool>
               </property>
-              <row>
-               <property name="text">
-                <string/>
-               </property>
-              </row>
               <column>
                <property name="text">
                 <string>Id</string>
@@ -144,16 +139,6 @@
                 <string>Update date</string>
                </property>
               </column>
-              <item row="0" column="1">
-               <property name="text">
-                <string>a</string>
-               </property>
-              </item>
-              <item row="0" column="2">
-               <property name="text">
-                <string>a</string>
-               </property>
-              </item>
              </widget>
             </item>
            </layout>
@@ -697,11 +682,6 @@
               <property name="sortingEnabled">
                <bool>true</bool>
               </property>
-              <row>
-               <property name="text">
-                <string/>
-               </property>
-              </row>
               <column>
                <property name="text">
                 <string>Id</string>
@@ -742,11 +722,6 @@
                 <string>Modify date</string>
                </property>
               </column>
-              <item row="0" column="1">
-               <property name="text">
-                <string>a</string>
-               </property>
-              </item>
              </widget>
             </item>
            </layout>
