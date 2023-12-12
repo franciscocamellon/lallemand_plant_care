@@ -24,6 +24,7 @@
 import os
 import datetime
 
+from .message_service import MessageService
 from ..constants import DIRECTORY_STRUCTURE
 
 
@@ -33,7 +34,7 @@ class SystemService:
         """
         Constructor for the SystemService class.
         """
-        pass
+        self.messageService = MessageService()
 
     @staticmethod
     def createDirectoryStructure(path):
@@ -48,3 +49,13 @@ class SystemService:
         createDate = datetime.datetime.now()
         return createDate.strftime('%Y-%m-%d %H:%M:%S')
 
+    @staticmethod
+    def extractFileName(file_path):
+
+        try:
+            return os.path.splitext(os.path.basename(file_path))[0]
+
+        except Exception as file_name_exception:
+            errorMessage = f'Error getting file name: {str(file_name_exception)}'
+            MessageService().messageBox('Loading file', errorMessage, 5, 1)
+            return None

@@ -27,12 +27,13 @@ import processing
 from qgis.PyQt import QtWidgets, uic
 from qgis.core import QgsLayerTreeGroup, QgsCoordinateReferenceSystem
 
-from .algorithm_runner import AlgorithmRunner
-from ..constants import QGIS_TOC_GROUPS, POLYGONS_BUILDER_METHODS, OPERATION
-from ..services.layer_service import LayerService
+from ...core.tools.algorithm_runner import AlgorithmRunner
+from ...core.constants import QGIS_TOC_GROUPS, POLYGONS_BUILDER_METHODS, OPERATION
+from ...core.services.layer_service import LayerService
+from ...core.services.system_service import SystemService
 
 FORM_CLASS, _ = uic.loadUiType(
-    os.path.join(os.path.dirname(__file__), '../../gui/layer_manager/load_files.ui')
+    os.path.join(os.path.dirname(__file__), 'load_files.ui')
 )
 
 
@@ -41,33 +42,33 @@ class LoadFiles(QtWidgets.QDialog, FORM_CLASS):
     def __init__(self, iface, project, parent=None):
         """Constructor."""
         super(LoadFiles, self).__init__(parent)
-        # Set up the user interface from Designer through FORM_CLASS.
-        # After self.setupUi() you can access any designer object by doing
-        # self.<objectname>, and you can use autoconnect slots - see
-        # http://qt-project.org/doc/qt-4.8/designer-using-a-ui-file.html
-        # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
         self.iface = iface
         self.project = project
-        self.layer_services = LayerService(self.iface)
+        self.layerServices = LayerService(self.iface)
+        self.systemService = SystemService()
         self.crsOperations = ''
 
         self.crsWarningLabel.hide()
+        self.harvesterCrsWarningLabel.hide()
         self.suggestedCrsSelectionWidget.setEnabled(False)
+        self.harvesterCrsSelectionWidget.setEnabled(False)
+
         self.methodComboBox.insertItems(0, POLYGONS_BUILDER_METHODS)
         self.methodComboBox.setEnabled(False)
         self.sortingFieldComboBox.setEnabled(False)
+
         self.reprojectCheckBox.stateChanged.connect(self.enableReprojectChildren)
         self.treatmentCheckBox.stateChanged.connect(self.enableTreatmentChildren)
         self.gpsFileWidget.fileChanged.connect(self.updateGpsUI)
-        self.harvesterFileWidget.fileChanged.connect(self.updateGpsUI)
+        self.harvesterFileWidget.fileChanged.connect(self.updateHarvesterUI)
         self.loadGpsPointsPushButton.clicked.connect(self.loadGpsPoints)
         self.loadHarvesterPointsPushButton.clicked.connect(self.loadHarvesterPoints)
 
     def loadGpsPoints(self):
         filePath = self.gpsFileWidget.filePath()
-        fileName = self.layer_services.get_file_name(self.gpsFileWidget.filePath())
-        layer = self.layer_services.create_vector_layer(fileName, filePath)
+        fileName = self.systemService.extractFileName(self.gpsFileWidget.filePath())
+        layer = self.layerServices.create_vector_layer(fileName, filePath)
 
         self.loadPointFile(layer, QGIS_TOC_GROUPS[0])
 
@@ -89,9 +90,19 @@ class LoadFiles(QtWidgets.QDialog, FORM_CLASS):
 
     def loadHarvesterPoints(self):
         filePath = self.harvesterFileWidget.filePath()
-        fileName = self.layer_services.get_file_name(self.harvesterFileWidget.filePath())
-        layer = self.layer_services.create_vector_layer(fileName, filePath)
-        self.loadPointFile(layer)
+        fileName = self.systemService.extractFileName(self.harvesterFileWidget.filePath())
+        layer = self.layerServices.create_vector_layer(fileName, filePath)
+
+        self.loadPointFile(layer, QGIS_TOC_GROUPS[0])
+
+        epsg = self.suggestedCrsSelectionWidget.crs().authid()
+
+        if self.reprojectCheckBox.isChecked():
+            reprojected = self.reprojectLayer(layer, epsg, self.crsOperations[2])
+
+            reprojected.setName(f'{fileName}_{self.crsOperations[0]}')
+
+            self.loadPointFile(reprojected, QGIS_TOC_GROUPS[1])
 
     def loadPointFile(self, layer, groupName):
 
@@ -116,8 +127,8 @@ class LoadFiles(QtWidgets.QDialog, FORM_CLASS):
 
     def updateGpsUI(self, path):
 
-        layer = self.layer_services.create_vector_layer(self.layer_services.get_file_name(path), path)
-        crsInfo = self.layer_services.getSuggestedCrs(layer)
+        layer = self.layerServices.create_vector_layer(self.systemService.extractFileName(path), path)
+        crsInfo = self.layerServices.getSuggestedCrs(layer)
         self.crsOperations = crsInfo
         self.suggestedCrsSelectionWidget.setOptionVisible(5, False)
         self.suggestedCrsSelectionWidget.setCrs(QgsCoordinateReferenceSystem(crsInfo[1]))
@@ -126,6 +137,20 @@ class LoadFiles(QtWidgets.QDialog, FORM_CLASS):
         if layer.crs().isGeographic():
             self.crsWarningLabel.show()
         self.gpsCRSLabel.setText(f'CRS -> {layer.crs().authid()}')
+
+        del layer
+
+    def updateHarvesterUI(self, path):
+
+        layer = self.layerServices.create_vector_layer(self.systemService.extractFileName(path), path)
+        crsInfo = self.layerServices.getSuggestedCrs(layer)
+        self.crsOperations = crsInfo
+        self.harvesterCrsSelectionWidget.setOptionVisible(5, False)
+        self.harvesterCrsSelectionWidget.setCrs(QgsCoordinateReferenceSystem(crsInfo[1]))
+
+        if layer.crs().isGeographic():
+            self.harvesterCrsWarningLabel.show()
+        self.harvesterCRSLabel.setText(f'CRS -> {layer.crs().authid()}')
 
         del layer
 

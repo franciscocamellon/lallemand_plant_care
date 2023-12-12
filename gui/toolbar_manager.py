@@ -30,7 +30,7 @@ from qgis.PyQt.QtWidgets import QWidget
 
 from .lpc_team.farmer_manager import FarmerManager
 from .lpc_team.register_lpc_team import RegisterLpcTeam
-from ..core.tools.load_files import LoadFiles
+from .layer_manager.load_files import LoadFiles
 from .geostatistics_trial.geostatistics_trial import GeostatisticsTrial
 
 FORM_CLASS, _ = uic.loadUiType(
@@ -82,7 +82,7 @@ class ToolbarManager(QWidget, FORM_CLASS):
         """
         Shows the dialog that loads layers from server
         """
-        dlg = GeostatisticsTrial(self.iface, self.project)
+        dlg = GeostatisticsTrial(self.project)
         dlg.show()
         result = dlg.exec_()
         if result:
@@ -98,14 +98,16 @@ class ToolbarManager(QWidget, FORM_CLASS):
         if result:
             pass
 
-    def manageLpcTeam(self):
+    @staticmethod
+    def manageLpcTeam():
         dlg = RegisterLpcTeam()
         dlg.show()
         result = dlg.exec_()
         if result:
             pass
 
-    def manageFarmer(self):
+    @staticmethod
+    def manageFarmer():
         dlg = FarmerManager()
         dlg.show()
         result = dlg.exec_()

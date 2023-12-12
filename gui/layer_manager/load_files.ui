@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>550</width>
-    <height>450</height>
+    <width>554</width>
+    <height>459</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -23,7 +23,7 @@
    <item row="0" column="0">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="gpsTab">
       <attribute name="title">
@@ -654,11 +654,17 @@
            </item>
            <item>
             <widget class="QLabel" name="harvesterCRSLabel">
+             <property name="minimumSize">
+              <size>
+               <width>80</width>
+               <height>0</height>
+              </size>
+             </property>
              <property name="styleSheet">
               <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
              </property>
              <property name="text">
-              <string>CRS: EPSG4326</string>
+              <string>CRS -&gt; </string>
              </property>
             </widget>
            </item>
@@ -775,21 +781,12 @@
              <number>5</number>
             </property>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_9">
+             <layout class="QHBoxLayout" name="horizontalLayout_20">
               <property name="spacing">
                <number>5</number>
               </property>
               <item>
-               <widget class="QLabel" name="actionsLabel_3">
-                <property name="font">
-                 <font>
-                  <family>MS Shell Dlg 2</family>
-                  <pointsize>8</pointsize>
-                  <weight>50</weight>
-                  <italic>false</italic>
-                  <bold>false</bold>
-                 </font>
-                </property>
+               <widget class="QCheckBox" name="harvesterReprojectCheckBox">
                 <property name="styleSheet">
                  <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
                 </property>
@@ -801,41 +798,15 @@
              </layout>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_10">
+             <layout class="QHBoxLayout" name="horizontalLayout_19">
               <property name="spacing">
                <number>5</number>
               </property>
               <property name="leftMargin">
-               <number>5</number>
+               <number>15</number>
               </property>
               <item>
-               <widget class="QCheckBox" name="harvesterReprojectCheckBox">
-                <property name="styleSheet">
-                 <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
-                </property>
-                <property name="text">
-                 <string>Yes</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <spacer name="horizontalSpacer_7">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeType">
-                 <enum>QSizePolicy::Fixed</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>25</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-              <item>
-               <widget class="QLabel" name="label_2">
+               <widget class="QLabel" name="label_3">
                 <property name="styleSheet">
                  <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
                 </property>
@@ -845,7 +816,7 @@
                </widget>
               </item>
               <item>
-               <spacer name="horizontalSpacer_8">
+               <spacer name="horizontalSpacer_13">
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
                 </property>

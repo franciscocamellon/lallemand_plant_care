@@ -44,17 +44,19 @@ class FarmerManager(QtWidgets.QDialog, FORM_CLASS):
         """Constructor."""
         super(FarmerManager, self).__init__()
         self.setupUi(self)
+        self.postgresFactory = PostgresFactory()
         self.setWindowTitle("Farmer and Crop Management")
         self.setFarmerWidget()
         self.setCropWidget()
+        self.loadCropData()
+        self.loadFarmerData()
+
         self.farmerAddPushButton.clicked.connect(self.registerFarmer)
         self.cropAddPushButton.clicked.connect(self.registerCrop)
         self.farmerDeletePushButton.clicked.connect(self.deleteFarmer)
         self.cropDeletePushButton.clicked.connect(self.deleteCrop)
         self.cropEditPushButton.clicked.connect(self.updateCropWidget)
         self.farmerEditPushButton.clicked.connect(self.updateFarmerWidget)
-        self.loadCropData()
-        self.loadFarmerData()
 
     def setFarmerWidget(self):
         self.farmerTableWidget.setHorizontalHeaderLabels(FARMER_COLUMN_NAMES)
@@ -127,7 +129,6 @@ class FarmerManager(QtWidgets.QDialog, FORM_CLASS):
         self.register('farmer')
 
     def register(self, registerType):
-        connection = PostgresFactory().open_connection_to_db('BD_GEOSTAT_LPC')
 
         if registerType == 'crop':
             buttonType = self.cropAddPushButton.text()
@@ -141,7 +142,7 @@ class FarmerManager(QtWidgets.QDialog, FORM_CLASS):
                 sql = INSERT_CROP_SQL
                 data = self.prepareCropData()
 
-            result = PostgresFactory().postSqlExecutor(connection, sql, data)
+            result = self.postgresFactory.postSqlExecutor(sql, data)
             self.loadCropData()
             self.clearCropWidget()
             MessageService().resultMessage(result, 'Crop field management', 'Data saved successfully!')
@@ -158,10 +159,11 @@ class FarmerManager(QtWidgets.QDialog, FORM_CLASS):
                 sql = INSERT_FARMER_SQL
                 data = self.prepareFarmerData()
 
-            result = PostgresFactory().postSqlExecutor(connection, sql, data)
-            print(result)
+            result = self.postgresFactory.postSqlExecutor(sql, data)
+
             self.loadFarmerData()
             self.clearFarmerWidget()
+
             MessageService().resultMessage(result, 'Farmer management', 'Data saved successfully!')
 
     def prepareCropData(self):
@@ -191,14 +193,12 @@ class FarmerManager(QtWidgets.QDialog, FORM_CLASS):
         return tuple(farmerData)
 
     def loadCropData(self):
-        connection = PostgresFactory().open_connection_to_db('BD_GEOSTAT_LPC')
-        result = PostgresFactory().getSqlExecutor(connection, 'SELECT * FROM geostatistics.crop_trial')
+        result = self.postgresFactory.getSqlExecutor(FETCH_ALL_CROP)
 
         WidgetService().populateTable(result, self.cropTableWidget)
 
     def loadFarmerData(self):
-        connection = PostgresFactory().open_connection_to_db('BD_GEOSTAT_LPC')
-        result = PostgresFactory().getSqlExecutor(connection, 'SELECT * FROM geostatistics.farmer')
+        result = self.postgresFactory.getSqlExecutor(FETCH_ALL_FARMER)
 
         WidgetService().populateTable(result, self.farmerTableWidget)
 
@@ -207,8 +207,7 @@ class FarmerManager(QtWidgets.QDialog, FORM_CLASS):
 
         if selectedData:
             currentRow, data = selectedData
-            connection = PostgresFactory().open_connection_to_db('BD_GEOSTAT_LPC')
-            result = PostgresFactory().postSqlExecutor(connection, DELETE_FARMER_SQL.format(data[0]))
+            result = self.postgresFactory.postSqlExecutor(DELETE_FARMER_SQL.format(data[0]))
             self.loadFarmerData()
             MessageService().resultMessage(result, 'Farmer management', 'Data deleted successfully!')
         else:
@@ -219,8 +218,7 @@ class FarmerManager(QtWidgets.QDialog, FORM_CLASS):
 
         if selectedData:
             currentRow, data = selectedData
-            connection = PostgresFactory().open_connection_to_db('BD_GEOSTAT_LPC')
-            result = PostgresFactory().postSqlExecutor(connection, DELETE_CROP_SQL.format(data[0]))
+            result = self.postgresFactory.postSqlExecutor(DELETE_CROP_SQL.format(data[0]))
             self.loadCropData()
             MessageService().resultMessage(result, 'Crop management', 'Data deleted successfully!')
         else:

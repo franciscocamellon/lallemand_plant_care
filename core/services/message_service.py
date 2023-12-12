@@ -22,7 +22,7 @@
  ***************************************************************************/
 """
 from qgis.core import Qgis
-from qgis.gui import QgsMessageBar
+from qgis.gui import QgisInterface, QgsMessageBar
 from qgis.PyQt.QtWidgets import QMessageBox
 from qgis.PyQt.QtCore import QCoreApplication
 
@@ -31,25 +31,23 @@ class MessageService:
     def __init__(self):
         pass
 
-    @staticmethod
-    def resultMessage(result, title, message):
+    def resultMessage(self, result, title, message):
         if isinstance(result, bool):
-            MessageService().messageBox(title, message, 3, 1)
+            self.messageBox(title, message, 3, 1)
         else:
-            MessageService().messageBox(title, result[1], 5, 1)
+            self.messageBox(title, result[1], 5, 1)
 
-    @staticmethod
-    def show_message(iface, message, message_type='info'):
-        message_level = 0
-
-        if message_type == 'error':
-            message_level = 2
-        elif message_type == 'warning':
-            message_level = 1
-        elif message_type == 'success':
-            message_level = 3
-
-        iface.messageBar().pushMessage(message_type, message, level=message_level, duration=5)
+    # def show_message(self, message, message_type='info'):
+    #     message_level = 0
+    #
+    #     if message_type == 'error':
+    #         message_level = 2
+    #     elif message_type == 'warning':
+    #         message_level = 1
+    #     elif message_type == 'success':
+    #         message_level = 3
+    #
+    #     self.iface.messageBar().pushMessage(message_type, message, level=message_level, duration=5)
 
     @staticmethod
     def setIconType(iconType):

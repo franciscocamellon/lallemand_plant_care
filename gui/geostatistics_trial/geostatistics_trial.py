@@ -28,12 +28,13 @@ import uuid
 
 from qgis.PyQt import QtCore, QtWidgets, uic
 from qgis.PyQt.QtWidgets import QHeaderView
+from qgis.core import QgsCoordinateReferenceSystem
 
-from ...core.services.widget_service import WidgetService
 from ...core.constants import *
 from ...core.services.layer_service import LayerService
 from ...core.services.system_service import SystemService
 from ...core.services.message_service import MessageService
+from ...core.services.widget_service import WidgetService
 from ...core.factories.postgres_factory import PostgresFactory
 
 FORM_CLASS, _ = uic.loadUiType(
@@ -42,14 +43,14 @@ FORM_CLASS, _ = uic.loadUiType(
 
 
 class GeostatisticsTrial(QtWidgets.QDialog, FORM_CLASS):
-    def __init__(self, iface, project):
+    def __init__(self, project):
         """Constructor."""
         super(GeostatisticsTrial, self).__init__()
         self.setupUi(self)
         self.setWindowTitle("Geostatistics Trial Information")
-        self.iface = iface
         self.project = project
-        self.layer_services = LayerService(self.iface)
+        self.layer_services = LayerService()
+        self.postgresFactory = PostgresFactory()
         self.setTrialWidget()
         self.loadTrialData()
         self.fetchDomain()
@@ -61,45 +62,7 @@ class GeostatisticsTrial(QtWidgets.QDialog, FORM_CLASS):
         self.trialAddPushButton.clicked.connect(self.register)
         self.trialEditPushButton.clicked.connect(self.updateTrialWidget)
         self.trialDeletePushButton.clicked.connect(self.deleteTrial)
-
-    @staticmethod
-    def updateLabel(qtLabel, newLabelText):
-        qtLabel.clear()
-        qtLabel.setText(newLabelText)
-
-    @staticmethod
-    def fetchOne(baseSql, objectId):
-        objectSql = baseSql.format(objectId)
-        connection = PostgresFactory().open_connection_to_db('BD_GEOSTAT_LPC')
-        return PostgresFactory().getSqlExecutor(connection, objectSql)
-
-    @staticmethod
-    def resultMessage(result, title, message):
-        if isinstance(result, bool):
-            MessageService().messageBox(title, message, 3, 1)
-        else:
-            MessageService().messageBox(title, result[1], 5, 1)
-
-    @staticmethod
-    def populateTable(result, tableWidget):
-        tableWidget.clearContents()
-
-        if not result:
-            tableWidget.setRowCount(1)
-            return
-
-        tableWidget.setRowCount(len(result))
-        keys = result[0].keys()
-        tableWidget.setColumnCount(len(keys))
-
-        for rowIdx, row in enumerate(result):
-            for colIdx, key in enumerate(keys):
-                value = row[key]
-                if isinstance(value, datetime.datetime):
-                    value = value.strftime("%d/%m/%Y") if value else ""
-
-                item = QtWidgets.QTableWidgetItem(str(value))
-                tableWidget.setItem(rowIdx, colIdx, item)
+        self.createQgisProjectPushButton.clicked.connect(self.saveQgisProject)
 
     def setTrialWidget(self):
         self.trialTableWidget.setHorizontalHeaderLabels(GEOSTATISTIC_TRIAL)
@@ -136,9 +99,14 @@ class GeostatisticsTrial(QtWidgets.QDialog, FORM_CLASS):
         self.farmerComboBox.setCurrentIndex(0)
         self.cropFieldComboBox.setCurrentIndex(0)
 
+    def clearQgisProjectWidget(self):
+        self.qgisProjectLineEdit.clear()
+        self.trialStructureCheckBox.setChecked(False)
+        self.qgisProjectFileWidget.lineEdit().clearValue()
+
     def register(self):
         # TODO move register to the factory
-        connection = PostgresFactory().open_connection_to_db('BD_GEOSTAT_LPC')
+        # connection = PostgresFactory().openConnection('BD_GEOSTAT_LPC')
         buttonType = self.trialAddPushButton.text()
 
         if buttonType == 'Update':
@@ -150,20 +118,20 @@ class GeostatisticsTrial(QtWidgets.QDialog, FORM_CLASS):
             sql = INSERT_TRIAL_SQL
             data = self.prepareTrialData()
 
-        result = PostgresFactory().postSqlExecutor(connection, sql, data)
+        result = self.postgresFactory.postSqlExecutor(sql, data)
         self.loadTrialData()
         self.clearTrialWidget()
-        self.resultMessage(result, 'Trial management', 'Data saved successfully!')
+        MessageService().resultMessage(result, 'Trial management', 'Data saved successfully!')
 
     def deleteTrial(self):
         selectedData = WidgetService.getSelectedData(self.trialTableWidget, 11, 'Deleting data')
 
         if selectedData:
             currentRow, data = selectedData
-            connection = PostgresFactory().open_connection_to_db('BD_GEOSTAT_LPC')
-            result = PostgresFactory().postSqlExecutor(connection, DELETE_TRIAL.format(data[0]))
+            # connection = PostgresFactory().openConnection('BD_GEOSTAT_LPC')
+            result = self.postgresFactory.postSqlExecutor(DELETE_TRIAL_SQL.format(data[0]))
             self.loadTrialData()
-            self.resultMessage(result, 'Deleting data', 'Data deleted successfully!')
+            MessageService().resultMessage(result, 'Deleting data', 'Data deleted successfully!')
         else:
             MessageService().messageBox('Deleting data', 'No data selected.', 5, 1)
 
@@ -190,98 +158,70 @@ class GeostatisticsTrial(QtWidgets.QDialog, FORM_CLASS):
         return tuple(trialData)
 
     def loadTrialData(self):
-        connection = PostgresFactory().open_connection_to_db('BD_GEOSTAT_LPC')
-        result = PostgresFactory().getSqlExecutor(connection, FETCH_ALL_TRIAL)
+        # connection = PostgresFactory().openConnection('BD_GEOSTAT_LPC')
+        result = self.postgresFactory.getSqlExecutor(FETCH_ALL_TRIAL)
 
         if len(result) > 0:
             self.tableDataFormatter(result)
         else:
-            self.populateTable(result, self.trialTableWidget)
+            WidgetService().populateTable(result, self.trialTableWidget)
 
     def tableDataFormatter(self, result):
         for row in result:
-            lpcTeamName = self.fetchOne(FETCH_ONE_TEAM, row['lpc_team'])
-            farmer = self.fetchOne(FETCH_ONE_FARMER, row['farmer'])
-            crop = self.fetchOne(FETCH_ONE_CROP, row['crop_trial'])
+            lpcTeamName = self.postgresFactory.fetchOne(FETCH_ONE_TEAM, row['lpc_team'])
+            farmer = self.postgresFactory.fetchOne(FETCH_ONE_FARMER, row['farmer'])
+            crop = self.postgresFactory.fetchOne(FETCH_ONE_CROP, row['crop_trial'])
 
             row['lpc_team'] = f"{lpcTeamName[0]['first_name']} {lpcTeamName[0]['last_name']}"
             row['farmer'] = f"{farmer[0]['first_name']} {farmer[0]['last_name']}"
             row['crop_trial'] = f"{crop[0]['crop_name']} - {crop[0]['variety']}"
 
-        self.populateTable(result, self.trialTableWidget)
+        WidgetService().populateTable(result, self.trialTableWidget)
 
     def fetchDomain(self):
-        # TODO move register to the factory
-        self.trialIrrigatedComboBox.clear()
-        connection = PostgresFactory().open_connection_to_db('BD_GEOSTAT_LPC')
-        result = PostgresFactory().getSqlExecutor(connection, FETCH_ALL_DOMAIN)
-
-        if len(result) == 0:
-            full_name = ['There are no data registered!']
-            self.trialIrrigatedComboBox.addItems(full_name)
-            return False
-        else:
-            self.trialIrrigatedComboBox.insertItem(0, 'Select an option', uuid.uuid4())
-            for row in result:
-                self.trialIrrigatedComboBox.addItem(f"{row['description']}", row['code'])
-
-            return True
+        comboboxData = self.postgresFactory.fetchDataToCombobox(self.trialIrrigatedComboBox, FETCH_ALL_DOMAIN,
+                                                                ['description'], 'code')
+        if not comboboxData[0]:
+            MessageService().messageBox('QGIS project', comboboxData[1], 5, 1)
 
     def fetchLpcTeam(self):
-        # TODO move register to the factory
-        self.lpcTeamComboBox.clear()
-        connection = PostgresFactory().open_connection_to_db('BD_GEOSTAT_LPC')
-        result = PostgresFactory().getSqlExecutor(connection, FETCH_ALL_TEAM)
-
-        if len(result) == 0:
-            full_name = ['There are no data registered!']
-            self.lpcTeamComboBox.addItems(full_name)
-            return False
-        else:
-            self.lpcTeamComboBox.insertItem(0, 'Select an option', uuid.uuid4())
-            for row in result:
-                self.lpcTeamComboBox.addItem(f"{row['first_name']} {row['last_name']}", row['id'])
-
-            return True
+        comboboxData = self.postgresFactory.fetchDataToCombobox(self.lpcTeamComboBox, FETCH_ALL_TEAM,
+                                                                ['first_name', 'last_name'], 'id')
+        if not comboboxData[0]:
+            MessageService().messageBox('QGIS project', comboboxData[1], 5, 1)
 
     def fetchCropData(self):
-        # TODO move register to the factory
-        self.cropFieldComboBox.clear()
-        connection = PostgresFactory().open_connection_to_db('BD_GEOSTAT_LPC')
-        result = PostgresFactory().getSqlExecutor(connection, FETCH_ALL_CROP)
-
-        if len(result) == 0:
-            cropData = ['There are no data registered!']
-            self.cropFieldComboBox.addItems(cropData)
-            return False
-        else:
-            self.cropFieldComboBox.insertItem(0, 'Select an option', uuid.uuid4())
-            for row in result:
-                self.cropFieldComboBox.addItem(f"{row['crop_name']} - {row['variety']}", row['id'])
-            return True
+        comboboxData = self.postgresFactory.fetchDataToCombobox(self.cropFieldComboBox, FETCH_ALL_CROP,
+                                                                ['crop_name', 'variety'], 'id', ' - ')
+        if not comboboxData[0]:
+            MessageService().messageBox('QGIS project', comboboxData[1], 5, 1)
 
     def fetchFarmerData(self):
-        # TODO move register to the factory
-        self.farmerComboBox.clear()
-        connection = PostgresFactory().open_connection_to_db('BD_GEOSTAT_LPC')
-        result = PostgresFactory().getSqlExecutor(connection, FETCH_ALL_FARMER)
-
-        if len(result) == 0:
-            farmerData = ['There are no data registered!']
-            self.farmerComboBox.addItems(farmerData)
-            return False
-        else:
-            self.farmerComboBox.insertItem(0, 'Select an option', uuid.uuid4())
-            for row in result:
-                self.farmerComboBox.addItem(f"{row['first_name']} {row['last_name']}", row['id'])
-            return True
+        comboboxData = self.postgresFactory.fetchDataToCombobox(self.farmerComboBox, FETCH_ALL_FARMER,
+                                                                ['first_name', 'last_name'], 'id')
+        if not comboboxData[0]:
+            MessageService().messageBox('QGIS project', comboboxData[1], 5, 1)
 
     def setQgisProjectName(self):
-        self.updateLabel(self.qgisProjectLineEdit, self.trialFieldNameLineEdit.text())
+        self.qgisProjectLineEdit.clear()
+        self.qgisProjectLineEdit.setText(self.trialFieldNameLineEdit.text())
 
     def saveQgisProject(self):
-        self.project.setCrs(self.qgisProjectCrsWidget.crs())
-        self.project.write(f'{self.qgisProjectDirectoryFileWidget.filePath()}/{self.qgisProjectLineEdit.text()}.qgs')
+        try:
+            if os.path.exists(self.qgisProjectFileWidget.filePath()):
+                self.project.setCrs(self.qgisProjectCrsWidget.crs())
+                self.project.write(f'{self.qgisProjectFileWidget.filePath()}/{self.qgisProjectLineEdit.text()}.qgs')
 
-        if self.trialDirectoryStructureCheckBox.isChecked():
-            SystemService().createDirectoryStructure(self.qgisProjectDirectoryFileWidget.filePath())
+                if self.trialStructureCheckBox.isChecked():
+                    SystemService().createDirectoryStructure(self.qgisProjectFileWidget.filePath())
+
+                MessageService().messageBox('QGIS project', 'Project saved successfully!', 3, 1)
+
+            MessageService().messageBox('QGIS project', 'Directory does not exists!', 5, 1)
+
+        except Exception as e:
+            warningMessage = f"Error saving project: {str(e)}"
+            MessageService().messageBox('QGIS project', warningMessage, 5, 1)
+
+        finally:
+            self.clearQgisProjectWidget()

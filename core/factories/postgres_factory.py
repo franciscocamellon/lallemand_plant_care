@@ -30,52 +30,77 @@ from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 
 class PostgresFactory:
-    def __init__(self):
+    def __init__(self, database_name='BD_GEOSTAT_LPC', user='postgres', password='postgres', host='127.0.0.1', port='5432'):
         super(PostgresFactory, self).__init__()
-        logging.basicConfig(filename=os.path.join(os.path.dirname(__file__), 'postgres_log.log'), level=logging.ERROR)
+        self.database_name = database_name
+        self.user = user
+        self.password = password
+        self.host = host
+        self.port = port
+        self._initializeLogging()
+        self.connection = self.openConnection()
 
     @staticmethod
-    def open_connection_to_db(database_name):
-        conn = psycopg2.connect(
-            database=database_name,
-            user='postgres',
-            password='postgres',
-            host='127.0.0.1',
-            port='5432'
+    def _initializeLogging():
+        logging.basicConfig(filename=os.path.join(os.path.dirname(__file__), 'postgres_log.log'), level=logging.ERROR)
+
+    def openConnection(self):
+        connection = psycopg2.connect(
+            database=self.database_name,
+            user=self.user,
+            password=self.password,
+            host=self.host,
+            port=self.port
         )
+        connection.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+        connection.autocommit = True
+        return connection
 
-        conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-        conn.autocommit = True
-        return conn
-
-    def getSqlExecutor(self, connection, sql):
+    def fetchDataToCombobox(self, combobox, query, displayColumns, idColumn, concatSeparator=' '):
         try:
-            with connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as curs:
+            combobox.clear()
+            # connection = self.openConnection()
+            result = self.getSqlExecutor(query)
+
+            for row in result:
+                displayValue = concatSeparator.join([str(row[column]) for column in displayColumns])
+                combobox.addItem(displayValue, row[idColumn])
+
+            return True, combobox
+
+        except Exception as e:
+            errorMessage = f"Error executing SQL query: {str(e)}"
+            return False, errorMessage
+
+    def fetchOne(self, baseSql, objectId):
+        objectSql = baseSql.format(objectId)
+        # connection = self.openConnection()
+        return self.getSqlExecutor(objectSql)
+
+    def getSqlExecutor(self, sql):
+        try:
+            with self.connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as curs:
                 curs.execute(sql)
                 result = curs.fetchall()
-                curs.close()
-            connection.close()
             return result
+
         except psycopg2.Error as e:
             error_message = f"Error executing SQL: {e}"
             logging.error(error_message)
-            self.close_connection(connection)
             return error_message
 
-    def postSqlExecutor(self, connection, sql, data=None):
+    def postSqlExecutor(self, sql, data=None):
         try:
-            with connection.cursor() as curs:
+            with self.connection.cursor() as curs:
                 if data:
                     curs.execute(sql, data)
                 else:
                     curs.execute(sql)
-                curs.close()
-            connection.close()
             return True
+
         except psycopg2.Error as e:
             error_message = f"Error executing SQL: {e}"
             logging.error(error_message)
-            self.close_connection(connection)
             return False, error_message
 
     @staticmethod

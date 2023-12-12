@@ -18,12 +18,16 @@ GEOSTATISTIC_TRIAL = ['Id', "Field name", "Area", "Irrigated", "Soil type", "LPC
                       "Create date", "Update date"]
 
 FETCH_ALL_DOMAIN = "SELECT * FROM domains.yes_or_not;"
+
 FETCH_ALL_TEAM = "SELECT * FROM geostatistics.lpc_team;"
 FETCH_ONE_TEAM = "SELECT * FROM geostatistics.lpc_team WHERE id = '{}';"
+
 FETCH_ALL_CROP = "SELECT * FROM geostatistics.crop_trial;"
 FETCH_ONE_CROP = "SELECT * FROM geostatistics.crop_trial WHERE id = '{}';"
+
 FETCH_ALL_FARMER = "SELECT * FROM geostatistics.farmer;"
 FETCH_ONE_FARMER = "SELECT * FROM geostatistics.farmer WHERE id = '{}';"
+
 FETCH_ALL_TRIAL = """
 SELECT
     gt.id, gt.field_name, gt.field_area, yn.description, gt.field_soil, gt.lpc_team, gt.farmer, gt.crop_trial, gt.id_contour, gt.create_date, gt.update_date

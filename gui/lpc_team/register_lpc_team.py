@@ -45,6 +45,7 @@ class RegisterLpcTeam(QtWidgets.QDialog, FORM_CLASS):
         """Constructor."""
         super(RegisterLpcTeam, self).__init__()
         self.setupUi(self)
+        self.postgresFactory = PostgresFactory()
         self.setWindowTitle("LPC Team Management")
         self.tableWidget.setHorizontalHeaderLabels(['Id', "First name", "Last name", "Create date"])
         self.tableWidget.setColumnHidden(0, True)
@@ -57,7 +58,6 @@ class RegisterLpcTeam(QtWidgets.QDialog, FORM_CLASS):
         self.loadData()
 
     def register(self):
-        connection = PostgresFactory().open_connection_to_db('BD_GEOSTAT_LPC')
         buttonType = self.lpcTeamAddPushButton.text()
 
         if buttonType == 'Update':
@@ -69,10 +69,12 @@ class RegisterLpcTeam(QtWidgets.QDialog, FORM_CLASS):
             sql = INSERT_TEAM_SQL
             data = self.prepareTeamData()
 
-        result = PostgresFactory().postSqlExecutor(connection, sql, data)
+        result = self.postgresFactory.postSqlExecutor(sql, data)
+
         self.loadData()
         self.lpcTeamLastNameLineEdit.clear()
         self.lpcTeamFirstNameLineEdit.clear()
+
         MessageService().resultMessage(result, 'LPC Team Management', 'Data saved successfully!')
 
     def prepareTeamData(self):
@@ -88,9 +90,7 @@ class RegisterLpcTeam(QtWidgets.QDialog, FORM_CLASS):
         return tuple(trialData)
 
     def loadData(self):
-        connection = PostgresFactory().open_connection_to_db('BD_GEOSTAT_LPC')
-        result = PostgresFactory().getSqlExecutor(connection, FETCH_ALL_TEAM)
-
+        result = self.postgresFactory.getSqlExecutor(FETCH_ALL_TEAM)
         WidgetService().populateTable(result, self.tableWidget)
 
     def deleteTeamMember(self):
@@ -98,8 +98,7 @@ class RegisterLpcTeam(QtWidgets.QDialog, FORM_CLASS):
 
         if selectedData:
             currentRow, data = selectedData
-            connection = PostgresFactory().open_connection_to_db('BD_GEOSTAT_LPC')
-            result = PostgresFactory().postSqlExecutor(connection, DELETE_TEAM_SQL.format(data[0]))
+            result = self.postgresFactory.postSqlExecutor(DELETE_TEAM_SQL.format(data[0]))
             self.loadData()
             MessageService().resultMessage(result, 'Deleting data', 'Data deleted successfully!')
         else:

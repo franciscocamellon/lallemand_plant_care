@@ -10,5 +10,6 @@
         <file>icons/farmer.png</file>
         <file>icons/delete.png</file>
         <file>icons/edit.png</file>
+        <file>icons/save.png</file>
     </qresource>
 </RCC>

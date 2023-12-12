@@ -27,19 +27,21 @@ from qgis.core import QgsProject, QgsVectorLayer, QgsFeature, QgsGeometry, QgsPo
     QgsLayerTreeLayer, QgsCoordinateTransform
 
 from .message_service import MessageService
+from .system_service import SystemService
 
 
 class LayerService:
 
     def __init__(self, iface, default_crs=None):
-        self.iface = iface
         self.default_crs = default_crs
         self.message_service = MessageService()
+        self.systemService = SystemService()
 
     def load_shape_file(self, project, group_name, file_path):
 
         try:
-            layer = self.create_vector_layer(self.get_file_name(file_path), file_path)
+            fileName = self.systemService.extractFileName(file_path)
+            layer = self.create_vector_layer(fileName, file_path)
 
             if group_name is None:
                 project.instance().addMapLayer(layer)
@@ -50,8 +52,8 @@ class LayerService:
                 group.addLayer(layer)
             return layer.crs()
         except Exception as load_file_exception:
-            error_message = f'Error loading shape file: {str(load_file_exception)}'
-            self.message_service.show_message(error_message, 'Error')
+            errorMessage = f'Error loading shape file: {str(load_file_exception)}'
+            self.message_service.messageBox('Loading file', errorMessage, 5, 1)
 
     def create_vector_layer(self, layer_name, file_path, use_default_crs=True):
 
@@ -70,8 +72,8 @@ class LayerService:
             return layer
 
         except Exception as create_layer_exception:
-            error_message = f'Error creating layer {layer_name} -> {str(create_layer_exception)}'
-            self.message_service.show_message(error_message, 'Error')
+            errorMessage = f'Error creating layer {layer_name} -> {str(create_layer_exception)}'
+            self.message_service.messageBox('Loading file', errorMessage, 5, 1)
             return None
 
     def convert_layer_crs(self, layer, target_crs):
@@ -96,8 +98,8 @@ class LayerService:
             return True
 
         except Exception as e:
-            error_message = f'Error converting layer CRS: {str(e)}'
-            self.message_service.show_message(error_message, 'Error')
+            errorMessage = f'Error converting layer CRS: {str(e)}'
+            self.message_service.messageBox('Loading file', errorMessage, 5, 1)
             return False
 
     def create_layer_tree_group(self, qgs_project, group_name):
@@ -109,8 +111,8 @@ class LayerService:
             return root
 
         except Exception as group_exception:
-            error_message = f'Error creating layer tree group: {str(group_exception)}'
-            self.message_service.show_message(error_message, 'Error')
+            errorMessage = f'Error creating layer tree group: {str(group_exception)}'
+            self.message_service.messageBox('Loading file', errorMessage, 5, 1)
             return None
 
     @staticmethod
@@ -119,19 +121,9 @@ class LayerService:
         group = root.findGroup(groupName)
         group.addLayer(layer)
 
-    def get_file_name(self, file_path):
-
-        try:
-            return os.path.splitext(os.path.basename(file_path))[0]
-
-        except Exception as file_name_exception:
-            error_message = f'Error getting file name: {str(file_name_exception)}'
-            self.message_service.show_message(error_message, 'Error')
-            return None
-
     def getSuggestedCrs(self, layer):
 
-        worldZoneFileDirectory = self.getWorldZonesPath()
+        worldZoneFileDirectory = self._getWorldZonesPath()
         zoneFile = self.create_vector_layer('world_zones', worldZoneFileDirectory)
 
         if not layer.isValid():
@@ -151,7 +143,7 @@ class LayerService:
                 print('Centroid is not within any polygon in layer2')
 
     @staticmethod
-    def getWorldZonesPath():
+    def _getWorldZonesPath():
         currentDirectory = os.path.dirname(__file__)
         parentDirectory = os.path.join(currentDirectory, '..')
         return os.path.join(parentDirectory, 'resources', 'world_zones.geojson')

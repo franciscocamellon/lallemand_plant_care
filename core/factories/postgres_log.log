@@ -116,3 +116,7 @@ ERROR:root:Error executing SQL: invalid input syntax for type uuid: "None"
 LINE 1: ...ETE FROM geostatistics.geostatistic_trial WHERE id = 'None';
                                                                 ^
 
+ERROR:root:Error executing SQL: invalid input syntax for type double precision: "sadadasa"
+LINE 1: ...l, id_contour, create_date) VALUES ('ssdadasass', 'sadadasa'...
+                                                             ^
+
