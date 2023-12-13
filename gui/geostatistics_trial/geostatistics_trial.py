@@ -28,7 +28,7 @@ import uuid
 
 from qgis.PyQt import QtCore, QtWidgets, uic
 from qgis.PyQt.QtWidgets import QHeaderView
-from qgis.core import QgsCoordinateReferenceSystem
+from qgis.core import QgsProject
 
 from ...core.constants import *
 from ...core.services.layer_service import LayerService
@@ -43,12 +43,12 @@ FORM_CLASS, _ = uic.loadUiType(
 
 
 class GeostatisticsTrial(QtWidgets.QDialog, FORM_CLASS):
-    def __init__(self, project):
+    def __init__(self):
         """Constructor."""
         super(GeostatisticsTrial, self).__init__()
         self.setupUi(self)
         self.setWindowTitle("Geostatistics Trial Information")
-        self.project = project
+        self.project = ''
         self.layer_services = LayerService()
         self.postgresFactory = PostgresFactory()
         self.setTrialWidget()
@@ -71,6 +71,8 @@ class GeostatisticsTrial(QtWidgets.QDialog, FORM_CLASS):
         self.trialTableWidget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.trialTableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.trialIDLabel.hide()
+
+        WidgetService().floatValidator(self.trialFieldAreaLineEdit)
 
     def updateTrialWidget(self):
         selectedData = WidgetService.getSelectedData(self.trialTableWidget, 11, 'Updating data')
@@ -128,7 +130,6 @@ class GeostatisticsTrial(QtWidgets.QDialog, FORM_CLASS):
 
         if selectedData:
             currentRow, data = selectedData
-            # connection = PostgresFactory().openConnection('BD_GEOSTAT_LPC')
             result = self.postgresFactory.postSqlExecutor(DELETE_TRIAL_SQL.format(data[0]))
             self.loadTrialData()
             MessageService().resultMessage(result, 'Deleting data', 'Data deleted successfully!')
@@ -158,7 +159,6 @@ class GeostatisticsTrial(QtWidgets.QDialog, FORM_CLASS):
         return tuple(trialData)
 
     def loadTrialData(self):
-        # connection = PostgresFactory().openConnection('BD_GEOSTAT_LPC')
         result = self.postgresFactory.getSqlExecutor(FETCH_ALL_TRIAL)
 
         if len(result) > 0:
@@ -208,6 +208,7 @@ class GeostatisticsTrial(QtWidgets.QDialog, FORM_CLASS):
 
     def saveQgisProject(self):
         try:
+            self.project = QgsProject.instance()
             if os.path.exists(self.qgisProjectFileWidget.filePath()):
                 self.project.setCrs(self.qgisProjectCrsWidget.crs())
                 self.project.write(f'{self.qgisProjectFileWidget.filePath()}/{self.qgisProjectLineEdit.text()}.qgs')
@@ -216,8 +217,8 @@ class GeostatisticsTrial(QtWidgets.QDialog, FORM_CLASS):
                     SystemService().createDirectoryStructure(self.qgisProjectFileWidget.filePath())
 
                 MessageService().messageBox('QGIS project', 'Project saved successfully!', 3, 1)
-
-            MessageService().messageBox('QGIS project', 'Directory does not exists!', 5, 1)
+            else:
+                MessageService().messageBox('QGIS project', 'Directory does not exists!', 5, 1)
 
         except Exception as e:
             warningMessage = f"Error saving project: {str(e)}"

@@ -165,7 +165,7 @@ class LallemandPlantCare:
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
-        self.toolbar_widget = ToolbarManager(self.iface, self.project, toolbar=self.toolbar)
+        self.toolbar_widget = ToolbarManager(toolbar=self.toolbar)
         self.toolbar = self.iface.addToolBar(u'CropAnalysisEnvironment')
         self.toolbar.setObjectName(u'CropAnalysisEnvironment')
         self.toolbar.addWidget(self.toolbar_widget)

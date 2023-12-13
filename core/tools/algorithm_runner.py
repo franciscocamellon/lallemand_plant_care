@@ -30,11 +30,9 @@ from qgis.PyQt.Qt import QObject
 
 class AlgorithmRunner(QObject):
 
-    def __init__(self, iface=None):
+    def __init__(self):
         super(AlgorithmRunner, self).__init__()
-        self.iface = iface
-        if iface:
-            self.canvas = iface.mapCanvas()
+        pass
 
     @staticmethod
     def runWaypointsPolygonsBuilder(layer, method, sorting, context=None, feedback=None, output_layer=None):

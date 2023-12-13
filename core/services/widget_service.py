@@ -25,7 +25,10 @@ import os
 import datetime
 
 from qgis.PyQt import QtCore, QtWidgets
-from qgis.PyQt.QtWidgets import QHeaderView
+from qgis.PyQt.QtWidgets import QHeaderView, QWidget, QLabel, QPushButton, QCheckBox, QLineEdit, QSpinBox, QComboBox
+from qgis.PyQt.QtGui import QPalette, QColor, QDoubleValidator
+from qgis.PyQt.QtCore import Qt
+from qgis.gui import QgsFileWidget
 
 from .message_service import MessageService
 
@@ -76,3 +79,77 @@ class WidgetService:
 
                 item = QtWidgets.QTableWidgetItem(str(value))
                 tableWidget.setItem(rowIdx, colIdx, item)
+
+    @staticmethod
+    def enableWidget(widget, state):
+        if state == 0:
+            widget.setEnabled(False)
+        else:
+            widget.setEnabled(True)
+
+    @staticmethod
+    def clearWidget(widget):
+
+        if isinstance(widget, QLabel):
+            if widget.text() == '<html><head/><body><p><span style=" font-size:8pt; color:#ff0000;">**Needs to be reprojected</span></p></body></html>':
+                widget.hide()
+            elif widget.text().split()[0] == 'CRS':
+                widget.setText('CRS -> ')
+            else:
+                pass
+
+        elif isinstance(widget, QLineEdit):
+            widget.clear()
+
+        elif isinstance(widget, QCheckBox):
+            widget.setChecked(False)
+
+        elif isinstance(widget, QSpinBox):
+            widget.setValue(0)
+
+        elif isinstance(widget, QSpinBox):
+            widget.setValue(0)
+
+        elif isinstance(widget, QComboBox):
+            widget.setCurrentIndex(0)
+
+        elif isinstance(widget, QgsFileWidget):
+            widget.lineEdit().clearValue()
+
+        else:
+            print(f"Unsupported widget type: {type(widget).__name__}")
+
+    def validateNumericEntry(self, lineEdit, text):
+        try:
+            positiveNumericValue = float(text)
+
+            if positiveNumericValue < 0:
+                self._setTextColor(lineEdit, Qt.red)
+            else:
+                self._setTextColor(lineEdit, Qt.black)
+
+        except ValueError:
+            self._setTextColor(lineEdit, Qt.red)
+
+    def validateEmpty(self, lineEdit):
+        if lineEdit.text().strip():
+            self._setBackgroundColor(lineEdit, Qt.white)
+        else:
+            self._setBackgroundColor(lineEdit, Qt.pink)
+
+    @staticmethod
+    def floatValidator(widget):
+        floatValidator = QDoubleValidator()
+        widget.setValidator(floatValidator)
+
+    @staticmethod
+    def _setTextColor(lineEdit, color):
+        palette = lineEdit.palette()
+        palette.setColor(QPalette.Text, QColor(color))
+        lineEdit.setPalette(palette)
+
+    @staticmethod
+    def _setBackgroundColor(lineEdit, color):
+        palette = lineEdit.palette()
+        palette.setColor(QPalette.Base, QColor(color))
+        lineEdit.setPalette(palette)

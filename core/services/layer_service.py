@@ -32,10 +32,25 @@ from .system_service import SystemService
 
 class LayerService:
 
-    def __init__(self, iface, default_crs=None):
+    def __init__(self, default_crs=None):
         self.default_crs = default_crs
+        self.project = QgsProject.instance()
         self.message_service = MessageService()
         self.systemService = SystemService()
+
+    @staticmethod
+    def addMapLayer(layer, groupName):
+        project = QgsProject.instance()
+        root = project.instance().layerTreeRoot()
+        group = root.findGroup(groupName)
+        if group is not None:
+            project.instance().addMapLayer(layer, False)
+            group.addLayer(layer)
+        else:
+            group = QgsLayerTreeGroup(groupName)
+            root.addChildNode(group)
+            project.instance().addMapLayer(layer, False)
+            group.addLayer(layer)
 
     def load_shape_file(self, project, group_name, file_path):
 
@@ -55,14 +70,15 @@ class LayerService:
             errorMessage = f'Error loading shape file: {str(load_file_exception)}'
             self.message_service.messageBox('Loading file', errorMessage, 5, 1)
 
-    def create_vector_layer(self, layer_name, file_path, use_default_crs=True):
+    def create_vector_layer(self, layerName, file_path, use_default_crs=True):
 
         try:
             if use_default_crs:
                 crs = self.default_crs
             else:
                 crs = None
-            layer = QgsVectorLayer(file_path, layer_name, "ogr")
+
+            layer = QgsVectorLayer(file_path, layerName, "ogr")
 
             if not layer.isValid():
                 raise Exception('Layer is not valid.')
@@ -72,7 +88,7 @@ class LayerService:
             return layer
 
         except Exception as create_layer_exception:
-            errorMessage = f'Error creating layer {layer_name} -> {str(create_layer_exception)}'
+            errorMessage = f'Error creating layer {layerName} -> {str(create_layer_exception)}'
             self.message_service.messageBox('Loading file', errorMessage, 5, 1)
             return None
 

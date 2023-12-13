@@ -27,6 +27,7 @@ import processing
 from qgis.PyQt import QtWidgets, uic
 from qgis.core import QgsLayerTreeGroup, QgsCoordinateReferenceSystem
 
+from ...core.services.widget_service import WidgetService
 from ...core.tools.algorithm_runner import AlgorithmRunner
 from ...core.constants import QGIS_TOC_GROUPS, POLYGONS_BUILDER_METHODS, OPERATION
 from ...core.services.layer_service import LayerService
@@ -39,15 +40,17 @@ FORM_CLASS, _ = uic.loadUiType(
 
 class LoadFiles(QtWidgets.QDialog, FORM_CLASS):
 
-    def __init__(self, iface, project, parent=None):
+    def __init__(self):
         """Constructor."""
-        super(LoadFiles, self).__init__(parent)
+        super(LoadFiles, self).__init__()
         self.setupUi(self)
-        self.iface = iface
-        self.project = project
-        self.layerServices = LayerService(self.iface)
+        self.layerService = LayerService()
         self.systemService = SystemService()
         self.crsOperations = ''
+        self.gpsLayer = ''
+        self.gpsLayerName = ''
+        self.harvesterLayer = ''
+        self.harvesterLayerName = ''
 
         self.crsWarningLabel.hide()
         self.harvesterCrsWarningLabel.hide()
@@ -58,112 +61,106 @@ class LoadFiles(QtWidgets.QDialog, FORM_CLASS):
         self.methodComboBox.setEnabled(False)
         self.sortingFieldComboBox.setEnabled(False)
 
-        self.reprojectCheckBox.stateChanged.connect(self.enableReprojectChildren)
+        self.reprojectCheckBox.stateChanged.connect(self.gpsReprojectWidget)
         self.treatmentCheckBox.stateChanged.connect(self.enableTreatmentChildren)
+        self.harvesterReprojectCheckBox.stateChanged.connect(self.harvesterReprojectWidget)
         self.gpsFileWidget.fileChanged.connect(self.updateGpsUI)
         self.harvesterFileWidget.fileChanged.connect(self.updateHarvesterUI)
         self.loadGpsPointsPushButton.clicked.connect(self.loadGpsPoints)
         self.loadHarvesterPointsPushButton.clicked.connect(self.loadHarvesterPoints)
 
+    def updateGpsUI(self, path):
+        if path:
+            self.gpsLayerName = self.systemService.extractFileName(path)
+            self.gpsLayer = self.layerService.create_vector_layer(self.gpsLayerName, path)
+
+            crsInfo = self.layerService.getSuggestedCrs(self.gpsLayer)
+            self.crsOperations = crsInfo
+            self.suggestedCrsSelectionWidget.setOptionVisible(5, False)
+            self.suggestedCrsSelectionWidget.setCrs(QgsCoordinateReferenceSystem(crsInfo[1]))
+            self.sortingFieldComboBox.setFields(self.gpsLayer.fields())
+
+            if self.gpsLayer.crs().isGeographic():
+                self.crsWarningLabel.show()
+            self.gpsCRSLabel.setText(f'CRS -> {self.gpsLayer.crs().authid()}')
+
+    def updateHarvesterUI(self, path):
+        if path:
+            self.harvesterLayerName = self.systemService.extractFileName(path)
+            self.harvesterLayer = self.layerService.create_vector_layer(self.harvesterLayerName, path)
+
+            crsInfo = self.layerService.getSuggestedCrs(self.harvesterLayer)
+            self.crsOperations = crsInfo
+            self.harvesterCrsSelectionWidget.setOptionVisible(5, False)
+            self.harvesterCrsSelectionWidget.setCrs(QgsCoordinateReferenceSystem(crsInfo[1]))
+
+            if self.harvesterLayer.crs().isGeographic():
+                self.harvesterCrsWarningLabel.show()
+            self.harvesterCRSLabel.setText(f'CRS -> {self.harvesterLayer.crs().authid()}')
+
     def loadGpsPoints(self):
-        filePath = self.gpsFileWidget.filePath()
-        fileName = self.systemService.extractFileName(self.gpsFileWidget.filePath())
-        layer = self.layerServices.create_vector_layer(fileName, filePath)
-
-        self.loadPointFile(layer, QGIS_TOC_GROUPS[0])
-
         epsg = self.suggestedCrsSelectionWidget.crs().authid()
 
         if self.reprojectCheckBox.isChecked():
+            reprojected = AlgorithmRunner.reprojectLayer(self.gpsLayer, epsg, self.crsOperations[2])
 
-            reprojected = self.reprojectLayer(layer, epsg, self.crsOperations[2])
+            reprojected.setName(f'{self.gpsLayerName}_{self.crsOperations[0]}')
 
-            reprojected.setName(f'{fileName}_{self.crsOperations[0]}')
-
-            self.loadPointFile(reprojected, QGIS_TOC_GROUPS[1])
+            LayerService.addMapLayer(self.gpsLayer, QGIS_TOC_GROUPS[0])
+            LayerService.addMapLayer(reprojected, QGIS_TOC_GROUPS[1])
+        else:
+            LayerService.addMapLayer(self.gpsLayer, QGIS_TOC_GROUPS[0])
+        self.clearGpsWidget()
 
         # if self.treatmentCheckBox.isChecked():
-        #     polygons = self.createTreatmentPolygons(layer, self.methodComboBox.currentIndex(),
-        #                                             self.sortingFieldComboBox.currentField())
+        #     polygons = AlgorithmRunner.runWaypointsPolygonsBuilder(layer,
+        #     self.methodComboBox.currentIndex(), self.sortingFieldComboBox.currentField())
         #     print(polygons)
         #
 
     def loadHarvesterPoints(self):
-        filePath = self.harvesterFileWidget.filePath()
-        fileName = self.systemService.extractFileName(self.harvesterFileWidget.filePath())
-        layer = self.layerServices.create_vector_layer(fileName, filePath)
 
-        self.loadPointFile(layer, QGIS_TOC_GROUPS[0])
+        epsg = self.harvesterCrsSelectionWidget.crs().authid()
 
-        epsg = self.suggestedCrsSelectionWidget.crs().authid()
+        if self.harvesterReprojectCheckBox.isChecked():
+            reprojected = AlgorithmRunner.reprojectLayer(self.harvesterLayer, epsg, self.crsOperations[2])
 
-        if self.reprojectCheckBox.isChecked():
-            reprojected = self.reprojectLayer(layer, epsg, self.crsOperations[2])
-
-            reprojected.setName(f'{fileName}_{self.crsOperations[0]}')
-
-            self.loadPointFile(reprojected, QGIS_TOC_GROUPS[1])
-
-    def loadPointFile(self, layer, groupName):
-
-        root = self.project.instance().layerTreeRoot()
-        group = root.findGroup(groupName)
-        if group is not None:
-            self.project.instance().addMapLayer(layer, False)
-            group.addLayer(layer)
+            reprojected.setName(f'{self.harvesterLayerName}_{self.crsOperations[0]}')
+            LayerService.addMapLayer(self.harvesterLayer, QGIS_TOC_GROUPS[0])
+            LayerService.addMapLayer(reprojected, QGIS_TOC_GROUPS[1])
         else:
-            group = QgsLayerTreeGroup(groupName)
-            root.addChildNode(group)
-            self.project.instance().addMapLayer(layer, False)
-            group.addLayer(layer)
+            LayerService.addMapLayer(self.harvesterLayer, QGIS_TOC_GROUPS[0])
 
-    @staticmethod
-    def createTreatmentPolygons(layer, method, sorting):
-        return AlgorithmRunner().runWaypointsPolygonsBuilder(layer, method, sorting)
+        self.clearHarvesterWidget()
 
-    @staticmethod
-    def reprojectLayer(layer, targetCrs, operation):
-        return AlgorithmRunner().runReprojectLayer(layer, targetCrs, operation)
+    def gpsReprojectWidget(self, state):
+        WidgetService.enableWidget(self.suggestedCrsSelectionWidget, state)
 
-    def updateGpsUI(self, path):
-
-        layer = self.layerServices.create_vector_layer(self.systemService.extractFileName(path), path)
-        crsInfo = self.layerServices.getSuggestedCrs(layer)
-        self.crsOperations = crsInfo
-        self.suggestedCrsSelectionWidget.setOptionVisible(5, False)
-        self.suggestedCrsSelectionWidget.setCrs(QgsCoordinateReferenceSystem(crsInfo[1]))
-        self.sortingFieldComboBox.setFields(layer.fields())
-
-        if layer.crs().isGeographic():
-            self.crsWarningLabel.show()
-        self.gpsCRSLabel.setText(f'CRS -> {layer.crs().authid()}')
-
-        del layer
-
-    def updateHarvesterUI(self, path):
-
-        layer = self.layerServices.create_vector_layer(self.systemService.extractFileName(path), path)
-        crsInfo = self.layerServices.getSuggestedCrs(layer)
-        self.crsOperations = crsInfo
-        self.harvesterCrsSelectionWidget.setOptionVisible(5, False)
-        self.harvesterCrsSelectionWidget.setCrs(QgsCoordinateReferenceSystem(crsInfo[1]))
-
-        if layer.crs().isGeographic():
-            self.harvesterCrsWarningLabel.show()
-        self.harvesterCRSLabel.setText(f'CRS -> {layer.crs().authid()}')
-
-        del layer
-
-    def enableReprojectChildren(self, state):
-        if state == 0:
-            self.suggestedCrsSelectionWidget.setEnabled(False)
-        else:
-            self.suggestedCrsSelectionWidget.setEnabled(True)
+    def harvesterReprojectWidget(self, state):
+        WidgetService.enableWidget(self.harvesterCrsSelectionWidget, state)
 
     def enableTreatmentChildren(self, state):
-        if state == 0:
-            self.methodComboBox.setEnabled(False)
-            self.sortingFieldComboBox.setEnabled(False)
-        else:
-            self.methodComboBox.setEnabled(True)
-            self.sortingFieldComboBox.setEnabled(True)
+        widgets = [self.methodComboBox, self.sortingFieldComboBox]
+        for widget in widgets:
+            WidgetService.enableWidget(widget, state)
+
+    def clearGpsWidget(self):
+        widgets = [self.gpsFileWidget,
+                   self.gpsCRSLabel,
+                   self.crsWarningLabel,
+                   self.reprojectCheckBox,
+                   self.treatmentCheckBox,
+                   self.boundaryCheckBox]
+        for widget in widgets:
+            WidgetService.clearWidget(widget)
+
+    def clearHarvesterWidget(self):
+        widgets = [self.harvesterCRSLabel,
+                   self.harvesterCrsWarningLabel,
+                   self.harvesterFileWidget,
+                   self.harvesterReprojectCheckBox,
+                   self.yieldFilteringCheckBox,
+                   self.treatmentFilteringCheckBox,
+                   self.percentualFilteringCheckBox]
+        for widget in widgets:
+            WidgetService.clearWidget(widget)
