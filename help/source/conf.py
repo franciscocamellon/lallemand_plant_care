@@ -40,7 +40,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'CropAnalysisEnvironment'
+project = u'LallemandPlantCare'
 copyright = u'2013, CamellOnCase'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -178,7 +178,7 @@ htmlhelp_basename = 'TemplateClassdoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'CropAnalysisEnvironment.tex', u'CropAnalysisEnvironment Documentation',
+  ('index', 'LallemandPlantCare.tex', u'LallemandPlantCare Documentation',
    u'CamellOnCase', 'manual'),
 ]
 
@@ -211,6 +211,6 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'TemplateClass', u'CropAnalysisEnvironment Documentation',
+    ('index', 'TemplateClass', u'LallemandPlantCare Documentation',
      [u'CamellOnCase'], 1)
 ]

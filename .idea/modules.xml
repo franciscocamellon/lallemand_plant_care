@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/crop_analysis_environment.iml" filepath="$PROJECT_DIR$/.idea/crop_analysis_environment.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/lallemand_plant_care.iml" filepath="$PROJECT_DIR$/.idea/lallemand_plant_care.iml" />
     </modules>
   </component>
 </project>

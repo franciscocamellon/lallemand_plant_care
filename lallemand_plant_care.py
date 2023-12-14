@@ -29,11 +29,12 @@ from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 
 from .gui.toolbar_manager import ToolbarManager
+from .gui.settings.options_settings import OptionsSettingsFactory, OptionsSettingsPage
 # Initialize Qt resources from file resources.py
 from .resources import *
 
 
-class CropAnalysisEnvironment:
+class LallemandPlantCare:
     """QGIS Plugin Implementation."""
 
     def __init__(self, iface):
@@ -57,7 +58,7 @@ class CropAnalysisEnvironment:
         locale_path = os.path.join(
             self.plugin_dir,
             'i18n',
-            'CropAnalysisEnvironment_{}.qm'.format(locale))
+            'LallemandPlantCare{}.qm'.format(locale))
 
         if os.path.exists(locale_path):
             self.translator = QTranslator()
@@ -66,11 +67,11 @@ class CropAnalysisEnvironment:
 
         # Declare instance attributes
         self.actions = []
-        self.menu = self.tr(u'&Lallemand - Crop Analysis Environment')
+        self.menu = self.tr(u'&Lallemand Plant Care')
 
         self.toolbar = None
         self.toolbar_widget = None
-        self.first_start = None
+        self.optionsFactory = None
         self.gui_manager = None
         self.main_widget = None
 
@@ -87,7 +88,7 @@ class CropAnalysisEnvironment:
         :rtype: QString
         """
         # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
-        return QCoreApplication.translate('CropAnalysisEnvironment', message)
+        return QCoreApplication.translate('LallemandPlantCare', message)
 
     def add_action(
             self,
@@ -165,9 +166,15 @@ class CropAnalysisEnvironment:
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
-        self.toolbar_widget = ToolbarManager(self.iface, self.project, toolbar=self.toolbar)
-        self.toolbar = self.iface.addToolBar(u'CropAnalysisEnvironment')
-        self.toolbar.setObjectName(u'CropAnalysisEnvironment')
+        self.optionsFactory = OptionsSettingsFactory()
+        self.optionsFactory.setTitle('Lallemand Plant Care Settings')
+        self.optionsFactory.setIcon(QIcon(':plugins/lallemand_plant_care/icons/lallemand.png'))
+
+        self.iface.registerOptionsWidgetFactory(self.optionsFactory)
+
+        self.toolbar_widget = ToolbarManager(toolbar=self.toolbar)
+        self.toolbar = self.iface.addToolBar(u'Lallemand Plant Care')
+        self.toolbar.setObjectName(u'Lallemand Plant Care')
         self.toolbar.addWidget(self.toolbar_widget)
 
     # --------------------------------------------------------------------------
@@ -179,8 +186,12 @@ class CropAnalysisEnvironment:
 
         for action in self.actions:
             self.iface.removePluginMenu(
-                self.tr(u'&Lallemand - Crop Analysis Environment'),
+                self.tr(u'&Lallemand Plant Care'),
                 action)
             self.iface.removeToolBarIcon(action)
         # remove the toolbar
         del self.toolbar
+
+        if self.optionsFactory:
+            self.iface.unregisterOptionsWidgetFactory(self.optionsFactory)
+            self.optionsFactory = None
