@@ -38,6 +38,7 @@ class PostgresFactory:
         self._initializeLogging()
         self.connection = self.openConnection()
 
+
     @staticmethod
     def _initializeLogging():
         logging.basicConfig(filename=os.path.join(os.path.dirname(__file__), 'postgres_log.log'), level=logging.ERROR)

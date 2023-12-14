@@ -30,7 +30,7 @@ from qgis.PyQt.QtGui import QIcon
 from qgis.gui import QgsOptionsWidgetFactory, QgsOptionsPageWidget
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'options_settings.ui'))
+    os.path.dirname(__file__), 'options_settings.ui'), resource_suffix='')
 
 SETTINGS_KEY = "LPC/postgresConnection"
 
@@ -77,7 +77,7 @@ class OptionsSettingsPage(QgsOptionsPageWidget, FORM_CLASS):
 
         return {
             'database': settings.value('LPC/database'),
-            'host': settings.value('LPC/server'),
+            'host': settings.value('LPC/host'),
             'port': settings.value('LPC/port'),
             'user': settings.value('LPC/user'),
             'password': settings.value('LPC/password')

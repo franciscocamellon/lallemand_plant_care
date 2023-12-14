@@ -34,7 +34,7 @@ from ...core.services.layer_service import LayerService
 from ...core.services.system_service import SystemService
 
 FORM_CLASS, _ = uic.loadUiType(
-    os.path.join(os.path.dirname(__file__), 'load_files.ui')
+    os.path.join(os.path.dirname(__file__), 'load_files.ui'), resource_suffix=''
 )
 
 

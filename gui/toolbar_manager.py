@@ -23,6 +23,7 @@
 """
 
 import os
+import sys
 
 from qgis.PyQt import uic
 from qgis.PyQt.QtCore import pyqtSlot
@@ -34,7 +35,7 @@ from .layer_manager.load_files import LoadFiles
 from .geostatistics_trial.geostatistics_trial import GeostatisticsTrial
 
 FORM_CLASS, _ = uic.loadUiType(
-    os.path.join(os.path.dirname(__file__), 'toolbar/toolbar_manager.ui')
+    os.path.join(os.path.dirname(__file__), 'toolbar/toolbar_manager.ui'), resource_suffix=''
 )
 
 
