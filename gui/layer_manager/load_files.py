@@ -99,10 +99,12 @@ class LoadFiles(QtWidgets.QDialog, FORM_CLASS):
             self.harvesterCRSLabel.setText(f'CRS -> {self.harvesterLayer.crs().authid()}')
 
     def loadGpsPoints(self):
+        path = self.layerService.checkForSavedProject()
+        print(path)
         epsg = self.suggestedCrsSelectionWidget.crs().authid()
 
         if self.reprojectCheckBox.isChecked():
-            reprojected = AlgorithmRunner.reprojectLayer(self.gpsLayer, epsg, self.crsOperations[2])
+            reprojected = AlgorithmRunner.runReprojectLayer(self.gpsLayer, epsg, self.crsOperations[2])
 
             reprojected.setName(f'{self.gpsLayerName}_{self.crsOperations[0]}')
 
@@ -123,7 +125,7 @@ class LoadFiles(QtWidgets.QDialog, FORM_CLASS):
         epsg = self.harvesterCrsSelectionWidget.crs().authid()
 
         if self.harvesterReprojectCheckBox.isChecked():
-            reprojected = AlgorithmRunner.reprojectLayer(self.harvesterLayer, epsg, self.crsOperations[2])
+            reprojected = AlgorithmRunner.runReprojectLayer(self.harvesterLayer, epsg, self.crsOperations[2])
 
             reprojected.setName(f'{self.harvesterLayerName}_{self.crsOperations[0]}')
             LayerService.addMapLayer(self.harvesterLayer, QGIS_TOC_GROUPS[0])

@@ -25,6 +25,7 @@ import os
 
 from qgis.core import QgsProject, QgsVectorLayer, QgsFeature, QgsGeometry, QgsPointXY, QgsLayerTreeGroup, \
     QgsLayerTreeLayer, QgsCoordinateTransform
+from qgis.PyQt.QtWidgets import QMessageBox, QFileDialog
 
 from .message_service import MessageService
 from .system_service import SystemService
@@ -37,6 +38,27 @@ class LayerService:
         self.project = QgsProject.instance()
         self.message_service = MessageService()
         self.systemService = SystemService()
+
+    def checkForSavedProject(self):
+        if self.project.fileName():
+            print("Saved project found. Path:", self.project.fileName())
+            return self.project.fileName()
+        else:
+            # Open a dialog box to ask the user to save the project
+            file_dialog = QFileDialog()
+            file_dialog.setAcceptMode(QFileDialog.AcceptSave)
+            file_dialog.setNameFilter("QGIS Project Files (*.qgz *.qgs)")
+            file_dialog.setDefaultSuffix("qgz")
+
+            if file_dialog.exec_():
+                file_path = file_dialog.selectedFiles()[0]
+                # Save the project
+                self.project.write(file_path)
+                print("Project saved at:", file_path)
+                return file_path
+            else:
+                QMessageBox.warning(None, "Project Save", "Project not saved.")
+                return None
 
     @staticmethod
     def addMapLayer(layer, groupName):

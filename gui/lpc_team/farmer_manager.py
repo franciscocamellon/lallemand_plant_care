@@ -34,7 +34,7 @@ from ...core.services.message_service import MessageService
 from ...core.factories.postgres_factory import PostgresFactory
 
 FORM_CLASS, _ = uic.loadUiType(
-    os.path.join(os.path.dirname(__file__), 'farmer_manager_new.ui')
+    os.path.join(os.path.dirname(__file__), 'farmer_manager.ui')
 )
 
 
