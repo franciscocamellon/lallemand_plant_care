@@ -28,15 +28,13 @@ import psycopg2.extras
 import logging
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
+from ...gui.settings.options_settings import OptionsSettingsPage
+
 
 class PostgresFactory:
-    def __init__(self, database_name='BD_GEOSTAT_LPC', user='postgres', password='postgres', host='127.0.0.1', port='5432'):
+    def __init__(self):
         super(PostgresFactory, self).__init__()
-        self.database_name = database_name
-        self.user = user
-        self.password = password
-        self.host = host
-        self.port = port
+        self.settings = OptionsSettingsPage().loadSettings()
         self._initializeLogging()
         self.connection = self.openConnection()
 
@@ -46,11 +44,11 @@ class PostgresFactory:
 
     def openConnection(self):
         connection = psycopg2.connect(
-            database=self.database_name,
-            user=self.user,
-            password=self.password,
-            host=self.host,
-            port=self.port
+            database=self.settings['database'],
+            user=self.settings['user'],
+            password=self.settings['password'],
+            host=self.settings['host'],
+            port=self.settings['port']
         )
         connection.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
         connection.autocommit = True
