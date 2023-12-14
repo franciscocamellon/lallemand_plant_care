@@ -32,6 +32,7 @@ from .gui.toolbar_manager import ToolbarManager
 from .gui.settings.options_settings import OptionsSettingsFactory, OptionsSettingsPage
 # Initialize Qt resources from file resources.py
 from .resources import *
+from .resources_rc import *
 
 
 class LallemandPlantCare:
