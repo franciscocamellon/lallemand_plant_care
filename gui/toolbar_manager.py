@@ -45,6 +45,8 @@ class ToolbarManager(QWidget, FORM_CLASS):
         self.setupUi(self)
         self.toolbar = toolbar
         self.splitter.hide()
+        self.settingsPushButton.hide()
+        self.reportPushButton.hide()
         self.createTrialPushButton.clicked.connect(self.createTrialProject)
         self.loadFilePushButton.clicked.connect(self.loadFiles)
         self.lpcTeamPushButton.clicked.connect(self.manageLpcTeam)
