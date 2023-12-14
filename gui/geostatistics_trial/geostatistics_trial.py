@@ -36,6 +36,7 @@ from ...core.services.system_service import SystemService
 from ...core.services.message_service import MessageService
 from ...core.services.widget_service import WidgetService
 from ...core.factories.postgres_factory import PostgresFactory
+from ...resources import *
 
 FORM_CLASS, _ = uic.loadUiType(
     os.path.join(os.path.dirname(__file__), 'geostatistics_trial.ui'), resource_suffix=''

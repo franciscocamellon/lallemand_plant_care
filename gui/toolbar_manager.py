@@ -33,6 +33,7 @@ from .lpc_team.farmer_manager import FarmerManager
 from .lpc_team.lpc_team_manager import RegisterLpcTeam
 from .layer_manager.load_files import LoadFiles
 from .geostatistics_trial.geostatistics_trial import GeostatisticsTrial
+from ..resources import *
 
 FORM_CLASS, _ = uic.loadUiType(
     os.path.join(os.path.dirname(__file__), 'toolbar/toolbar_manager.ui'), resource_suffix=''

@@ -71,8 +71,8 @@
       <string/>
      </property>
      <property name="icon">
-      <iconset resource="../../resources.qrc">
-       <normaloff>:/plugins/lallemand_plant_care/icons/lallemand.png</normaloff>:/plugins/lallemand_plant_care/icons/lallemand.png</iconset>
+      <iconset>
+       <normaloff>../../icons/lallemand.png</normaloff>../../icons/lallemand.png</iconset>
      </property>
      <property name="iconSize">
       <size>
@@ -141,8 +141,8 @@
           <string/>
          </property>
          <property name="icon">
-          <iconset resource="../../resources.qrc">
-           <normaloff>:/plugins/lallemand_plant_care/icons/new_experiment.png</normaloff>:/plugins/lallemand_plant_care/icons/new_experiment.png</iconset>
+          <iconset>
+           <normaloff>../../icons/new_experiment.png</normaloff>../../icons/new_experiment.png</iconset>
          </property>
          <property name="iconSize">
           <size>
@@ -164,8 +164,8 @@
           <string/>
          </property>
          <property name="icon">
-          <iconset resource="../../resources.qrc">
-           <normaloff>:/plugins/lallemand_plant_care/icons/upload_file.png</normaloff>:/plugins/lallemand_plant_care/icons/upload_file.png</iconset>
+          <iconset>
+           <normaloff>../../icons/upload_file.png</normaloff>../../icons/upload_file.png</iconset>
          </property>
          <property name="iconSize">
           <size>
@@ -187,8 +187,8 @@
           <string/>
          </property>
          <property name="icon">
-          <iconset resource="../../resources.qrc">
-           <normaloff>:/plugins/lallemand_plant_care/icons/user.png</normaloff>:/plugins/lallemand_plant_care/icons/user.png</iconset>
+          <iconset>
+           <normaloff>../../icons/user.png</normaloff>../../icons/user.png</iconset>
          </property>
          <property name="iconSize">
           <size>
@@ -210,8 +210,8 @@
           <string/>
          </property>
          <property name="icon">
-          <iconset resource="../../resources.qrc">
-           <normaloff>:/plugins/lallemand_plant_care/icons/farmer.png</normaloff>:/plugins/lallemand_plant_care/icons/farmer.png</iconset>
+          <iconset>
+           <normaloff>../../icons/farmer.png</normaloff>../../icons/farmer.png</iconset>
          </property>
          <property name="iconSize">
           <size>
@@ -233,8 +233,8 @@
           <string/>
          </property>
          <property name="icon">
-          <iconset resource="../../resources.qrc">
-           <normaloff>:/plugins/lallemand_plant_care/icons/report.png</normaloff>:/plugins/lallemand_plant_care/icons/report.png</iconset>
+          <iconset>
+           <normaloff>../../icons/report.png</normaloff>../../icons/report.png</iconset>
          </property>
          <property name="iconSize">
           <size>
@@ -256,8 +256,8 @@
           <string/>
          </property>
          <property name="icon">
-          <iconset resource="../../resources.qrc">
-           <normaloff>:/plugins/lallemand_plant_care/icons/settings.png</normaloff>:/plugins/lallemand_plant_care/icons/settings.png</iconset>
+          <iconset>
+           <normaloff>../../icons/settings.png</normaloff>../../icons/settings.png</iconset>
          </property>
          <property name="iconSize">
           <size>
