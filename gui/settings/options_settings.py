@@ -21,16 +21,12 @@
  *                                                                         *
  ***************************************************************************/
 """
-import json
-import os
 
-from qgis.PyQt import uic
 from qgis.PyQt.QtCore import QSettings
 from qgis.PyQt.QtGui import QIcon
 from qgis.gui import QgsOptionsWidgetFactory, QgsOptionsPageWidget
 
-FORM_CLASS, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'options_settings.ui'), resource_suffix='')
+from .ui_options_settings import Ui_OptionsSettingsForm
 
 SETTINGS_KEY = "LPC/postgresConnection"
 
@@ -47,7 +43,7 @@ class OptionsSettingsFactory(QgsOptionsWidgetFactory):
         return OptionsSettingsPage(parent)
 
 
-class OptionsSettingsPage(QgsOptionsPageWidget, FORM_CLASS):
+class OptionsSettingsPage(QgsOptionsPageWidget, Ui_OptionsSettingsForm):
 
     def __init__(self, parent=None):
         super().__init__(parent)

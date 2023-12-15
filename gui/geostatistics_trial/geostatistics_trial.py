@@ -23,26 +23,21 @@
 """
 
 import os
-import datetime
-import uuid
 
-from qgis.PyQt import QtCore, QtWidgets, uic
+from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtWidgets import QHeaderView
 from qgis.core import QgsProject
 
+from .ui_geostatistics_trial import Ui_GeostatisticsTrialDialog
 from ...core.constants import *
-from ...core.services.layer_service import LayerService
-from ...core.services.system_service import SystemService
-from ...core.services.message_service import MessageService
-from ...core.services.widget_service import WidgetService
 from ...core.factories.postgres_factory import PostgresFactory
+from ...core.services.layer_service import LayerService
+from ...core.services.message_service import MessageService
+from ...core.services.system_service import SystemService
+from ...core.services.widget_service import WidgetService
 
-FORM_CLASS, _ = uic.loadUiType(
-    os.path.join(os.path.dirname(__file__), 'geostatistics_trial.ui'), resource_suffix=''
-)
 
-
-class GeostatisticsTrial(QtWidgets.QDialog, FORM_CLASS):
+class GeostatisticsTrial(QtWidgets.QDialog, Ui_GeostatisticsTrialDialog):
     def __init__(self):
         """Constructor."""
         super(GeostatisticsTrial, self).__init__()

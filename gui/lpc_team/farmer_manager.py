@@ -21,24 +21,19 @@
  *                                                                         *
  ***************************************************************************/
 """
-import datetime
-import os
 
-from qgis.PyQt import QtWidgets, QtCore, QtGui, uic
+from qgis.PyQt import QtWidgets, QtCore
 from qgis.PyQt.QtWidgets import QHeaderView
 
-from ...core.services.widget_service import WidgetService
-from ...core.services.system_service import SystemService
+from .ui_farmer_manager import Ui_FarmerDialog
 from ...core.constants import *
-from ...core.services.message_service import MessageService
 from ...core.factories.postgres_factory import PostgresFactory
+from ...core.services.message_service import MessageService
+from ...core.services.system_service import SystemService
+from ...core.services.widget_service import WidgetService
 
-FORM_CLASS, _ = uic.loadUiType(
-    os.path.join(os.path.dirname(__file__), 'farmer_manager.ui'), resource_suffix=''
-)
 
-
-class FarmerManager(QtWidgets.QDialog, FORM_CLASS):
+class FarmerManager(QtWidgets.QDialog, Ui_FarmerDialog):
 
     def __init__(self):
         """Constructor."""

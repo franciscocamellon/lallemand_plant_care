@@ -403,8 +403,8 @@
              <string>  Add</string>
             </property>
             <property name="icon">
-             <iconset resource="../../resources.qrc">
-              <normaloff>:/plugins/lallemand_plant_care/icons/user.png</normaloff>:/plugins/lallemand_plant_care/icons/user.png</iconset>
+             <iconset>
+              <normaloff>../../icons/user.png</normaloff>../../icons/user.png</iconset>
             </property>
            </widget>
           </item>
@@ -595,8 +595,8 @@
              <string>  Edit</string>
             </property>
             <property name="icon">
-             <iconset resource="../../resources.qrc">
-              <normaloff>:/plugins/lallemand_plant_care/icons/edit.png</normaloff>:/plugins/lallemand_plant_care/icons/edit.png</iconset>
+             <iconset>
+              <normaloff>../../icons/edit.png</normaloff>../../icons/edit.png</iconset>
             </property>
             <property name="iconSize">
              <size>
@@ -627,8 +627,8 @@
              <string>  Delete</string>
             </property>
             <property name="icon">
-             <iconset resource="../../resources.qrc">
-              <normaloff>:/plugins/lallemand_plant_care/icons/delete.png</normaloff>:/plugins/lallemand_plant_care/icons/delete.png</iconset>
+             <iconset>
+              <normaloff>../../icons/delete.png</normaloff>../../icons/delete.png</iconset>
             </property>
             <property name="iconSize">
              <size>
