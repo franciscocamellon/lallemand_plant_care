@@ -21,24 +21,19 @@
  *                                                                         *
  ***************************************************************************/
 """
-import os
-import processing
 
-from qgis.PyQt import QtWidgets, uic
-from qgis.core import QgsLayerTreeGroup, QgsCoordinateReferenceSystem
+from qgis.PyQt import QtWidgets
+from qgis.core import QgsCoordinateReferenceSystem
 
-from ...core.services.widget_service import WidgetService
-from ...core.tools.algorithm_runner import AlgorithmRunner
-from ...core.constants import QGIS_TOC_GROUPS, POLYGONS_BUILDER_METHODS, OPERATION
+from .ui_load_files import Ui_LoadFilesDialog
+from ...core.constants import QGIS_TOC_GROUPS, POLYGONS_BUILDER_METHODS
 from ...core.services.layer_service import LayerService
 from ...core.services.system_service import SystemService
-
-FORM_CLASS, _ = uic.loadUiType(
-    os.path.join(os.path.dirname(__file__), 'load_files.ui'), resource_suffix=''
-)
+from ...core.services.widget_service import WidgetService
+from ...core.tools.algorithm_runner import AlgorithmRunner
 
 
-class LoadFiles(QtWidgets.QDialog, FORM_CLASS):
+class LoadFiles(QtWidgets.QDialog, Ui_LoadFilesDialog):
 
     def __init__(self):
         """Constructor."""

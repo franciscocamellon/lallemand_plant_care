@@ -21,25 +21,19 @@
  *                                                                         *
  ***************************************************************************/
 """
-import datetime
-import os
 
-from qgis.PyQt import QtWidgets, QtCore, QtGui, uic
-from qgis.PyQt.QtCore import Qt
+from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtWidgets import QHeaderView
 
+from .ui_lpc_team_manager import Ui_LpcTeamManagerDialog
+from ...core.constants import FETCH_ALL_TEAM, DELETE_TEAM_SQL, UPDATE_TEAM_SQL, INSERT_TEAM_SQL
+from ...core.factories.postgres_factory import PostgresFactory
+from ...core.services.message_service import MessageService
 from ...core.services.system_service import SystemService
 from ...core.services.widget_service import WidgetService
-from ...core.constants import FETCH_ALL_TEAM, DELETE_TEAM_SQL, UPDATE_TEAM_SQL, INSERT_TEAM_SQL
-from ...core.services.message_service import MessageService
-from ...core.factories.postgres_factory import PostgresFactory
-
-FORM_CLASS, _ = uic.loadUiType(
-    os.path.join(os.path.dirname(__file__), 'lpc_team_manager.ui'), resource_suffix=''
-)
 
 
-class RegisterLpcTeam(QtWidgets.QDialog, FORM_CLASS):
+class RegisterLpcTeam(QtWidgets.QDialog, Ui_LpcTeamManagerDialog):
 
     def __init__(self):
         """Constructor."""

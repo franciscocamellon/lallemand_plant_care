@@ -22,25 +22,17 @@
  ***************************************************************************/
 """
 
-import os
-import sys
-
-from qgis.PyQt import uic
 from qgis.PyQt.QtCore import pyqtSlot
 from qgis.PyQt.QtWidgets import QWidget
 
+from .geostatistics_trial.geostatistics_trial import GeostatisticsTrial
+from .layer_manager.load_files import LoadFiles
 from .lpc_team.farmer_manager import FarmerManager
 from .lpc_team.lpc_team_manager import RegisterLpcTeam
-from .layer_manager.load_files import LoadFiles
-from .geostatistics_trial.geostatistics_trial import GeostatisticsTrial
-from ..resources import *
-
-FORM_CLASS, _ = uic.loadUiType(
-    os.path.join(os.path.dirname(__file__), 'toolbar/toolbar_manager.ui'), resource_suffix=''
-)
+from .toolbar.ui_toolbar_manager import Ui_ToolbarManagerForm
 
 
-class ToolbarManager(QWidget, FORM_CLASS):
+class ToolbarManager(QWidget, Ui_ToolbarManagerForm):
     def __init__(self, toolbar=None):
         """Constructor."""
         super(ToolbarManager, self).__init__()
