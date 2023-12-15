@@ -69,14 +69,17 @@ class LoadFiles(QtWidgets.QDialog, Ui_LoadFilesDialog):
             self.gpsLayerName = self.systemService.extractFileName(path)
             self.gpsLayer = self.layerService.create_vector_layer(self.gpsLayerName, path)
 
-            crsInfo = self.layerService.getSuggestedCrs(self.gpsLayer)
-            self.crsOperations = crsInfo
-            self.suggestedCrsSelectionWidget.setOptionVisible(5, False)
-            self.suggestedCrsSelectionWidget.setCrs(QgsCoordinateReferenceSystem(crsInfo[1]))
             self.sortingFieldComboBox.setFields(self.gpsLayer.fields())
 
             if self.gpsLayer.crs().isGeographic():
                 self.crsWarningLabel.show()
+                crsInfo = self.layerService.getSuggestedCrs(self.gpsLayer)
+                self.crsOperations = crsInfo
+                self.suggestedCrsSelectionWidget.setCrs(QgsCoordinateReferenceSystem(crsInfo[1]))
+            else:
+                self.crsWarningLabel.hide()
+                self.suggestedCrsSelectionWidget.setCrs(self.gpsLayer.crs())
+
             self.gpsCRSLabel.setText(f'CRS -> {self.gpsLayer.crs().authid()}')
 
     def updateHarvesterUI(self, path):
@@ -84,18 +87,20 @@ class LoadFiles(QtWidgets.QDialog, Ui_LoadFilesDialog):
             self.harvesterLayerName = self.systemService.extractFileName(path)
             self.harvesterLayer = self.layerService.create_vector_layer(self.harvesterLayerName, path)
 
-            crsInfo = self.layerService.getSuggestedCrs(self.harvesterLayer)
-            self.crsOperations = crsInfo
-            self.harvesterCrsSelectionWidget.setOptionVisible(5, False)
-            self.harvesterCrsSelectionWidget.setCrs(QgsCoordinateReferenceSystem(crsInfo[1]))
-
             if self.harvesterLayer.crs().isGeographic():
                 self.harvesterCrsWarningLabel.show()
+                crsInfo = self.layerService.getSuggestedCrs(self.harvesterLayer)
+                self.crsOperations = crsInfo
+                self.harvesterCrsSelectionWidget.setCrs(QgsCoordinateReferenceSystem(crsInfo[1]))
+            else:
+                self.harvesterCrsWarningLabel.hide()
+                self.harvesterCrsSelectionWidget.setCrs(self.harvesterLayer)
+
             self.harvesterCRSLabel.setText(f'CRS -> {self.harvesterLayer.crs().authid()}')
 
     def loadGpsPoints(self):
-        path = self.layerService.checkForSavedProject()
-        print(path)
+        # path = self.layerService.checkForSavedProject()
+        # print(path)
         epsg = self.suggestedCrsSelectionWidget.crs().authid()
 
         if self.reprojectCheckBox.isChecked():
