@@ -23,6 +23,7 @@
 """
 import os
 import datetime
+import shutil
 
 from .message_service import MessageService
 from ..constants import DIRECTORY_STRUCTURE
@@ -37,12 +38,36 @@ class SystemService:
         self.messageService = MessageService()
 
     @staticmethod
-    def createDirectoryStructure(path):
+    def _createDirectoryStructure(path):
 
         full_paths = [os.path.join(path, directory) for directory in DIRECTORY_STRUCTURE]
 
         for full_path in full_paths:
             os.makedirs(full_path, exist_ok=True)
+
+    def createDirectoryStructure(self, basePath):
+
+        for mainDirectory, subDirectories in DIRECTORY_STRUCTURE.items():
+            mainDirectoryPath = os.path.join(basePath, mainDirectory)
+
+            if os.path.exists(mainDirectoryPath) and os.listdir(mainDirectoryPath):
+                choice = self.messageService.standardButtonMessage('Creating project',
+                                                                   [f'{mainDirectoryPath}',
+                                                                    'will be irreversible overwritten!\nDo you want to '
+                                                                    'continue?'],
+                                                                   2, [5, 6])
+                if choice == 65536:
+                    break
+                else:
+                    shutil.rmtree(mainDirectoryPath)
+                    os.makedirs(mainDirectoryPath, exist_ok=True)
+                    continue
+
+            os.makedirs(mainDirectoryPath, exist_ok=True)
+
+            for sub_dir in subDirectories:
+                sub_dir_path = os.path.join(mainDirectoryPath, sub_dir)
+                os.makedirs(sub_dir_path, exist_ok=True)
 
     @staticmethod
     def createDate():
@@ -59,3 +84,16 @@ class SystemService:
             errorMessage = f'Error getting file name: {str(file_name_exception)}'
             MessageService().messageBox('Loading file', errorMessage, 5, 1)
             return None
+
+    @staticmethod
+    def getPath(mainDirectory):
+
+        if len(DIRECTORY_STRUCTURE[mainDirectory]) > 0:
+            for subDirectory in DIRECTORY_STRUCTURE[mainDirectory]:
+                return f'{mainDirectory}/{subDirectory}'
+        else:
+            return f'{mainDirectory}/'
+
+    @staticmethod
+    def copyFile(source, target):
+        shutil.copyfile(source, target)

@@ -1,20 +1,21 @@
 QGIS_TOC_GROUPS = ['Raw_Data', 'Reprojected_Data', 'Sampling', 'Kriging', 'Validation', 'Error_Compensation',
                    'Gain_Surface']
-DIRECTORY_STRUCTURE = ['00_Data', '01_Kriging', '02_Validation', '03_Error_Compensation', '04_Gain_Surface',
-                       '05_Results']
-POLYGONS_BUILDER_METHODS = ['Boucle rang', 'Ligne parcelle']
 
-OPERATION = {
-    'EPSG:32630': '+proj=pipeline +step +proj=unitconvert +xy_in=deg +xy_out=rad +step +proj=utm +zone=30 +ellps=WGS84',
-    'EPSG:32631': '+proj=pipeline +step +proj=unitconvert +xy_in=deg +xy_out=rad +step +proj=utm +zone=31 +ellps=WGS84',
-    'EPSG:32632': '+proj=pipeline +step +proj=unitconvert +xy_in=deg +xy_out=rad +step +proj=utm +zone=32 +ellps=WGS84'
-}
+DIRECTORY_STRUCTURE = {'00_Data': ['00_Raw_Files', '01_Reproject', '02_Sampling'],
+                       '01_Kriging': ['01_T1_T2_Total', '02_T1_Total', '03_T2_Total', '04_T1_80perc', '05_T2_80perc'],
+                       '02_Validation': [],
+                       '03_Error_Compensation': ['T1_Error_Compensation', 'T2_Error_Compensation'],
+                       '04_Gain_Surface': [],
+                       '05_Results': ['01_Histograms', '02_Variograms', '03_Maps']}
+
+POLYGONS_BUILDER_METHODS = ['Boucle rang', 'Ligne parcelle']
 
 CROP_COLUMN_NAMES = ['Id', "Crop name", "Sowing date", "Harvesting date", "Variety", "InterRoCM", "Create date",
                      "Update date"]
 FARMER_COLUMN_NAMES = ['Id', "First name", "Last name", "Address", "Zipcode", "Town", "Country", "Create date",
                        "Update date"]
-GEOSTATISTIC_TRIAL = ['Id', "Field name", "Area", "Irrigated", "Soil type", "LPC Team", "Farmer", "Crop field", "Contour",
+GEOSTATISTIC_TRIAL = ['Id', "Field name", "Area", "Irrigated", "Soil type", "LPC Team", "Farmer", "Crop field",
+                      "Contour",
                       "Create date", "Update date"]
 
 FETCH_ALL_DOMAIN = "SELECT * FROM domains.yes_or_not;"
@@ -44,11 +45,10 @@ UPDATE_CROP_SQL = "UPDATE geostatistics.crop_trial SET crop_name = %s, " \
 DELETE_CROP_SQL = "DELETE FROM geostatistics.crop_trial WHERE id = '{}';"
 
 INSERT_FARMER_SQL = "INSERT INTO geostatistics.farmer (first_name, last_name, address, zipcode, town, country," \
-                  "create_date) VALUES (%s, %s, %s, %s, %s, %s, %s);"
+                    "create_date) VALUES (%s, %s, %s, %s, %s, %s, %s);"
 UPDATE_FARMER_SQL = "UPDATE geostatistics.farmer SET first_name = %s, " \
-                  "last_name = %s, address = %s, zipcode = %s, town = %s, country = %s, update_date = %s WHERE id = %s;"
+                    "last_name = %s, address = %s, zipcode = %s, town = %s, country = %s, update_date = %s WHERE id = %s;"
 DELETE_FARMER_SQL = "DELETE FROM geostatistics.farmer WHERE id = '{}';"
-
 
 INSERT_TRIAL_SQL = "INSERT INTO geostatistics.geostatistic_trial (field_name, field_area, field_irrigation, " \
                    "field_soil, lpc_team, farmer, crop_trial, id_contour, create_date) VALUES (%s, %s, %s, %s, %s, " \

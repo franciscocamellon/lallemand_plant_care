@@ -24,7 +24,7 @@
 import os
 
 from qgis.core import QgsProject, QgsVectorLayer, QgsFeature, QgsGeometry, QgsPointXY, QgsLayerTreeGroup, \
-    QgsLayerTreeLayer, QgsCoordinateTransform
+    QgsLayerTreeLayer, QgsCoordinateTransform, QgsVectorFileWriter, QgsCoordinateTransformContext
 from qgis.PyQt.QtWidgets import QMessageBox, QFileDialog
 
 from .message_service import MessageService
@@ -36,28 +36,38 @@ class LayerService:
     def __init__(self, default_crs=None):
         self.default_crs = default_crs
         self.project = QgsProject.instance()
-        self.message_service = MessageService()
+        self.messageService = MessageService()
         self.systemService = SystemService()
 
-    def checkForSavedProject(self):
-        if self.project.fileName():
-            print("Saved project found. Path:", self.project.fileName())
-            return self.project.fileName()
-        else:
-            # Open a dialog box to ask the user to save the project
-            file_dialog = QFileDialog()
-            file_dialog.setAcceptMode(QFileDialog.AcceptSave)
-            file_dialog.setNameFilter("QGIS Project Files (*.qgz *.qgs)")
-            file_dialog.setDefaultSuffix("qgz")
+    def checkForSavedProject(self, epsg):
 
-            if file_dialog.exec_():
-                file_path = file_dialog.selectedFiles()[0]
-                # Save the project
-                self.project.write(file_path)
-                print("Project saved at:", file_path)
-                return file_path
+        if self.project.fileName():
+
+            projectName = self.systemService.extractFileName(self.project.fileName())
+            projectPath = self.project.homePath()
+            self.systemService.createDirectoryStructure(projectPath)
+
+            return projectPath
+
+        else:
+            choice = self.messageService.standardButtonMessage('Load trial files',
+                                                               ['There is no saved QGIS project.',
+                                                                'Do you want to save your project now?'],
+                                                               3, [5, 6])
+            if choice == 16384:
+                fileDialog = self.messageService.saveFileDialog()
+
+                if fileDialog.exec_():
+                    filePath = fileDialog.selectedFiles()[0]
+                    print(epsg)
+                    self.project.setCrs(epsg)
+                    self.project.write(filePath)
+
+                    self.systemService.createDirectoryStructure(self.project.homePath())
+
+                    return self.project.homePath()
             else:
-                QMessageBox.warning(None, "Project Save", "Project not saved.")
+                self.messageService.warningMessage("Project Save", "Project not saved.")
                 return None
 
     @staticmethod
@@ -74,23 +84,23 @@ class LayerService:
             project.instance().addMapLayer(layer, False)
             group.addLayer(layer)
 
-    def load_shape_file(self, project, group_name, file_path):
+    def load_shape_file(self, group_name, file_path):
 
         try:
             fileName = self.systemService.extractFileName(file_path)
             layer = self.create_vector_layer(fileName, file_path)
 
             if group_name is None:
-                project.instance().addMapLayer(layer)
+                self.project.addMapLayer(layer)
             else:
-                project.instance().addMapLayer(layer, False)
-                root = self.create_layer_tree_group(project, group_name)
+                self.project.addMapLayer(layer, False)
+                root = self.create_layer_tree_group(self.project, group_name)
                 group = root.findGroup(group_name)
                 group.addLayer(layer)
             return layer.crs()
         except Exception as load_file_exception:
             errorMessage = f'Error loading shape file: {str(load_file_exception)}'
-            self.message_service.messageBox('Loading file', errorMessage, 5, 1)
+            self.messageService.messageBox('Loading file', errorMessage, 5, 1)
 
     def create_vector_layer(self, layerName, file_path, use_default_crs=True):
 
@@ -111,7 +121,7 @@ class LayerService:
 
         except Exception as create_layer_exception:
             errorMessage = f'Error creating layer {layerName} -> {str(create_layer_exception)}'
-            self.message_service.messageBox('Loading file', errorMessage, 5, 1)
+            self.messageService.messageBox('Loading file', errorMessage, 5, 1)
             return None
 
     def convert_layer_crs(self, layer, target_crs):
@@ -137,7 +147,7 @@ class LayerService:
 
         except Exception as e:
             errorMessage = f'Error converting layer CRS: {str(e)}'
-            self.message_service.messageBox('Loading file', errorMessage, 5, 1)
+            self.messageService.messageBox('Loading file', errorMessage, 5, 1)
             return False
 
     def create_layer_tree_group(self, qgs_project, group_name):
@@ -150,7 +160,7 @@ class LayerService:
 
         except Exception as group_exception:
             errorMessage = f'Error creating layer tree group: {str(group_exception)}'
-            self.message_service.messageBox('Loading file', errorMessage, 5, 1)
+            self.messageService.messageBox('Loading file', errorMessage, 5, 1)
             return None
 
     @staticmethod
@@ -185,3 +195,23 @@ class LayerService:
         currentDirectory = os.path.dirname(__file__)
         parentDirectory = os.path.join(currentDirectory, '..')
         return os.path.join(parentDirectory, 'resources', 'world_zones.geojson')
+
+    def saveVectorLayer(self, layer, outputPath):
+        writerOptions = QgsVectorFileWriter.SaveVectorOptions()
+        writerOptions.fileEncoding = 'UTF-8'
+        writerOptions.driverName = 'ESRI Shapefile'
+
+        try:
+            result, error_message = QgsVectorFileWriter.writeAsVectorFormatV2(
+                layer,
+                outputPath,
+                QgsCoordinateTransformContext(),
+                options=writerOptions
+            )
+
+            if result == QgsVectorFileWriter.NoError:
+                # self.messageService.informationMessage('Saving file', f'Layer saved successfully to {outputPath}')
+                pass
+
+        except Exception as e:
+            self.messageService.criticalMessage('Saving file', f'An error occurred: {str(e)}')

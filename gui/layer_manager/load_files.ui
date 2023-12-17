@@ -467,10 +467,26 @@
                    </font>
                   </property>
                   <property name="styleSheet">
-                   <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+                   <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;</string>
                   </property>
                   <property name="text">
                    <string>Sorting variable</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="borderSizeLabel">
+                  <property name="maximumSize">
+                   <size>
+                    <width>100</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;</string>
+                  </property>
+                  <property name="text">
+                   <string>Border size</string>
                   </property>
                  </widget>
                 </item>
@@ -492,6 +508,9 @@
                     <height>23</height>
                    </size>
                   </property>
+                  <property name="styleSheet">
+                   <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;</string>
+                  </property>
                  </widget>
                 </item>
                 <item>
@@ -501,6 +520,22 @@
                     <width>0</width>
                     <height>23</height>
                    </size>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QDoubleSpinBox" name="borderSizeSpinBox">
+                  <property name="maximumSize">
+                   <size>
+                    <width>100</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;</string>
                   </property>
                  </widget>
                 </item>
@@ -1023,6 +1058,23 @@
    <header>qgsprojectionselectionwidget.h</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>tabWidget</tabstop>
+  <tabstop>reprojectCheckBox</tabstop>
+  <tabstop>suggestedCrsSelectionWidget</tabstop>
+  <tabstop>treatmentCheckBox</tabstop>
+  <tabstop>methodComboBox</tabstop>
+  <tabstop>sortingFieldComboBox</tabstop>
+  <tabstop>borderSizeSpinBox</tabstop>
+  <tabstop>boundaryCheckBox</tabstop>
+  <tabstop>loadGpsPointsPushButton</tabstop>
+  <tabstop>harvesterCrsSelectionWidget</tabstop>
+  <tabstop>yieldFilteringCheckBox</tabstop>
+  <tabstop>treatmentFilteringCheckBox</tabstop>
+  <tabstop>percentualFilteringCheckBox</tabstop>
+  <tabstop>loadHarvesterPointsPushButton</tabstop>
+  <tabstop>harvesterReprojectCheckBox</tabstop>
+ </tabstops>
  <resources>
   <include location="../../resources.qrc"/>
  </resources>

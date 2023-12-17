@@ -24,7 +24,7 @@
 
 import processing
 
-from qgis.core import QgsCoordinateReferenceSystem
+from qgis.core import QgsCoordinateReferenceSystem, QgsProject
 from qgis.PyQt.Qt import QObject
 
 
@@ -35,21 +35,26 @@ class AlgorithmRunner(QObject):
         pass
 
     @staticmethod
-    def runWaypointsPolygonsBuilder(layer, method, sorting, context=None, feedback=None, output_layer=None):
-        output_layer = 'memory:' if output_layer is None else output_layer
+    def runWaypointsPolygonsBuilder(layer, method, sorting, sizeBorder, context=None, feedback=None, outputLayer=None):
+        outputLayer = 'memory:' if outputLayer is None else outputLayer
         parameters = {
-            'Waypoints': layer, 'Methode': method, 'Variable_ordonnee': sorting, 'Polygones_traitement': output_layer
+            'Waypoints': layer,
+            'Initial_Projection': 0,
+            'Reprojection': 0,
+            'Methode': method,
+            'Variable_ordonnee': sorting,
+            'Size_border': sizeBorder,
+            'Polygones_traitement': outputLayer
         }
-        output = processing.run('r:Waypoints_Polygons_builder', parameters, context=context, feedback=feedback)
-        print(output)
+        output = processing.run('r:Waypoints_Polygons_builder_v3_border', parameters, context=context, feedback=feedback)
         return output['Polygones_traitement']
 
     @staticmethod
-    def runReprojectLayer(layer, targetCrs, operation=None, context=None, feedback=None, output_layer=None):
-        output_layer = 'memory:' if output_layer is None else output_layer
+    def runReprojectLayer(layer, targetCrs, operation=None, context=None, feedback=None, outputLayer=None):
+        outputLayer = 'memory:' if outputLayer is None else outputLayer
         parameters = {
             'INPUT': layer, 'TARGET_CRS': QgsCoordinateReferenceSystem(targetCrs),
-            'OPERATION': operation, 'OUTPUT': output_layer
+            'OPERATION': operation, 'OUTPUT': outputLayer
         }
         output = processing.run('native:reprojectlayer', parameters, context=context, feedback=feedback)
 
