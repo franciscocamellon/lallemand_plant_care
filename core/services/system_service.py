@@ -37,37 +37,23 @@ class SystemService:
         """
         self.messageService = MessageService()
 
-    @staticmethod
-    def _createDirectoryStructure(path):
-
-        full_paths = [os.path.join(path, directory) for directory in DIRECTORY_STRUCTURE]
-
-        for full_path in full_paths:
-            os.makedirs(full_path, exist_ok=True)
-
     def createDirectoryStructure(self, basePath):
 
         for mainDirectory, subDirectories in DIRECTORY_STRUCTURE.items():
             mainDirectoryPath = os.path.join(basePath, mainDirectory)
 
             if os.path.exists(mainDirectoryPath) and os.listdir(mainDirectoryPath):
-                choice = self.messageService.standardButtonMessage('Creating project',
-                                                                   [f'{mainDirectoryPath}',
-                                                                    'will be irreversible overwritten!\nDo you want to '
-                                                                    'continue?'],
-                                                                   2, [5, 6])
-                if choice == 65536:
-                    break
-                else:
-                    shutil.rmtree(mainDirectoryPath)
-                    os.makedirs(mainDirectoryPath, exist_ok=True)
-                    continue
+                for subDirectory in subDirectories:
+                    subDirectoryPath = os.path.join(mainDirectoryPath, subDirectory)
+                    if os.path.exists(subDirectoryPath):
+                        continue
+                    os.makedirs(subDirectoryPath, exist_ok=True)
 
             os.makedirs(mainDirectoryPath, exist_ok=True)
 
-            for sub_dir in subDirectories:
-                sub_dir_path = os.path.join(mainDirectoryPath, sub_dir)
-                os.makedirs(sub_dir_path, exist_ok=True)
+            for subDirectory in subDirectories:
+                subDirectoryPath = os.path.join(mainDirectoryPath, subDirectory)
+                os.makedirs(subDirectoryPath, exist_ok=True)
 
     @staticmethod
     def createDate():
@@ -97,3 +83,10 @@ class SystemService:
     @staticmethod
     def copyFile(source, target):
         shutil.copyfile(source, target)
+
+    def fileExist(self, path):
+        if os.path.isfile(path):
+            file = os.path.basename(path)
+            return self.messageService.standardButtonMessage('Load trial files',
+                                                             [f'{file} already exist!', 'Overwrite?'],
+                                                             4, [5, 6])

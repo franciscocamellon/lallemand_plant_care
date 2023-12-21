@@ -21,10 +21,10 @@
  *                                                                         *
  ***************************************************************************/
 """
-from qgis.core import Qgis
+from qgis.core import QgsProcessingFeedback
 from qgis.gui import QgisInterface, QgsMessageBar
-from qgis.PyQt.QtWidgets import QMessageBox, QFileDialog
-from qgis.PyQt.QtCore import QCoreApplication
+from qgis.PyQt.QtWidgets import QMessageBox, QFileDialog, QProgressDialog
+from qgis.PyQt.QtCore import QCoreApplication, Qt
 
 
 class MessageService:
@@ -119,3 +119,27 @@ class MessageService:
         fileDialog.setNameFilter(self._tr("QGIS Project Files (*.qgz *.qgs)"))
         fileDialog.setDefaultSuffix("qgz")
         return fileDialog
+
+
+class UserFeedback(QgsProcessingFeedback):
+
+    def __init__(self, parent=None):
+        super(UserFeedback, self).__init__()
+        self.progressBar = QProgressDialog("Processing...", "Cancel", 0, 100, parent)
+        self.progressBar.setWindowModality(Qt.WindowModal)
+        self.progressBar.show()
+
+    def setProgress(self, percent):
+        self.progressBar.setValue(percent)
+
+    def pushInfo(self, info):
+        self.progressBar.setLabelText(info)
+
+    def pushMessage(self, message, level=0, duration=0):
+        self.progressBar.setLabelText(message)
+
+    def isCanceled(self):
+        return self.progressBar.wasCanceled()
+
+    def close(self):
+        self.progressBar.close()

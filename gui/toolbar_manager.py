@@ -35,11 +35,10 @@ from .toolbar.ui_toolbar_manager import Ui_Form
 
 
 class ToolbarManager(QWidget, Ui_Form):
-    def __init__(self, iface, toolbar=None):
+    def __init__(self, toolbar=None):
         """Constructor."""
         super(ToolbarManager, self).__init__()
         self.setupUi(self)
-        self.iface = iface
         self.toolbar = toolbar
         self.layerService = LayerService()
         self.splitter.hide()
