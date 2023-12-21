@@ -35,13 +35,14 @@ from ...core.tools.algorithm_runner import AlgorithmRunner
 
 class LoadFiles(QtWidgets.QDialog, Ui_Dialog):
 
-    def __init__(self):
+    def __init__(self, project):
         """Constructor."""
         super(LoadFiles, self).__init__()
         self.setupUi(self)
         self.setWindowTitle("Load trial files")
         self.layerService = LayerService()
         self.systemService = SystemService()
+        self.project = project
         self.crsOperations = ''
         self.gpsLayer = ''
         self.gpsLayerName = ''
@@ -68,7 +69,7 @@ class LoadFiles(QtWidgets.QDialog, Ui_Dialog):
     def updateGpsUI(self, path):
         if path:
             self.gpsLayerName = self.systemService.extractFileName(path)
-            self.gpsLayer = self.layerService.create_vector_layer(self.gpsLayerName, path)
+            self.gpsLayer = self.layerService.createVectorLayer(self.gpsLayerName, path)
 
             self.sortingFieldComboBox.setFields(self.gpsLayer.fields())
 
@@ -76,7 +77,7 @@ class LoadFiles(QtWidgets.QDialog, Ui_Dialog):
                 self.crsWarningLabel.show()
                 crsInfo = self.layerService.getSuggestedCrs(self.gpsLayer)
                 self.crsOperations = crsInfo
-                self.suggestedCrsSelectionWidget.setCrs(QgsCoordinateReferenceSystem(crsInfo[1]))
+                self.suggestedCrsSelectionWidget.setCrs(QgsCoordinateReferenceSystem(crsInfo[2]))
             else:
                 self.crsWarningLabel.hide()
                 self.suggestedCrsSelectionWidget.setCrs(self.gpsLayer.crs())
@@ -86,13 +87,14 @@ class LoadFiles(QtWidgets.QDialog, Ui_Dialog):
     def updateHarvesterUI(self, path):
         if path:
             self.harvesterLayerName = self.systemService.extractFileName(path)
-            self.harvesterLayer = self.layerService.create_vector_layer(self.harvesterLayerName, path)
+            self.harvesterLayer = self.layerService.createVectorLayer(self.harvesterLayerName, path)
 
             if self.harvesterLayer.crs().isGeographic():
                 self.harvesterCrsWarningLabel.show()
                 crsInfo = self.layerService.getSuggestedCrs(self.harvesterLayer)
-                self.crsOperations = crsInfo
-                self.harvesterCrsSelectionWidget.setCrs(QgsCoordinateReferenceSystem(crsInfo[1]))
+                if crsInfo is not None:
+                    self.crsOperations = crsInfo
+                    self.harvesterCrsSelectionWidget.setCrs(QgsCoordinateReferenceSystem(crsInfo[2]))
             else:
                 self.harvesterCrsWarningLabel.hide()
                 self.harvesterCrsSelectionWidget.setCrs(self.harvesterLayer)
@@ -100,32 +102,38 @@ class LoadFiles(QtWidgets.QDialog, Ui_Dialog):
             self.harvesterCRSLabel.setText(f'CRS -> {self.harvesterLayer.crs().authid()}')
 
     def loadGpsPoints(self):
+        filePath = self.project.homePath()
         epsg = self.suggestedCrsSelectionWidget.crs()
-        filePath = self.layerService.checkForSavedProject(epsg)
+        print(len([feat for feat in self.gpsLayer.getFeatures()]))
 
         if self.reprojectCheckBox.isChecked():
 
-            reprojectedLayerName = f'{self.gpsLayerName}_{self.crsOperations[0]}'
+            reprojectedLayerName = f'{self.gpsLayerName}_{self.crsOperations[1]}'
 
             outputGpsLayer = f"{filePath}/00_Data/00_Raw_Files/{self.gpsLayerName}.shp"
+            if self.systemService.fileExist(outputGpsLayer) != 65536:
+                self.layerService.saveVectorLayer(self.gpsLayer, outputGpsLayer)
+                self.layerService.loadShapeFile(QGIS_TOC_GROUPS[0], outputGpsLayer)
+
             outputReprojectLayer = f"{filePath}/00_Data/01_Reproject/{reprojectedLayerName}.shp"
-
-            self.layerService.saveVectorLayer(self.gpsLayer, outputGpsLayer)
-            AlgorithmRunner.runReprojectLayer(self.gpsLayer, epsg.authid(), self.crsOperations[2],
-                                              outputLayer=outputReprojectLayer)
-
-            self.layerService.load_shape_file(QGIS_TOC_GROUPS[0], outputGpsLayer)
-            self.layerService.load_shape_file(QGIS_TOC_GROUPS[1], outputReprojectLayer)
+            if self.systemService.fileExist(outputReprojectLayer) != 65536:
+                AlgorithmRunner.runReprojectLayer(self.gpsLayer, epsg.authid(), self.crsOperations[3],
+                                                  outputLayer=outputReprojectLayer)
+                self.layerService.loadShapeFile(QGIS_TOC_GROUPS[1], outputReprojectLayer)
 
         else:
-            LayerService.addMapLayer(self.gpsLayer, QGIS_TOC_GROUPS[0])
+            outputGpsLayer = f"{filePath}/00_Data/00_Raw_Files/{self.gpsLayerName}.shp"
+            if self.systemService.fileExist(outputGpsLayer) != 65536:
+                self.layerService.saveVectorLayer(self.gpsLayer, outputGpsLayer)
+                self.layerService.loadShapeFile(QGIS_TOC_GROUPS[0], outputGpsLayer)
 
         if self.treatmentCheckBox.isChecked():
-            treatmentReprojectLayer = f"{filePath}/00_Data/01_Reproject/{f'{self.gpsLayerName}_{self.crsOperations[0]}'}_treatment.shp"
+            treatmentReprojectLayer = f"{filePath}/00_Data/01_Reproject/{f'{self.gpsLayerName}_{self.crsOperations[3]}'}_treatment.shp"
             AlgorithmRunner.runWaypointsPolygonsBuilder(self.gpsLayer, self.methodComboBox.currentIndex(),
                                                         self.sortingFieldComboBox.currentField(),
+                                                        self.borderSizeSpinBox.value(),
                                                         outputLayer=treatmentReprojectLayer)
-            self.layerService.load_shape_file(QGIS_TOC_GROUPS[1], treatmentReprojectLayer)
+            self.layerService.loadShapeFile(QGIS_TOC_GROUPS[1], treatmentReprojectLayer)
 
         self.clearGpsWidget()
 
