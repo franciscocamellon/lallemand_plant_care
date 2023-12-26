@@ -29,7 +29,7 @@ from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 
 from .gui.toolbar_manager import ToolbarManager
-from .gui.settings.options_settings import OptionsSettingsFactory, OptionsSettingsPage
+from .gui.settings.options_settings_dlg import OptionsSettingsFactory, OptionsSettingsPage
 # Initialize Qt resources from file resources.py
 from .resources import *
 
