@@ -52,7 +52,6 @@ class AlgorithmRunner(QObject):
 
     @staticmethod
     def runReprojectLayer(layer, targetCrs, operation=None, context=None, feedback=None, outputLayer=None):
-
         outputLayer = 'memory:' if outputLayer is None else outputLayer
         parameters = {
             'INPUT': layer,
@@ -88,3 +87,8 @@ class AlgorithmRunner(QObject):
         output = processing.run('native:dissolve', parameters, context=context, feedback=feedback)
 
         return output['OUTPUT']
+
+    @staticmethod
+    def runYieldMapFiltering(parameters, context=None, feedback=None):
+        processing.run('r:Yield_map_filtering', parameters, context=context, feedback=feedback)
+        # return output['OUTPUT']

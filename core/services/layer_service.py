@@ -258,3 +258,10 @@ class LayerService:
     @staticmethod
     def checkLayerGeometry(layer):
         return True if layer.geometryType() in [1, 2, 3] else False
+
+    def filterByLayerName(self, layers, filterName):
+        filteredLayers = []
+        for layer in layers:
+            if filterName not in layer.name().split('_'):
+                filteredLayers.append(layer)
+        return filteredLayers
