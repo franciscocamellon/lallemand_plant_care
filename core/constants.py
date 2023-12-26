@@ -9,6 +9,8 @@ DIRECTORY_STRUCTURE = {'00_Data': ['00_Raw_Files', '01_Reproject', '02_Sampling'
                        '05_Results': ['01_Histograms', '02_Variograms', '03_Maps']}
 
 POLYGONS_BUILDER_METHODS = ['Boucle rang', 'Ligne parcelle']
+FILTERING_TARGET_PROJECTION = ['Lambert93', 'UTM']
+FILTERING_COLONNE_DATE = ['Yes', 'No']
 
 CROP_COLUMN_NAMES = ['Id', "Crop name", "Sowing date", "Harvesting date", "Variety", "InterRoCM", "Create date",
                      "Update date"]
