@@ -22,7 +22,7 @@
  ***************************************************************************/
 """
 from qgis.PyQt import QtWidgets
-from qgis.core import QgsFieldProxyModel, QgsProject
+from qgis.core import QgsFieldProxyModel, QgsProject, QgsCoordinateReferenceSystem
 
 from ...core.services.message_service import UserFeedback
 from ...core.constants import POLYGONS_BUILDER_METHODS, QGIS_TOC_GROUPS
@@ -43,9 +43,11 @@ class TreatmentPolygons(QtWidgets.QDialog, Ui_TreatmentPolygonsDialogBase):
         self.setWindowTitle('Treatment polygons')
         self.layerService = LayerService()
         self.systemService = SystemService()
+        self.crsOperations = ''
         self.borderSizeSpinBox.setValue(10)
         self.methodComboBox.insertItems(0, POLYGONS_BUILDER_METHODS)
         self.enableWidget(False)
+        self.updateGui()
         self.treatmentCheckBox.stateChanged.connect(self.enableWidget)
         self.gpsPointLayerComboBox.layerChanged.connect(self.setLayerFields)
         self.setMapLayerCombobox()
@@ -60,7 +62,7 @@ class TreatmentPolygons(QtWidgets.QDialog, Ui_TreatmentPolygonsDialogBase):
 
     def setLayerFields(self):
         layer = self.gpsPointLayerComboBox.currentLayer()
-        self.sortingFieldComboBox.setFilters(QgsFieldProxyModel.Int | QgsFieldProxyModel.LongLong)
+        self.sortingFieldComboBox.setFilters(QgsFieldProxyModel.Numeric)
         self.sortingFieldComboBox.setLayer(layer)
 
     def enableWidget(self, state):
@@ -68,9 +70,23 @@ class TreatmentPolygons(QtWidgets.QDialog, Ui_TreatmentPolygonsDialogBase):
         for widget in widgets:
             WidgetService.enableWidget(widget, state)
 
+    def updateGui(self):
+
+        if self.gpsPointLayerComboBox.currentLayer().crs().isGeographic():
+            self.crsWarningLabel.show()
+            crsInfo = self.layerService.getSuggestedCrs(self.gpsPointLayerComboBox.currentLayer())
+            self.crsOperations = crsInfo
+            self.suggestedCrsSelectionWidget.setCrs(QgsCoordinateReferenceSystem(crsInfo[2]))
+        else:
+            self.crsWarningLabel.hide()
+            self.suggestedCrsSelectionWidget.setCrs(self.gpsPointLayerComboBox.currentLayer().crs())
+
+        self.crsLabel.setText(f'CRS -> {self.gpsPointLayerComboBox.currentLayer().crs().authid()}')
+
     def createPolygons(self):
         filePath = self.project.homePath()
-        treatmentLayer = f"{filePath}/00_Data/01_Reproject/{f'{self.gpsPointLayerComboBox.currentLayer().name()}'}_treatment.shp"
+        treatmentLayer = f"{filePath}/00_Data/00_Raw_Files/{f'{self.gpsPointLayerComboBox.currentLayer().name()}'}_treatment.shp"
+        boundaryLayer = ''
         feedback = UserFeedback()
         treatmentPolygons = AlgorithmRunner.runWaypointsPolygonsBuilder(self.gpsPointLayerComboBox.currentLayer(),
                                                                         self.methodComboBox.currentIndex(),
@@ -82,8 +98,23 @@ class TreatmentPolygons(QtWidgets.QDialog, Ui_TreatmentPolygonsDialogBase):
         self.layerService.loadShapeFile(QGIS_TOC_GROUPS[0], treatmentLayer)
 
         if self.boundaryCheckBox.isChecked():
-            boundaryLayer = f"{filePath}/00_Data/01_Reproject/{f'{self.gpsPointLayerComboBox.currentLayer().name()}'}_contour.shp"
+            boundaryLayer = f"{filePath}/00_Data/00_Raw_Files/{f'{self.gpsPointLayerComboBox.currentLayer().name()}'}_contour.shp"
             feedback = UserFeedback()
             AlgorithmRunner.runDissolvePolygons(treatmentPolygons, feedback=feedback, outputLayer=boundaryLayer)
             feedback.close()
             self.layerService.loadShapeFile(QGIS_TOC_GROUPS[0], boundaryLayer)
+
+        if self.reprojectCheckBox.isChecked():
+            epsg = self.suggestedCrsSelectionWidget.crs()
+            toReproject = [treatmentLayer, boundaryLayer]
+            for toReprojectFilePath in toReproject:
+                fileName = self.systemService.extractFileName(toReprojectFilePath)
+                reprojectedName = f'{fileName}_{self.crsOperations[1]}'
+                outputLayerFilePath = f"{filePath}/00_Data/01_Reproject/{reprojectedName}.shp"
+
+                if self.systemService.fileExist(outputLayerFilePath) != 65536:
+                    feedback = UserFeedback()
+                    AlgorithmRunner.runReprojectLayer(toReprojectFilePath, epsg.authid(), self.crsOperations[3],
+                                                      feedback=feedback, outputLayer=outputLayerFilePath)
+                    feedback.close()
+                    self.layerService.loadShapeFile(QGIS_TOC_GROUPS[1], outputLayerFilePath)
