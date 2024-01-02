@@ -21,13 +21,18 @@
  *                                                                         *
  ***************************************************************************/
 """
+import random
+import time
+
+from PyQt5.QtCore import QObject, QThread, pyqtSignal
 from qgis.PyQt import QtWidgets
-from qgis.core import QgsFieldProxyModel, QgsProject, QgsMapLayerProxyModel
+from qgis.core import QgsFieldProxyModel, QgsProject, QgsMapLayerProxyModel, \
+    QgsProcessingContext, QgsFeatureRequest, QgsVectorLayer, QgsCoordinateReferenceSystem
 
 from ...core.services.message_service import UserFeedback
 from ...core.constants import POLYGONS_BUILDER_METHODS, QGIS_TOC_GROUPS, FILTERING_TARGET_PROJECTION, \
-    FILTERING_COLONNE_DATE
-from .filtering_dlg_base import Ui_FilteringPointsDialogBase
+    FILTERING_COLONNE_DATE, SAMPLING_LAYER_NAMES
+from .filtering_dlg_base import Ui_Dialog
 from ...core.services.layer_service import LayerService
 from ...core.services.system_service import SystemService
 from ...core.services.widget_service import WidgetService
@@ -35,7 +40,7 @@ from ...core.tools.algorithm_runner import AlgorithmRunner
 from ..settings.options_settings_dlg import OptionsSettingsPage
 
 
-class FilteringPoints(QtWidgets.QDialog, Ui_FilteringPointsDialogBase):
+class FilteringPoints(QtWidgets.QDialog, Ui_Dialog):
 
     def __init__(self, project, parent=None):
         """Constructor."""
@@ -46,23 +51,37 @@ class FilteringPoints(QtWidgets.QDialog, Ui_FilteringPointsDialogBase):
         self.setWindowTitle('Filtering harvester points')
         self.layerService = LayerService()
         self.systemService = SystemService()
+        self.widgetService = WidgetService()
+        self.suggestedCrsSelectionWidget.setEnabled(False)
         self.setMapLayerCombobox()
+        self.updateFilteringGui()
+        self.updateSamplingGui()
+        self.harvesterLayerComboBox.layerChanged.connect(self.updateFilteringGui)
+        self.samplingLayerComboBox.layerChanged.connect(self.updateSamplingGui)
+        self.reprojectCheckBox.stateChanged.connect(self.enableWidget)
+        self.samplesGroupBox.toggled.connect(self.enableSamples)
         self.yeldFilterPushButton.clicked.connect(self.runFilter)
+        self.samplerPushButton.clicked.connect(self.runSampling)
 
     def setMapLayerCombobox(self):
         layers = self.project.instance().mapLayers()
         if len(layers) == 0:
             self.harvesterLayerComboBox.setEnabled(False)
         else:
-            # self.harvesterLayerComboBox.setLayer(list(layers.values())[0])
-            boundaryLayer = self.layerService.filterByLayerName(list(layers.values()), 'contour')
-            treatmentLayer = self.layerService.filterByLayerName(list(layers.values()), 'treatment')
+            boundaryLayer = self.layerService.filterByLayerName(list(layers.values()), ['contour'])
+            treatmentLayer = self.layerService.filterByLayerName(list(layers.values()), ['treatment'])
+            samplingLayer = self.layerService.filterByLayerName(list(layers.values()), ['filtermap', 'Yield', 'Map'])
 
             self.harvesterLayerComboBox.setFilters(QgsMapLayerProxyModel.PointLayer)
+
             self.treatmentLayerComboBox.setFilters(QgsMapLayerProxyModel.PolygonLayer)
             self.treatmentLayerComboBox.setExceptedLayerList(treatmentLayer)
+
             self.boundaryLayerComboBox.setFilters(QgsMapLayerProxyModel.PolygonLayer)
             self.boundaryLayerComboBox.setExceptedLayerList(boundaryLayer)
+
+            self.samplingLayerComboBox.setFilters(QgsMapLayerProxyModel.PointLayer)
+            self.samplingLayerComboBox.setExceptedLayerList(samplingLayer)
 
             self.targetProjection.insertItems(0, FILTERING_TARGET_PROJECTION)
             self.colonneDateComboBox.insertItems(0, FILTERING_COLONNE_DATE)
@@ -78,40 +97,188 @@ class FilteringPoints(QtWidgets.QDialog, Ui_FilteringPointsDialogBase):
         self.harvesterLayerYeldComboBox.setLayer(self.harvesterLayerComboBox.currentLayer())
         self.treatmentLayerIdComboBox.setLayer(self.treatmentLayerComboBox.currentLayer())
 
-    def enableWidget(self, state):
-        widgets = [self.yieldFilteringCheckBox, self.treatmentFilteringCheckBox, self.percentualFilteringCheckBox]
+    def updateFilteringGui(self):
+        self.widgetService.updateGui(self.harvesterLayerComboBox, self.suggestedCrsSelectionWidget,
+                                     self.crsWarningLabel, self.crsLabel)
+
+    def updateSamplingGui(self):
+        if self.samplingLayerComboBox.currentLayer().crs().isGeographic():
+            self.enableSamples(False)
+            self.samplingCrsLabel.show()
+            self.samplingWarningLabel.show()
+            self.samplingCrsLabel.setText(f'CRS -> {self.samplingLayerComboBox.currentLayer().crs().authid()}')
+            self.samplesGroupBox.setEnabled(False)
+            self.samplerPushButton.setEnabled(False)
+        else:
+            self.samplingWarningLabel.hide()
+            self.samplingCrsLabel.hide()
+            self.samplesGroupBox.setEnabled(True)
+            self.samplesGroupBox.setChecked(True)
+            self.enableSamples(True)
+            self.samplerPushButton.setEnabled(True)
+
+    def enableSamples(self, state):
+        widgets = [self.samplesGroupBox, self.eightySamplesCheckBox, self.twentySamplesCheckBox,
+                   self.totalSamplesCheckBox]
         for widget in widgets:
-            WidgetService.enableWidget(widget, state)
+            widget.setChecked(state)
+
+    def enableWidget(self, state):
+        WidgetService.enableWidget(self.suggestedCrsSelectionWidget, state)
 
     def runFilter(self):
         filePath = self.project.homePath()
-        self.filterMapLayer = f"{filePath}/00_Data/00_Raw_Files/{f'{self.harvesterLayerComboBox.currentLayer().name()}'}_filtermap.shp"
+        self.filterMapLayer = f"{filePath}/00_Data/00_Raw_Files/Yield_Map.shp"
         self.rPlots = f"{filePath}/00_Data/00_Raw_Files/rPlots.html"
         self.tableErrors = f"{filePath}/00_Data/00_Raw_Files/table_errors.csv"
         filterParameters = self.getFilterParameters()
+        outputReprojectLayer = ''
+
         feedback = UserFeedback()
-        AlgorithmRunner.runYieldMapFiltering(filterParameters, feedback=feedback,)
+        context = QgsProcessingContext()
+        output = AlgorithmRunner().runYieldMapFiltering(filterParameters, context, feedback=feedback)
+        filteredFeatures = self.layerService.getFeaturesByRequest(output, "\"Biais_rendement\"='F - Pas de biais'")
+        yieldMapVector = self.layerService.createMemoryVectorLayer(output.wkbType(),
+                                                                   'Yield_Map',
+                                                                   output.crs().authid(), fields=output.fields(),
+                                                                   features=filteredFeatures)
+        self.layerService.saveVectorLayer(yieldMapVector, self.filterMapLayer)
+
+        if self.reprojectCheckBox.isChecked():
+            epsg = self.suggestedCrsSelectionWidget.crs()
+            reprojectedLayerName = f'Yield_Map_{self.crsOperations[1]}'
+            outputReprojectLayer = f"{filePath}/00_Data/01_Reproject/{reprojectedLayerName}.shp"
+
+            if self.systemService.fileExist(outputReprojectLayer) != 65536:
+                AlgorithmRunner.runReprojectLayer(yieldMapVector, epsg.authid(), self.crsOperations[3],
+                                                  feedback=feedback, outputLayer=outputReprojectLayer)
+
         feedback.close()
+
         self.layerService.loadShapeFile(QGIS_TOC_GROUPS[0], self.filterMapLayer)
+        self.layerService.loadShapeFile(QGIS_TOC_GROUPS[1], outputReprojectLayer)
 
     def getFilterParameters(self):
-
         return {
-
             'Contour': self.boundaryLayerComboBox.currentLayer(),
             'Polygones_traitement': self.treatmentLayerComboBox.currentLayer(),
             'Identifiant_polygones': self.treatmentLayerIdComboBox.currentField(),
             'Carte_rendement': self.harvesterLayerComboBox.currentLayer(),
             'Datage': self.harvesterDatageComboBox.currentField(),
             'Rendement': self.harvesterLayerYeldComboBox.currentField(),
-
             'Target_Projection': self.targetProjection.currentIndex(),
-            'Polygones_pairs': 'T2',
-            'Polygones_impairs': 'T1',
-
+            'Polygones_pairs': self.settings[1],
+            'Polygones_impairs': self.settings[0],
             'Colonne_date': self.colonneDateComboBox.currentIndex(),
-
-            'Largeur_coupe': 0, 'Sous_Echantillonnage': 1,
-            'RPLOTS': self.rPlots, 'Carte_filtree': self.filterMapLayer,
+            'Largeur_coupe': self.largeurCoupeSpinBox.value(),
+            'Sous_Echantillonnage': self.sousEchantillonnageSpinBox.value(),
+            'RPLOTS': self.rPlots,
+            'Carte_filtree': '',
             'Table_errors': self.tableErrors
         }
+
+    def runSampling(self):
+        feedback = UserFeedback()
+        samplingProcess = SamplingProcess(self.samplingLayerComboBox, self.layerService, feedback, self.project)
+
+        self.thread = QThread()
+        self.worker = Worker(samplingProcess)
+        self.worker.moveToThread(self.thread)
+        # Step 5: Connect signals and slots
+        self.thread.started.connect(self.worker.run)
+        self.worker.finished.connect(self.thread.quit)
+        self.worker.finished.connect(self.worker.deleteLater)
+        self.thread.finished.connect(self.thread.deleteLater)
+        # Step 6: Start the thread
+        self.thread.start()
+
+
+class Worker(QThread):
+    finished = pyqtSignal()
+    progress = pyqtSignal(int)
+
+    def __init__(self, sampling_process):
+        super(QThread, self).__init__()
+        self.sampling_process = sampling_process
+        self.currentStep = sampling_process.currentStep
+        self.totalSteps = sampling_process.totalSteps
+        self.stopWorker = False
+
+    def run(self):
+        self.sampling_process.run()
+        if self.currentStep == self.totalSteps:
+            self.finished.emit()
+            self.stop()
+
+    def stop(self):
+        self.stopWorker = True
+
+
+class SamplingProcess:
+    def __init__(self, widgetLayer, layerService, userFeedback, project):
+        self.samplingLayerComboBox = widgetLayer
+        self.layerService = layerService
+        self.userFeedback = userFeedback
+        self.project = project
+        self.filePath = self.project.homePath()
+        self.totalSteps = 24
+        self.currentStep = 0
+
+    def run(self):
+        layer = self._getSamplingLayer()
+        self._processTreatment(layer, 'T1')
+        self._processTreatment(layer, 'T2')
+        self._saveAndLoadLayers()
+        self.userFeedback.close()
+
+    def _getSamplingLayer(self):
+        return self.samplingLayerComboBox.currentLayer()
+
+    def _getTreatmentFeatures(self, layer, treatment):
+        return self.layerService.getFeaturesByRequest(layer, f"\"Traitement\"='{treatment}'")
+
+    def _processTreatment(self, layer, treatment):
+        features = self._getTreatmentFeatures(layer, treatment)
+        self._updateProgress()
+
+        total_layer_name = f'{treatment}_total'
+        self.__dict__[total_layer_name] = self._createMemoryVectorLayer(layer, total_layer_name, features)
+        self._updateProgress()
+
+        self._processPercentualFeatures(self.__dict__[total_layer_name], treatment)
+
+    def _createMemoryVectorLayer(self, layer, layer_name, features):
+        return self.layerService.createMemoryVectorLayer(layer.wkbType(), layer_name, layer.crs().authid(),
+                                                         fields=layer.fields(), features=features)
+
+    def _processPercentualFeatures(self, layer, treatment):
+        for percent in [80, 20]:
+            features = self.layerService.getPercentualFeaturesById(layer, percent)
+            self._updateProgress()
+
+            layer_name = f'{treatment}_{percent}_perc'
+            percentual_layer = self.layerService.createMemoryVectorLayer(layer.wkbType(), layer_name,
+                                                                         layer.crs().authid(), fields=layer.fields(),
+                                                                         features=features)
+            self._updateProgress()
+
+            setattr(self, layer_name, percentual_layer)
+
+    def _saveAndLoadLayers(self):
+        filePath = self.filePath
+
+        for layer_name in SAMPLING_LAYER_NAMES:
+            layer = getattr(self, layer_name, None)
+            if layer:
+                outputPath = f"{filePath}/00_Data/02_Sampling/{layer.name()}.shp"
+                self.layerService.saveVectorLayer(layer, outputPath)
+                self._updateProgress()
+                self.layerService.loadShapeFile(QGIS_TOC_GROUPS[2], outputPath)
+                self._updateProgress()
+
+    def _updateProgress(self, delay=0.1):
+        self.currentStep += 1
+        progressPercent = int(self.currentStep * 100.0 / self.totalSteps)
+        self.userFeedback.setProgress(progressPercent)
+
+        time.sleep(delay)
