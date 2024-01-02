@@ -67,7 +67,7 @@
            <widget class="QLabel" name="databaseNameLabel_2">
             <property name="minimumSize">
              <size>
-              <width>50</width>
+              <width>100</width>
               <height>0</height>
              </size>
             </property>
@@ -75,7 +75,7 @@
              <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
             </property>
             <property name="text">
-             <string>Database</string>
+             <string>Database name</string>
             </property>
            </widget>
           </item>
@@ -138,7 +138,7 @@
            <widget class="QLabel" name="serverIpLabel">
             <property name="minimumSize">
              <size>
-              <width>50</width>
+              <width>100</width>
               <height>0</height>
              </size>
             </property>
@@ -146,7 +146,7 @@
              <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
             </property>
             <property name="text">
-             <string>Server</string>
+             <string>Server IP address</string>
             </property>
            </widget>
           </item>
@@ -209,7 +209,7 @@
            <widget class="QLabel" name="serverPortLabel">
             <property name="minimumSize">
              <size>
-              <width>50</width>
+              <width>100</width>
               <height>0</height>
              </size>
             </property>
@@ -280,7 +280,7 @@
            <widget class="QLabel" name="serverUserLabel">
             <property name="minimumSize">
              <size>
-              <width>50</width>
+              <width>100</width>
               <height>0</height>
              </size>
             </property>
@@ -288,7 +288,7 @@
              <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
             </property>
             <property name="text">
-             <string>User</string>
+             <string>Username</string>
             </property>
            </widget>
           </item>
@@ -351,7 +351,7 @@
            <widget class="QLabel" name="serverPasswordLabel">
             <property name="minimumSize">
              <size>
-              <width>50</width>
+              <width>100</width>
               <height>0</height>
              </size>
             </property>

@@ -9,6 +9,7 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from qgscollapsiblegroupbox import QgsCollapsibleGroupBox
 
 
 class Ui_OptionsSettingsForm(object):
@@ -37,7 +38,7 @@ class Ui_OptionsSettingsForm(object):
         self.horizontalLayout_13.setSpacing(0)
         self.horizontalLayout_13.setObjectName("horizontalLayout_13")
         self.databaseNameLabel_2 = QtWidgets.QLabel(self.mGroupBox)
-        self.databaseNameLabel_2.setMinimumSize(QtCore.QSize(50, 0))
+        self.databaseNameLabel_2.setMinimumSize(QtCore.QSize(100, 0))
         self.databaseNameLabel_2.setStyleSheet("font: 8pt \"MS Shell Dlg 2\";")
         self.databaseNameLabel_2.setObjectName("databaseNameLabel_2")
         self.horizontalLayout_13.addWidget(self.databaseNameLabel_2)
@@ -60,7 +61,7 @@ class Ui_OptionsSettingsForm(object):
         self.horizontalLayout_8.setSpacing(0)
         self.horizontalLayout_8.setObjectName("horizontalLayout_8")
         self.serverIpLabel = QtWidgets.QLabel(self.mGroupBox)
-        self.serverIpLabel.setMinimumSize(QtCore.QSize(50, 0))
+        self.serverIpLabel.setMinimumSize(QtCore.QSize(100, 0))
         self.serverIpLabel.setStyleSheet("font: 8pt \"MS Shell Dlg 2\";")
         self.serverIpLabel.setObjectName("serverIpLabel")
         self.horizontalLayout_8.addWidget(self.serverIpLabel)
@@ -83,7 +84,7 @@ class Ui_OptionsSettingsForm(object):
         self.horizontalLayout_9.setSpacing(0)
         self.horizontalLayout_9.setObjectName("horizontalLayout_9")
         self.serverPortLabel = QtWidgets.QLabel(self.mGroupBox)
-        self.serverPortLabel.setMinimumSize(QtCore.QSize(50, 0))
+        self.serverPortLabel.setMinimumSize(QtCore.QSize(100, 0))
         self.serverPortLabel.setStyleSheet("font: 8pt \"MS Shell Dlg 2\";")
         self.serverPortLabel.setObjectName("serverPortLabel")
         self.horizontalLayout_9.addWidget(self.serverPortLabel)
@@ -106,7 +107,7 @@ class Ui_OptionsSettingsForm(object):
         self.horizontalLayout_10.setSpacing(0)
         self.horizontalLayout_10.setObjectName("horizontalLayout_10")
         self.serverUserLabel = QtWidgets.QLabel(self.mGroupBox)
-        self.serverUserLabel.setMinimumSize(QtCore.QSize(50, 0))
+        self.serverUserLabel.setMinimumSize(QtCore.QSize(100, 0))
         self.serverUserLabel.setStyleSheet("font: 8pt \"MS Shell Dlg 2\";")
         self.serverUserLabel.setObjectName("serverUserLabel")
         self.horizontalLayout_10.addWidget(self.serverUserLabel)
@@ -129,7 +130,7 @@ class Ui_OptionsSettingsForm(object):
         self.horizontalLayout_11.setSpacing(0)
         self.horizontalLayout_11.setObjectName("horizontalLayout_11")
         self.serverPasswordLabel = QtWidgets.QLabel(self.mGroupBox)
-        self.serverPasswordLabel.setMinimumSize(QtCore.QSize(50, 0))
+        self.serverPasswordLabel.setMinimumSize(QtCore.QSize(100, 0))
         self.serverPasswordLabel.setStyleSheet("font: 8pt \"MS Shell Dlg 2\";")
         self.serverPasswordLabel.setObjectName("serverPasswordLabel")
         self.horizontalLayout_11.addWidget(self.serverPasswordLabel)
@@ -230,12 +231,11 @@ class Ui_OptionsSettingsForm(object):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Form"))
         self.mGroupBox.setTitle(_translate("Form", "Postgres server settings"))
-        self.databaseNameLabel_2.setText(_translate("Form", "Database"))
-        self.serverIpLabel.setText(_translate("Form", "Server"))
+        self.databaseNameLabel_2.setText(_translate("Form", "Database name"))
+        self.serverIpLabel.setText(_translate("Form", "Server IP address"))
         self.serverPortLabel.setText(_translate("Form", "Port"))
-        self.serverUserLabel.setText(_translate("Form", "User"))
+        self.serverUserLabel.setText(_translate("Form", "Username"))
         self.serverPasswordLabel.setText(_translate("Form", "Password"))
         self.mGroupBox_2.setTitle(_translate("Form", "Treatment polygons"))
         self.oddPolygonsLabel.setText(_translate("Form", "Odd polygons name"))
         self.evenPolygonsLabel.setText(_translate("Form", "Even polygons name"))
-from qgscollapsiblegroupbox import QgsCollapsibleGroupBox
