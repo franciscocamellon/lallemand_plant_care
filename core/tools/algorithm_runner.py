@@ -24,7 +24,7 @@
 
 import processing
 
-from qgis.core import QgsCoordinateReferenceSystem, QgsProject
+from qgis.core import QgsCoordinateReferenceSystem, QgsProcessingUtils, QgsProject
 from qgis.PyQt.Qt import QObject
 
 
@@ -33,6 +33,15 @@ class AlgorithmRunner(QObject):
     def __init__(self):
         super(AlgorithmRunner, self).__init__()
         pass
+
+    @staticmethod
+    def _getLayerFromContext(outputDict, context, returnError=False):
+        lyr = QgsProcessingUtils.mapLayerFromString(outputDict['Carte_filtree'], context)
+        if returnError:
+            errorLyr = QgsProcessingUtils.mapLayerFromString(outputDict['error'], context)
+            return lyr, errorLyr
+        else:
+            return lyr
 
     @staticmethod
     def runWaypointsPolygonsBuilder(layer, method, sorting, sizeBorder, context=None, feedback=None, outputLayer=None):
@@ -88,7 +97,9 @@ class AlgorithmRunner(QObject):
 
         return output['OUTPUT']
 
-    @staticmethod
-    def runYieldMapFiltering(parameters, context=None, feedback=None):
-        processing.run('r:Yield_map_filtering', parameters, context=context, feedback=feedback)
-        # return output['OUTPUT']
+    def runYieldMapFiltering(self, parameters, context=None, feedback=None):
+        output = QgsProcessingUtils.generateTempFilename('OUTPUT.gpkg')
+        parameters['Carte_filtree'] = 'TEMPORARY_OUTPUT'
+
+        outputDict = processing.run('r:Yield_map_filtering', parameters, context=context, feedback=feedback)
+        return self._getLayerFromContext(outputDict, context)
