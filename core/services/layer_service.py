@@ -22,6 +22,8 @@
  ***************************************************************************/
 """
 import os
+import random
+import re
 
 from qgis.core import (
     QgsProject,
@@ -34,7 +36,9 @@ from qgis.core import (
     QgsCoordinateTransform,
     QgsVectorFileWriter,
     QgsCoordinateTransformContext,
-    QgsWkbTypes
+    QgsWkbTypes,
+    QgsFeatureRequest,
+    QgsExpression
 )
 from qgis.PyQt.QtWidgets import QMessageBox, QFileDialog
 
@@ -50,6 +54,69 @@ class LayerService:
         self.project = QgsProject.instance()
         self.messageService = MessageService()
         self.systemService = SystemService()
+
+    @staticmethod
+    def _convertToSimpleGeometry(layer):
+        convertedLayerType = ''
+        if layer.geometryType() == QgsWkbTypes.PointZ:
+            convertedLayerType = "Point"
+        elif layer.geometryType() == QgsWkbTypes.LineStringZ:
+            convertedLayerType = "LineString"
+        elif layer.geometryType() == QgsWkbTypes.PolygonZ:
+            convertedLayerType = "Polygon"
+
+        convertedLayer = QgsVectorLayer(f"{convertedLayerType}?crs={layer.crs().authid()}", layer.name(), "memory")
+
+        for feature in layer.getFeatures():
+            convertedFeature = QgsFeature(layer.fields())
+            convertedFeature.setGeometry(QgsWkbTypes.dropZ(feature.geometry().wkbType()))
+            print(convertedFeature.geometry().type())
+            convertedLayer.dataProvider().addFeature(convertedFeature)
+
+        return convertedLayer
+
+    @staticmethod
+    def _getWorldZonesPath():
+        currentDirectory = os.path.dirname(__file__)
+        parentDirectory = os.path.join(currentDirectory, '..')
+        return os.path.join(parentDirectory, 'resources', 'world_zones.geojson')
+
+    @staticmethod
+    def _getGeometryFromWkbType(wkbType):
+        return QgsWkbTypes.displayString(wkbType)
+
+    @staticmethod
+    def checkLayerGeometry(layer):
+        return True if layer.geometryType() in [1, 2, 3] else False
+
+    @staticmethod
+    def addLayerToTreeGroup(project, layer, groupName):
+        root = project.instance().layerTreeRoot()
+        group = root.findGroup(groupName)
+        group.addLayer(layer)
+
+    @staticmethod
+    def addMapLayer(layer, groupName):
+        project = QgsProject.instance()
+        root = project.instance().layerTreeRoot()
+        group = root.findGroup(groupName)
+        if group is not None:
+            project.instance().addMapLayer(layer, False)
+            group.addLayer(layer)
+        else:
+            group = QgsLayerTreeGroup(groupName)
+            root.addChildNode(group)
+            project.instance().addMapLayer(layer, False)
+            group.addLayer(layer)
+
+    @staticmethod
+    def filterByLayerName(layers, filterNames):
+        regexPattern = '|'.join(map(re.escape, filterNames))
+        pattern = re.compile(regexPattern)
+
+        filteredLayers = [layer for layer in layers if not pattern.search(layer.name())]
+
+        return filteredLayers
 
     def checkForSavedProject(self):
 
@@ -79,20 +146,6 @@ class LayerService:
                 self.messageService.warningMessage("Project Save", "Project not saved.")
                 return None
 
-    @staticmethod
-    def addMapLayer(layer, groupName):
-        project = QgsProject.instance()
-        root = project.instance().layerTreeRoot()
-        group = root.findGroup(groupName)
-        if group is not None:
-            project.instance().addMapLayer(layer, False)
-            group.addLayer(layer)
-        else:
-            group = QgsLayerTreeGroup(groupName)
-            root.addChildNode(group)
-            project.instance().addMapLayer(layer, False)
-            group.addLayer(layer)
-
     def loadShapeFile(self, groupName, file_path):
 
         try:
@@ -120,10 +173,36 @@ class LayerService:
             errorMessage = f'Error loading shape file: {str(load_file_exception)}'
             self.messageService.messageBox('Loading file', errorMessage, 5, 1)
 
-    def createVectorLayer(self, layerName, filePath, use_default_crs=True):
+    def createMemoryVectorLayer(self, wkbType, layerName, crs, fields=None, features=None):
+        geometry = self._getGeometryFromWkbType(wkbType)
+        uri = f'{geometry}?crs={crs}&index=yes'
 
         try:
-            if use_default_crs:
+            layer = QgsVectorLayer(uri, layerName, "memory")
+            provider = layer.dataProvider()
+
+            if fields is not None:
+                provider.addAttributes(fields)
+                layer.updateFields()
+
+            if features is not None:
+                provider.addFeatures(features)
+                layer.updateExtents()
+
+            if not layer.isValid():
+                raise Exception('Layer is not valid.')
+
+            return layer
+
+        except Exception as createLayerException:
+            errorMessage = f'Error creating layer {layerName} -> {str(createLayerException)}'
+            self.messageService.messageBox('Loading file', errorMessage, 5, 1)
+            return None
+
+    def createVectorLayer(self, layerName, filePath, useDefaultCrs=True):
+
+        try:
+            if useDefaultCrs:
                 crs = self.default_crs
             else:
                 crs = None
@@ -143,7 +222,9 @@ class LayerService:
             self.messageService.messageBox('Loading file', errorMessage, 5, 1)
             return None
 
-    def convert_layer_crs(self, layer, target_crs):
+    def convertFeatureCrs(self, layer, target_crs, feedback=None):
+        transformedLayer = self.createMemoryVectorLayer(layer.wkbType(), layer.name(), target_crs, fields=layer.fields())
+        provider = transformedLayer.dataProvider()
         try:
             if not layer.isValid():
                 raise Exception('Invalid layer for CRS conversion.')
@@ -155,14 +236,18 @@ class LayerService:
             transform_context = QgsCoordinateTransform.Context()
             transform = QgsCoordinateTransform(source_crs, target_crs, transform_context)
 
-            for feature in layer.getFeatures():
+            transformedFeature = []
+            for idx, feature in enumerate(layer.getFeatures()):
                 geometry = feature.geometry()
                 if not geometry.isEmpty():
                     geometry.transform(transform)
                     feature.setGeometry(geometry)
-                    layer.updateFeature(feature)
+                    transformedFeature.append(feature)
+                    feedback.setProgress(idx)
+            provider.addFeatures(transformedFeature)
+            transformedLayer.updateExtents()
 
-            return True
+            return transformedLayer
 
         except Exception as e:
             errorMessage = f'Error converting layer CRS: {str(e)}'
@@ -181,12 +266,6 @@ class LayerService:
             errorMessage = f'Error creating layer tree group: {str(group_exception)}'
             self.messageService.messageBox('Loading file', errorMessage, 5, 1)
             return None
-
-    @staticmethod
-    def addLayerToTreeGroup(project, layer, groupName):
-        root = project.instance().layerTreeRoot()
-        group = root.findGroup(groupName)
-        group.addLayer(layer)
 
     def getSuggestedCrs(self, layer):
 
@@ -209,12 +288,6 @@ class LayerService:
             else:
                 print('Centroid is not within any polygon in world zones layer')
 
-    @staticmethod
-    def _getWorldZonesPath():
-        currentDirectory = os.path.dirname(__file__)
-        parentDirectory = os.path.join(currentDirectory, '..')
-        return os.path.join(parentDirectory, 'resources', 'world_zones.geojson')
-
     def saveVectorLayer(self, layer, outputPath):
         writerOptions = QgsVectorFileWriter.SaveVectorOptions()
         writerOptions.fileEncoding = 'UTF-8'
@@ -236,32 +309,14 @@ class LayerService:
             self.messageService.criticalMessage('Saving file', f'An error occurred: {str(e)}')
 
     @staticmethod
-    def _convertToSimpleGeometry(layer):
-        convertedLayerType = ''
-        if layer.geometryType() == QgsWkbTypes.PointZ:
-            convertedLayerType = "Point"
-        elif layer.geometryType() == QgsWkbTypes.LineStringZ:
-            convertedLayerType = "LineString"
-        elif layer.geometryType() == QgsWkbTypes.PolygonZ:
-            convertedLayerType = "Polygon"
-
-        convertedLayer = QgsVectorLayer(f"{convertedLayerType}?crs={layer.crs().authid()}", layer.name(), "memory")
-
-        for feature in layer.getFeatures():
-            convertedFeature = QgsFeature(layer.fields())
-            convertedFeature.setGeometry(QgsWkbTypes.dropZ(feature.geometry().wkbType()))
-            print(convertedFeature.geometry().type())
-            convertedLayer.dataProvider().addFeature(convertedFeature)
-
-        return convertedLayer
+    def getFeaturesByRequest(layer, expression):
+        request = QgsExpression(expression)
+        return layer.getFeatures(QgsFeatureRequest(request))
 
     @staticmethod
-    def checkLayerGeometry(layer):
-        return True if layer.geometryType() in [1, 2, 3] else False
-
-    def filterByLayerName(self, layers, filterName):
-        filteredLayers = []
-        for layer in layers:
-            if filterName not in layer.name().split('_'):
-                filteredLayers.append(layer)
-        return filteredLayers
+    def getPercentualFeaturesById(layer, value):
+        ids = layer.allFeatureIds()
+        value = int(round(value / 100.0, 4) * len(ids))
+        randomSelection = random.sample(ids, value)
+        layer.selectByIds(randomSelection)
+        return layer.getSelectedFeatures()

@@ -24,22 +24,21 @@
 import os
 import datetime
 
+from qgis.core import QgsCoordinateReferenceSystem
 from qgis.PyQt import QtCore, QtWidgets
 from qgis.PyQt.QtWidgets import QHeaderView, QWidget, QLabel, QPushButton, QCheckBox, QLineEdit, QSpinBox, QComboBox
 from qgis.PyQt.QtGui import QPalette, QColor, QDoubleValidator
 from qgis.PyQt.QtCore import Qt
 from qgis.gui import QgsFileWidget
 
+from .layer_service import LayerService
 from .message_service import MessageService
 
 
 class WidgetService:
 
     def __init__(self):
-        """
-        Constructor for the SystemService class.
-        """
-        pass
+        self.layerService = LayerService()
 
     @staticmethod
     def getSelectedData(tableWidget, totalColumns, msgTitle):
@@ -81,11 +80,13 @@ class WidgetService:
                 tableWidget.setItem(rowIdx, colIdx, item)
 
     @staticmethod
-    def enableWidget(widget, state):
+    def enableWidget(widget, state, checkBox=False):
         if state == 0:
             widget.setEnabled(False)
         else:
             widget.setEnabled(True)
+            if checkBox:
+                widget.setChecked(True)
 
     @staticmethod
     def clearWidget(widget):
@@ -153,3 +154,17 @@ class WidgetService:
         palette = lineEdit.palette()
         palette.setColor(QPalette.Base, QColor(color))
         lineEdit.setPalette(palette)
+
+    def updateGui(self, mapLayerComboBox, crsSelectionWidget, warningLabel, crsLabel):
+        crsInfo = ''
+        if mapLayerComboBox.currentLayer().crs().isGeographic():
+            warningLabel.show()
+            crsInfo = self.layerService.getSuggestedCrs(mapLayerComboBox.currentLayer())
+            crsSelectionWidget.setCrs(QgsCoordinateReferenceSystem(crsInfo[2]))
+        else:
+            warningLabel.hide()
+            crsSelectionWidget.setCrs(mapLayerComboBox.currentLayer().crs())
+
+        crsLabel.setText(f'CRS -> {mapLayerComboBox.currentLayer().crs().authid()}')
+
+        return crsInfo
