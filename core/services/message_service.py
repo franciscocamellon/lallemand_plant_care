@@ -21,13 +21,9 @@
  *                                                                         *
  ***************************************************************************/
 """
-from qgis.PyQt import QtWidgets
-from qgis.core import QgsProcessingFeedback
-from qgis.gui import QgisInterface, QgsMessageBar
-from qgis.PyQt.QtWidgets import QMessageBox, QFileDialog, QProgressDialog
 from qgis.PyQt.QtCore import QCoreApplication, Qt
-from PyQt5.QtCore import pyqtSignal
-from ...gui.feedback.feedback_dlg_base import Ui_Dialog
+from qgis.PyQt.QtWidgets import QMessageBox, QFileDialog, QProgressDialog
+from qgis.core import QgsProcessingFeedback
 
 
 class MessageService:
