@@ -77,11 +77,14 @@ class TreatmentTask(QgsTask):
                 self.layerService.loadShapeFile(QGIS_TOC_GROUPS[0], self.polygonBuilder['Polygones_traitement'])
 
                 if self.taskParameters['boundary']:
-                    boundaryLayer = f"{self.filePath}/00_Data/00_Raw_Files/{f'{layerName}'}_contour.shp"
+                    boundaryLayerName = f'{layerName}_contour'
+                    boundaryLayer = f"{self.filePath}/00_Data/00_Raw_Files/{boundaryLayerName}.shp"
 
-                    AlgorithmRunner.runDissolvePolygons(treatmentPolygons, feedback=self.userFeedback, outputLayer=boundaryLayer)
-
-                    self.layerService.loadShapeFile(QGIS_TOC_GROUPS[0], boundaryLayer)
+                    if not self.systemService.fileExist(treatmentLayer, task=True):
+                        AlgorithmRunner.runDissolvePolygons(treatmentPolygons, feedback=self.userFeedback, outputLayer=boundaryLayer)
+                        self.layerService.loadShapeFile(QGIS_TOC_GROUPS[0], boundaryLayer)
+                    else:
+                        raise FileExistsException(f'Sampling file {boundaryLayerName} already exists.')
 
                 if self.reproject['reproject']:
                     epsg = self.reproject['epsg']
@@ -95,10 +98,12 @@ class TreatmentTask(QgsTask):
 
                             AlgorithmRunner.runReprojectLayer(toReprojectFilePath, epsg, self.reproject['operations'][3],
                                                               feedback=self.userFeedback, outputLayer=outputLayerFilePath)
-
                             self.layerService.loadShapeFile(QGIS_TOC_GROUPS[1], outputLayerFilePath)
+
+                        else:
+                            raise FileExistsException(f'Sampling file {reprojectedName} already exists.')
             else:
-                raise FileExistsException('Sampling file already exists.')
+                raise FileExistsException(f'Sampling file {treatmentLayer} already exists.')
 
             return True
 
