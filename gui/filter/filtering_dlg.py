@@ -168,6 +168,7 @@ class FilteringPoints(QtWidgets.QDialog, Ui_Dialog):
         reprojectedLayerName = f'Yield_Map_{self.crsOperations[1]}'
         return {
             'reproject': self.reprojectCheckBox.isChecked(),
+            'layerName': reprojectedLayerName,
             'epsg': self.suggestedCrsSelectionWidget.crs().authid(),
             'operations': self.crsOperations[3],
             'outputReprojectLayer': f"{self.filePath}/00_Data/01_Reproject/{reprojectedLayerName}.shp"

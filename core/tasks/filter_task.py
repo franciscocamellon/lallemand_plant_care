@@ -62,7 +62,7 @@ class FilterTask(QgsTask):
 
         try:
 
-            if not self.systemService.fileExist(outputReprojectLayer, task=True):
+            if not self.systemService.fileExist(filteredMapLayerPath, task=True):
                 output = AlgorithmRunner().runYieldMapFiltering(filterParameters, context=self.context,
                                                                 feedback=self.feedback)
 
@@ -76,9 +76,12 @@ class FilterTask(QgsTask):
                                                                                 features=filteredFeatures)
 
                 if reprojectionParameters['reproject']:
-                    AlgorithmRunner.runReprojectLayer(self.yieldMapVector, epsg, operations,
-                                                      context=self.context, feedback=self.feedback,
-                                                      outputLayer=outputReprojectLayer)
+                    if not self.systemService.fileExist(filteredMapLayerPath, task=True):
+                        AlgorithmRunner.runReprojectLayer(self.yieldMapVector, epsg, operations,
+                                                          context=self.context, feedback=self.feedback,
+                                                          outputLayer=outputReprojectLayer)
+                    else:
+                        raise FileExistsException(f"{reprojectionParameters['layerName']} file already exists.")
 
                 if self.yieldMapVector.isValid():
                     self.layerService.saveVectorLayer(self.yieldMapVector, filteredMapLayerPath)
