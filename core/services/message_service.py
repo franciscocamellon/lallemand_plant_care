@@ -21,36 +21,44 @@
  *                                                                         *
  ***************************************************************************/
 """
-from qgis.core import Qgis
+from qgis.PyQt import QtWidgets
+from qgis.core import QgsProcessingFeedback
 from qgis.gui import QgisInterface, QgsMessageBar
-from qgis.PyQt.QtWidgets import QMessageBox
-from qgis.PyQt.QtCore import QCoreApplication
+from qgis.PyQt.QtWidgets import QMessageBox, QFileDialog, QProgressDialog
+from qgis.PyQt.QtCore import QCoreApplication, Qt
+from PyQt5.QtCore import pyqtSignal
+from ...gui.feedback.feedback_dlg_base import Ui_Dialog
 
 
 class MessageService:
     def __init__(self):
         pass
 
-    def resultMessage(self, result, title, message):
-        if isinstance(result, bool):
-            self.messageBox(title, message, 3, 1)
-        else:
-            self.messageBox(title, result[1], 5, 1)
-
-    # def show_message(self, message, message_type='info'):
-    #     message_level = 0
-    #
-    #     if message_type == 'error':
-    #         message_level = 2
-    #     elif message_type == 'warning':
-    #         message_level = 1
-    #     elif message_type == 'success':
-    #         message_level = 3
-    #
-    #     self.iface.messageBar().pushMessage(message_type, message, level=message_level, duration=5)
+    @staticmethod
+    def _tr(string):
+        """
+        Returns a translatable string with the self.tr() function.
+        """
+        return QCoreApplication.translate('MessageService', string)
 
     @staticmethod
-    def setIconType(iconType):
+    def warningMessage(title, message):
+        return QMessageBox.warning(None, title, message, QMessageBox.Ok)
+
+    @staticmethod
+    def questionMessage(title, message):
+        return QMessageBox.question(None, title, message, QMessageBox.Ok)
+
+    @staticmethod
+    def informationMessage(title, message):
+        return QMessageBox.information(None, title, message, QMessageBox.Ok)
+
+    @staticmethod
+    def criticalMessage(title, message):
+        return QMessageBox.critical(None, title, message, QMessageBox.Ok)
+
+    @staticmethod
+    def _setIconType(iconType):
         if iconType == 1:
             return QMessageBox.NoIcon
         elif iconType == 2:
@@ -63,7 +71,7 @@ class MessageService:
             return QMessageBox.Critical
 
     @staticmethod
-    def setButtonType(buttonType):
+    def _setButtonType(buttonType):
         if buttonType == 1:
             return QMessageBox.Ok
         elif buttonType == 2:
@@ -72,18 +80,72 @@ class MessageService:
             return QMessageBox.Close
         elif buttonType == 4:
             return QMessageBox.Save
+        elif buttonType == 5:
+            return QMessageBox.Yes
+        elif buttonType == 6:
+            return QMessageBox.No
+        elif buttonType == [1, 2]:
+            return QMessageBox.Ok | QMessageBox.Cancel
+        elif buttonType == [5, 6]:
+            return QMessageBox.Yes | QMessageBox.No
+
+    def resultMessage(self, result, title, message):
+        if isinstance(result, bool):
+            self.messageBox(title, message, 3, 1)
+        else:
+            self.messageBox(title, result[1], 5, 1)
 
     def messageBox(self, title, message, iconType, buttonType):
         messageBox = QMessageBox()
-        messageBox.setWindowTitle(self.tr(title))
-        messageBox.setIcon(self.setIconType(iconType))
-        messageBox.setText(self.tr(message))
-        messageBox.setStandardButtons(self.setButtonType(buttonType))
-        messageBox.setDefaultButton(self.setButtonType(buttonType))
-        messageBox.exec_()
+        messageBox.setWindowTitle(self._tr(title))
+        messageBox.setIcon(self._setIconType(iconType))
+        messageBox.setText(self._tr(message))
+        messageBox.setStandardButtons(self._setButtonType(buttonType))
+        messageBox.setDefaultButton(self._setButtonType(buttonType))
+        choice = messageBox.exec_()
+        return choice
 
-    def tr(self, string):
-        """
-        Returns a translatable string with the self.tr() function.
-        """
-        return QCoreApplication.translate('MessageService', string)
+    def standardButtonMessage(self, title, message, iconType, buttonType):
+        messageBox = QMessageBox()
+        messageBox.setWindowTitle(self._tr(title))
+        messageBox.setIcon(self._setIconType(iconType))
+        messageBox.setText(self._tr(message[0]))
+        messageBox.setInformativeText(self._tr(message[1]))
+        messageBox.setStandardButtons(self._setButtonType(buttonType))
+        messageBox.setDefaultButton(self._setButtonType(buttonType[1]))
+        choice = messageBox.exec_()
+        return choice
+
+    def saveFileDialog(self):
+        fileDialog = QFileDialog()
+        fileDialog.setAcceptMode(QFileDialog.AcceptSave)
+        fileDialog.setNameFilter(self._tr("QGIS Project Files (*.qgz *.qgs)"))
+        fileDialog.setDefaultSuffix("qgz")
+        return fileDialog
+
+
+class UserFeedback(QgsProcessingFeedback):
+
+    def __init__(self, parent=None):
+        super(UserFeedback, self).__init__()
+        self.progressBar = QProgressDialog("Processing...", "Cancel", 0, 100, parent)
+        self.progressBar.setWindowModality(Qt.WindowModal)
+        self.progressBar.show()
+
+    def setProgress(self, percent):
+        self.progressBar.setValue(percent)
+
+    # def pushInfo(self, info):
+    #     self.progressBar.setLabelText(info)
+
+    def pushConsoleInfo(self, info):
+        self.progressBar.setLabelText(info)
+
+    def pushMessage(self, message, level=0, duration=0):
+        self.progressBar.setLabelText(message)
+
+    def isCanceled(self):
+        return self.progressBar.wasCanceled()
+
+    def close(self):
+        self.progressBar.close()

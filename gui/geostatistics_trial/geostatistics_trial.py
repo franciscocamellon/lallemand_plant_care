@@ -28,7 +28,7 @@ from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtWidgets import QHeaderView
 from qgis.core import QgsProject
 
-from .ui_geostatistics_trial import Ui_GeostatisticsTrialDialog
+from .ui_geostatistics_trial import Ui_Dialog
 from ...core.constants import *
 from ...core.factories.postgres_factory import PostgresFactory
 from ...core.services.layer_service import LayerService
@@ -37,7 +37,7 @@ from ...core.services.system_service import SystemService
 from ...core.services.widget_service import WidgetService
 
 
-class GeostatisticsTrial(QtWidgets.QDialog, Ui_GeostatisticsTrialDialog):
+class GeostatisticsTrial(QtWidgets.QDialog, Ui_Dialog):
     def __init__(self):
         """Constructor."""
         super(GeostatisticsTrial, self).__init__()

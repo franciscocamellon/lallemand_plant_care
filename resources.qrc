@@ -11,5 +11,7 @@
         <file>icons/delete.png</file>
         <file>icons/edit.png</file>
         <file>icons/save.png</file>
+        <file>icons/filter.png</file>
+        <file>icons/polygons.png</file>
     </qresource>
 </RCC>

@@ -24,7 +24,7 @@
 
 import processing
 
-from qgis.core import QgsCoordinateReferenceSystem
+from qgis.core import QgsCoordinateReferenceSystem, QgsProcessingUtils, QgsProject
 from qgis.PyQt.Qt import QObject
 
 
@@ -35,22 +35,71 @@ class AlgorithmRunner(QObject):
         pass
 
     @staticmethod
-    def runWaypointsPolygonsBuilder(layer, method, sorting, context=None, feedback=None, output_layer=None):
-        output_layer = 'memory:' if output_layer is None else output_layer
+    def _getLayerFromContext(outputDict, context, returnError=False):
+        lyr = QgsProcessingUtils.mapLayerFromString(outputDict['Carte_filtree'], context)
+        if returnError:
+            errorLyr = QgsProcessingUtils.mapLayerFromString(outputDict['error'], context)
+            return lyr, errorLyr
+        else:
+            return lyr
+
+    @staticmethod
+    def runWaypointsPolygonsBuilder(layer, method, sorting, sizeBorder, context=None, feedback=None, outputLayer=None):
+        outputLayer = 'memory:' if outputLayer is None else outputLayer
         parameters = {
-            'Waypoints': layer, 'Methode': method, 'Variable_ordonnee': sorting, 'Polygones_traitement': output_layer
+            'Waypoints': layer,
+            'Initial_Projection': 0,
+            'Reprojection': 0,
+            'Methode': method,
+            'Variable_ordonnee': sorting,
+            'Size_border': sizeBorder,
+            'Polygones_traitement': outputLayer
         }
-        output = processing.run('r:Waypoints_Polygons_builder', parameters, context=context, feedback=feedback)
-        print(output)
+        output = processing.run('r:Waypoints_Polygons_builder_v3_border', parameters, context=context,
+                                feedback=feedback)
         return output['Polygones_traitement']
 
     @staticmethod
-    def runReprojectLayer(layer, targetCrs, operation=None, context=None, feedback=None, output_layer=None):
-        output_layer = 'memory:' if output_layer is None else output_layer
+    def runReprojectLayer(layer, targetCrs, operation=None, context=None, feedback=None, outputLayer=None):
+        outputLayer = 'memory:' if outputLayer is None else outputLayer
         parameters = {
-            'INPUT': layer, 'TARGET_CRS': QgsCoordinateReferenceSystem(targetCrs),
-            'OPERATION': operation, 'OUTPUT': output_layer
+            'INPUT': layer,
+            'TARGET_CRS': QgsCoordinateReferenceSystem(targetCrs),
+            'OPERATION': operation,
+            'OUTPUT': outputLayer
         }
         output = processing.run('native:reprojectlayer', parameters, context=context, feedback=feedback)
 
         return output['OUTPUT']
+
+    @staticmethod
+    def runDropMZValues(layer, context=None, feedback=None, outputLayer=None):
+        outputLayer = 'memory:' if outputLayer is None else outputLayer
+        parameters = {
+            'INPUT': layer,
+            'DROP_M_VALUES': True,
+            'DROP_Z_VALUES': True,
+            'OUTPUT': outputLayer
+        }
+        output = processing.run('native:dropmzvalues', parameters, context=context, feedback=feedback)
+
+        return output['OUTPUT']
+
+    @staticmethod
+    def runDissolvePolygons(layer, context=None, feedback=None, outputLayer=None):
+        outputLayer = 'memory:' if outputLayer is None else outputLayer
+        parameters = {
+            'INPUT': layer,
+            'FIELD': [],
+            'OUTPUT': outputLayer
+        }
+        output = processing.run('native:dissolve', parameters, context=context, feedback=feedback)
+
+        return output['OUTPUT']
+
+    def runYieldMapFiltering(self, parameters, context=None, feedback=None):
+        output = QgsProcessingUtils.generateTempFilename('OUTPUT.gpkg')
+        parameters['Carte_filtree'] = 'TEMPORARY_OUTPUT'
+
+        outputDict = processing.run('r:Yield_map_filtering', parameters, context=context, feedback=feedback)
+        return self._getLayerFromContext(outputDict, context)
