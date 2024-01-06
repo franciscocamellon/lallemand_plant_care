@@ -25,19 +25,24 @@
 from qgis.PyQt.QtCore import pyqtSlot
 from qgis.PyQt.QtWidgets import QWidget
 
+from .filter.filtering_dlg import FilteringPoints
+from .treatment.treatment_polygons_dlg import TreatmentPolygons
 from .geostatistics_trial.geostatistics_trial import GeostatisticsTrial
-from .layer_manager.load_files import LoadFiles
+from .layer_manager.load_files_dlg import LoadFiles
 from .lpc_team.farmer_manager import FarmerManager
 from .lpc_team.lpc_team_manager import RegisterLpcTeam
-from .toolbar.ui_toolbar_manager import Ui_ToolbarManagerForm
+from .toolbar.ui_toolbar_manager import Ui_Form
+from ..core.services.layer_service import LayerService
 
 
-class ToolbarManager(QWidget, Ui_ToolbarManagerForm):
-    def __init__(self, toolbar=None):
+class ToolbarManager(QWidget, Ui_Form):
+    def __init__(self, iface, toolbar=None):
         """Constructor."""
         super(ToolbarManager, self).__init__()
         self.setupUi(self)
+        self.iface = iface
         self.toolbar = toolbar
+        self.layerService = LayerService()
         self.splitter.hide()
         self.settingsPushButton.hide()
         self.reportPushButton.hide()
@@ -45,6 +50,8 @@ class ToolbarManager(QWidget, Ui_ToolbarManagerForm):
         self.loadFilePushButton.clicked.connect(self.loadFiles)
         self.lpcTeamPushButton.clicked.connect(self.manageLpcTeam)
         self.farmerPushButton.clicked.connect(self.manageFarmer)
+        self.treatmentPushButton.clicked.connect(self.treatments)
+        self.filterPushButton.clicked.connect(self.filtering)
 
     @staticmethod
     def initGui():
@@ -77,16 +84,14 @@ class ToolbarManager(QWidget, Ui_ToolbarManagerForm):
         if result:
             pass
 
-    @staticmethod
-    def loadFiles():
-        """
-        Shows the dialog that loads layers from server
-        """
-        dlg = LoadFiles()
-        dlg.show()
-        result = dlg.exec_()
-        if result:
-            pass
+    def loadFiles(self):
+        project = self.layerService.checkForSavedProject()
+        if project:
+            dlg = LoadFiles(project)
+            dlg.show()
+            result = dlg.exec_()
+            if result:
+                pass
 
     @staticmethod
     def manageLpcTeam():
@@ -103,3 +108,21 @@ class ToolbarManager(QWidget, Ui_ToolbarManagerForm):
         result = dlg.exec_()
         if result:
             pass
+
+    def treatments(self):
+        project = self.layerService.checkForSavedProject()
+        if project:
+            dlg = TreatmentPolygons(project)
+            dlg.show()
+            result = dlg.exec_()
+            if result:
+                pass
+
+    def filtering(self):
+        project = self.layerService.checkForSavedProject()
+        if project:
+            dlg = FilteringPoints(self.iface, project)
+            dlg.show()
+            result = dlg.exec_()
+            if result:
+                pass

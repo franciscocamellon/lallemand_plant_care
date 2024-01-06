@@ -23,6 +23,7 @@
 """
 import os
 import datetime
+import shutil
 
 from .message_service import MessageService
 from ..constants import DIRECTORY_STRUCTURE
@@ -36,13 +37,23 @@ class SystemService:
         """
         self.messageService = MessageService()
 
-    @staticmethod
-    def createDirectoryStructure(path):
+    def createDirectoryStructure(self, basePath):
 
-        full_paths = [os.path.join(path, directory) for directory in DIRECTORY_STRUCTURE]
+        for mainDirectory, subDirectories in DIRECTORY_STRUCTURE.items():
+            mainDirectoryPath = os.path.join(basePath, mainDirectory)
 
-        for full_path in full_paths:
-            os.makedirs(full_path, exist_ok=True)
+            if os.path.exists(mainDirectoryPath) and os.listdir(mainDirectoryPath):
+                for subDirectory in subDirectories:
+                    subDirectoryPath = os.path.join(mainDirectoryPath, subDirectory)
+                    if os.path.exists(subDirectoryPath):
+                        continue
+                    os.makedirs(subDirectoryPath, exist_ok=True)
+
+            os.makedirs(mainDirectoryPath, exist_ok=True)
+
+            for subDirectory in subDirectories:
+                subDirectoryPath = os.path.join(mainDirectoryPath, subDirectory)
+                os.makedirs(subDirectoryPath, exist_ok=True)
 
     @staticmethod
     def createDate():
@@ -59,3 +70,26 @@ class SystemService:
             errorMessage = f'Error getting file name: {str(file_name_exception)}'
             MessageService().messageBox('Loading file', errorMessage, 5, 1)
             return None
+
+    @staticmethod
+    def getPath(mainDirectory):
+
+        if len(DIRECTORY_STRUCTURE[mainDirectory]) > 0:
+            for subDirectory in DIRECTORY_STRUCTURE[mainDirectory]:
+                return f'{mainDirectory}/{subDirectory}'
+        else:
+            return f'{mainDirectory}/'
+
+    @staticmethod
+    def copyFile(source, target):
+        shutil.copyfile(source, target)
+
+    def fileExist(self, path, task=False):
+        if os.path.isfile(path):
+            file = os.path.basename(path)
+            if task:
+                return True
+            else:
+                return self.messageService.standardButtonMessage('Load trial files',
+                                                                 [f'{file} already exist!', 'Overwrite?'],
+                                                                 4, [5, 6])

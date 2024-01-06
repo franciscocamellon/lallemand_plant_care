@@ -29,7 +29,7 @@ from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 
 from .gui.toolbar_manager import ToolbarManager
-from .gui.settings.options_settings import OptionsSettingsFactory, OptionsSettingsPage
+from .gui.settings.options_settings_dlg import OptionsSettingsFactory, OptionsSettingsPage
 # Initialize Qt resources from file resources.py
 from .resources import *
 
@@ -172,7 +172,7 @@ class LallemandPlantCare:
 
         self.iface.registerOptionsWidgetFactory(self.optionsFactory)
 
-        self.toolbar_widget = ToolbarManager(toolbar=self.toolbar)
+        self.toolbar_widget = ToolbarManager(self.iface, toolbar=self.toolbar)
         self.toolbar = self.iface.addToolBar(u'Lallemand Plant Care')
         self.toolbar.setObjectName(u'Lallemand Plant Care')
         self.toolbar.addWidget(self.toolbar_widget)

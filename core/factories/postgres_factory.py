@@ -28,16 +28,15 @@ import psycopg2.extras
 import logging
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
-from ...gui.settings.options_settings import OptionsSettingsPage
+from ...gui.settings.options_settings_dlg import OptionsSettingsPage
 
 
 class PostgresFactory:
     def __init__(self):
         super(PostgresFactory, self).__init__()
-        self.settings = OptionsSettingsPage().loadSettings()
+        self.settings = OptionsSettingsPage().getServerSettings()
         self._initializeLogging()
         self.connection = self.openConnection()
-
 
     @staticmethod
     def _initializeLogging():

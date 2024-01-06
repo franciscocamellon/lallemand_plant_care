@@ -28,7 +28,7 @@ class TestLayerService(unittest.TestCase):
         # Criar uma camada vetorial válida
         layer_name = "Test Layer"
         file_path = "path/to/valid_shapefile.shp"
-        layer = self.layer_service.create_vector_layer(layer_name, file_path)
+        layer = self.layer_service.createVectorLayer(layer_name, file_path)
 
         # Verificar se a camada foi criada corretamente
         self.assertIsNotNone(layer)
