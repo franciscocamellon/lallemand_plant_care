@@ -172,7 +172,7 @@ class LallemandPlantCare:
 
         self.iface.registerOptionsWidgetFactory(self.optionsFactory)
 
-        self.toolbar_widget = ToolbarManager(toolbar=self.toolbar)
+        self.toolbar_widget = ToolbarManager(self.iface, toolbar=self.toolbar)
         self.toolbar = self.iface.addToolBar(u'Lallemand Plant Care')
         self.toolbar.setObjectName(u'Lallemand Plant Care')
         self.toolbar.addWidget(self.toolbar_widget)

@@ -26,6 +26,7 @@ from qgis.core import QgsProcessingFeedback
 from qgis.gui import QgisInterface, QgsMessageBar
 from qgis.PyQt.QtWidgets import QMessageBox, QFileDialog, QProgressDialog
 from qgis.PyQt.QtCore import QCoreApplication, Qt
+from PyQt5.QtCore import pyqtSignal
 from ...gui.feedback.feedback_dlg_base import Ui_Dialog
 
 
@@ -123,10 +124,10 @@ class MessageService:
         return fileDialog
 
 
-class UserProcessingFeedback(QgsProcessingFeedback):
+class UserFeedback(QgsProcessingFeedback):
 
     def __init__(self, parent=None):
-        super(UserProcessingFeedback, self).__init__()
+        super(UserFeedback, self).__init__()
         self.progressBar = QProgressDialog("Processing...", "Cancel", 0, 100, parent)
         self.progressBar.setWindowModality(Qt.WindowModal)
         self.progressBar.show()
@@ -134,31 +135,14 @@ class UserProcessingFeedback(QgsProcessingFeedback):
     def setProgress(self, percent):
         self.progressBar.setValue(percent)
 
-    def pushInfo(self, info):
+    # def pushInfo(self, info):
+    #     self.progressBar.setLabelText(info)
+
+    def pushConsoleInfo(self, info):
         self.progressBar.setLabelText(info)
 
     def pushMessage(self, message, level=0, duration=0):
         self.progressBar.setLabelText(message)
-
-    def isCanceled(self):
-        return self.progressBar.wasCanceled()
-
-    def close(self):
-        self.progressBar.close()
-
-
-class UserFeedback:
-    def __init__(self, parent=None, title="Processing...", label="Processing...", minimum=0, maximum=100):
-        self.progressBar = QProgressDialog(label, "Cancel", minimum, maximum, parent)
-        self.progressBar.setWindowTitle(title)
-        self.progressBar.setWindowModality(Qt.WindowModal)
-        self.progressBar.show()
-
-    def setProgress(self, percent):
-        self.progressBar.setValue(percent)
-
-    def setInfo(self, info):
-        self.progressBar.setLabelText(info)
 
     def isCanceled(self):
         return self.progressBar.wasCanceled()

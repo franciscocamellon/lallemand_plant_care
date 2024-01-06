@@ -36,10 +36,11 @@ from ..core.services.layer_service import LayerService
 
 
 class ToolbarManager(QWidget, Ui_Form):
-    def __init__(self, toolbar=None):
+    def __init__(self, iface, toolbar=None):
         """Constructor."""
         super(ToolbarManager, self).__init__()
         self.setupUi(self)
+        self.iface = iface
         self.toolbar = toolbar
         self.layerService = LayerService()
         self.splitter.hide()
@@ -120,7 +121,7 @@ class ToolbarManager(QWidget, Ui_Form):
     def filtering(self):
         project = self.layerService.checkForSavedProject()
         if project:
-            dlg = FilteringPoints(project)
+            dlg = FilteringPoints(self.iface, project)
             dlg.show()
             result = dlg.exec_()
             if result:

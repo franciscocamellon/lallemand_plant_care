@@ -84,9 +84,12 @@ class SystemService:
     def copyFile(source, target):
         shutil.copyfile(source, target)
 
-    def fileExist(self, path):
+    def fileExist(self, path, task=False):
         if os.path.isfile(path):
             file = os.path.basename(path)
-            return self.messageService.standardButtonMessage('Load trial files',
-                                                             [f'{file} already exist!', 'Overwrite?'],
-                                                             4, [5, 6])
+            if task:
+                return True
+            else:
+                return self.messageService.standardButtonMessage('Load trial files',
+                                                                 [f'{file} already exist!', 'Overwrite?'],
+                                                                 4, [5, 6])
