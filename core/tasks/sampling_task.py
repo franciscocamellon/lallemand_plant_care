@@ -77,14 +77,14 @@ class SamplingTask(QgsTask):
 
                     for percent in [80, 20]:
                         percentFeatures = self.layerService.getPercentualFeaturesById(selectedFeaturesLayer, percent)
-                        layerName = f'{treatment}_{percent}_perc'
-                        outputPath = f"{self.filePath}/00_Data/02_Sampling/{layerName}.shp"
+                        percentLayerName = f'{treatment}_{percent}_perc'
+                        outputPath = f"{self.filePath}/00_Data/02_Sampling/{percentLayerName}.shp"
 
-                        if not self.systemService.fileExist(totalOutputPath, task=True):
+                        if not self.systemService.fileExist(outputPath, task=True):
 
                             percentFeaturesLayer = self.layerService.createMemoryVectorLayer(
                                 selectedFeaturesLayer.wkbType(),
-                                layerName,
+                                percentLayerName,
                                 selectedFeaturesLayer.crs().authid(),
                                 fields=selectedFeaturesLayer.fields(),
                                 features=percentFeatures)
@@ -92,9 +92,9 @@ class SamplingTask(QgsTask):
                             self.layerService.saveVectorLayer(percentFeaturesLayer, outputPath)
                             self.layerService.loadShapeFile(QGIS_TOC_GROUPS[2], outputPath, style=True)
                         else:
-                            raise FileExistsException('Sampling file already exists.')
+                            raise FileExistsException(f'Sampling file {percentLayerName} already exists.')
                 else:
-                    raise FileExistsException('Sampling file already exists.')
+                    raise FileExistsException(f'Sampling file {totalLayerName} already exists.')
 
             return True
 
