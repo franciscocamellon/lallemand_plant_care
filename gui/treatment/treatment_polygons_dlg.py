@@ -21,16 +21,18 @@
  *                                                                         *
  ***************************************************************************/
 """
-from qgis.PyQt import QtWidgets
-from qgis.core import QgsFieldProxyModel, QgsProject, QgsCoordinateReferenceSystem
 
-from ...core.services.message_service import UserFeedback
-from ...core.constants import POLYGONS_BUILDER_METHODS, QGIS_TOC_GROUPS
+from typing import Optional
+
+from qgis.PyQt import QtWidgets
+from qgis.core import QgsFieldProxyModel, QgsProject, QgsCoordinateReferenceSystem, QgsTask, QgsApplication
+
 from .treatment_polygons_dlg_base import Ui_TreatmentPolygonsDialogBase
+from ...core.constants import POLYGONS_BUILDER_METHODS
 from ...core.services.layer_service import LayerService
 from ...core.services.system_service import SystemService
 from ...core.services.widget_service import WidgetService
-from ...core.tools.algorithm_runner import AlgorithmRunner
+from ...core.tasks.treatment_task import TreatmentTask
 
 
 class TreatmentPolygons(QtWidgets.QDialog, Ui_TreatmentPolygonsDialogBase):
@@ -43,6 +45,7 @@ class TreatmentPolygons(QtWidgets.QDialog, Ui_TreatmentPolygonsDialogBase):
         self.setWindowTitle('Treatment polygons')
         self.layerService = LayerService()
         self.systemService = SystemService()
+        self.treatmentTask: Optional[QgsTask] = None
         self.crsOperations = ''
         self.borderSizeSpinBox.setValue(10)
         self.methodComboBox.insertItems(0, POLYGONS_BUILDER_METHODS)
@@ -83,38 +86,37 @@ class TreatmentPolygons(QtWidgets.QDialog, Ui_TreatmentPolygonsDialogBase):
 
         self.crsLabel.setText(f'CRS -> {self.gpsPointLayerComboBox.currentLayer().crs().authid()}')
 
+    def getTaskParameters(self):
+        return {
+            'layer': self.gpsPointLayerComboBox.currentLayer(),
+            'polygonBuilder': self.getWaypointsPolygonsBuilderParameters(),
+            'boundary': self.boundaryCheckBox.isChecked(),
+            'reprojection': self.getReprojectionParameters()
+        }
+
+    def getWaypointsPolygonsBuilderParameters(self):
+        layerName = self.gpsPointLayerComboBox.currentLayer().name()
+        self.filePath = self.project.homePath()
+        return {
+            'Waypoints': self.gpsPointLayerComboBox.currentLayer(),
+            'Initial_Projection': 0,
+            'Reprojection': 0,
+            'Methode': self.methodComboBox.currentIndex(),
+            'Variable_ordonnee': self.sortingFieldComboBox.currentField(),
+            'Size_border': self.borderSizeSpinBox.value(),
+            'Polygones_traitement': f"{self.filePath}/00_Data/00_Raw_Files/{f'{layerName}'}_treatment.shp"
+        }
+
+    def getReprojectionParameters(self):
+        return {
+            'reproject': self.reprojectCheckBox.isChecked(),
+            'epsg': self.suggestedCrsSelectionWidget.crs().authid(),
+            'operations': self.crsOperations
+        }
+
     def createPolygons(self):
-        filePath = self.project.homePath()
-        treatmentLayer = f"{filePath}/00_Data/00_Raw_Files/{f'{self.gpsPointLayerComboBox.currentLayer().name()}'}_treatment.shp"
-        boundaryLayer = ''
-        feedback = UserFeedback()
-        treatmentPolygons = AlgorithmRunner.runWaypointsPolygonsBuilder(self.gpsPointLayerComboBox.currentLayer(),
-                                                                        self.methodComboBox.currentIndex(),
-                                                                        self.sortingFieldComboBox.currentField(),
-                                                                        self.borderSizeSpinBox.value(),
-                                                                        feedback=feedback,
-                                                                        outputLayer=treatmentLayer)
-        feedback.close()
-        self.layerService.loadShapeFile(QGIS_TOC_GROUPS[0], treatmentLayer)
 
-        if self.boundaryCheckBox.isChecked():
-            boundaryLayer = f"{filePath}/00_Data/00_Raw_Files/{f'{self.gpsPointLayerComboBox.currentLayer().name()}'}_contour.shp"
-            feedback = UserFeedback()
-            AlgorithmRunner.runDissolvePolygons(treatmentPolygons, feedback=feedback, outputLayer=boundaryLayer)
-            feedback.close()
-            self.layerService.loadShapeFile(QGIS_TOC_GROUPS[0], boundaryLayer)
+        self.treatmentTask = TreatmentTask(self.getTaskParameters(), self.project)
 
-        if self.reprojectCheckBox.isChecked():
-            epsg = self.suggestedCrsSelectionWidget.crs()
-            toReproject = [treatmentLayer, boundaryLayer]
-            for toReprojectFilePath in toReproject:
-                fileName = self.systemService.extractFileName(toReprojectFilePath)
-                reprojectedName = f'{fileName}_{self.crsOperations[1]}'
-                outputLayerFilePath = f"{filePath}/00_Data/01_Reproject/{reprojectedName}.shp"
-
-                if self.systemService.fileExist(outputLayerFilePath) != 65536:
-                    feedback = UserFeedback()
-                    AlgorithmRunner.runReprojectLayer(toReprojectFilePath, epsg.authid(), self.crsOperations[3],
-                                                      feedback=feedback, outputLayer=outputLayerFilePath)
-                    feedback.close()
-                    self.layerService.loadShapeFile(QGIS_TOC_GROUPS[1], outputLayerFilePath)
+        QgsApplication.taskManager().addTask(self.treatmentTask)
+        self.close()
