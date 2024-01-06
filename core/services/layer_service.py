@@ -41,7 +41,6 @@ from qgis.core import (
     QgsExpression
 )
 from qgis.PyQt.QtWidgets import QMessageBox, QFileDialog
-
 from .message_service import MessageService
 from .system_service import SystemService
 from ..tools.algorithm_runner import AlgorithmRunner
@@ -70,7 +69,6 @@ class LayerService:
         for feature in layer.getFeatures():
             convertedFeature = QgsFeature(layer.fields())
             convertedFeature.setGeometry(QgsWkbTypes.dropZ(feature.geometry().wkbType()))
-            print(convertedFeature.geometry().type())
             convertedLayer.dataProvider().addFeature(convertedFeature)
 
         return convertedLayer
@@ -80,6 +78,12 @@ class LayerService:
         currentDirectory = os.path.dirname(__file__)
         parentDirectory = os.path.join(currentDirectory, '..')
         return os.path.join(parentDirectory, 'resources', 'world_zones.geojson')
+
+    @staticmethod
+    def _getLayerStylePath():
+        currentDirectory = os.path.dirname(__file__)
+        parentDirectory = os.path.join(currentDirectory, '..')
+        return os.path.join(parentDirectory, 'resources', 'sampling_style.qml')
 
     @staticmethod
     def _getGeometryFromWkbType(wkbType):
@@ -100,9 +104,11 @@ class LayerService:
         project = QgsProject.instance()
         root = project.instance().layerTreeRoot()
         group = root.findGroup(groupName)
+
         if group is not None:
             project.instance().addMapLayer(layer, False)
             group.addLayer(layer)
+
         else:
             group = QgsLayerTreeGroup(groupName)
             root.addChildNode(group)
@@ -146,11 +152,18 @@ class LayerService:
                 self.messageService.warningMessage("Project Save", "Project not saved.")
                 return None
 
-    def loadShapeFile(self, groupName, file_path):
+    def loadLayerSamplingStyle(self):
+        mapLayers = self.project.instance().mapLayers().values()
+
+    def loadShapeFile(self, groupName, file_path, style=False):
 
         try:
             fileName = self.systemService.extractFileName(file_path)
             layer = self.createVectorLayer(fileName, file_path)
+
+            if style:
+                layer.loadNamedStyle(self._getLayerStylePath())
+                layer.triggerRepaint()
 
             if groupName is None:
                 self.project.addMapLayer(layer)
@@ -223,7 +236,8 @@ class LayerService:
             return None
 
     def convertFeatureCrs(self, layer, target_crs, feedback=None):
-        transformedLayer = self.createMemoryVectorLayer(layer.wkbType(), layer.name(), target_crs, fields=layer.fields())
+        transformedLayer = self.createMemoryVectorLayer(layer.wkbType(), layer.name(), target_crs,
+                                                        fields=layer.fields())
         provider = transformedLayer.dataProvider()
         try:
             if not layer.isValid():
@@ -294,14 +308,15 @@ class LayerService:
         writerOptions.driverName = 'ESRI Shapefile'
 
         try:
-            result, error_message = QgsVectorFileWriter.writeAsVectorFormatV2(
+
+            error, errorMessage, layerPath, layerName = QgsVectorFileWriter.writeAsVectorFormatV3(
                 layer,
                 outputPath,
                 QgsCoordinateTransformContext(),
                 options=writerOptions
             )
 
-            if result == QgsVectorFileWriter.NoError:
+            if error == QgsVectorFileWriter.NoError:
                 # self.messageService.informationMessage('Saving file', f'Layer saved successfully to {outputPath}')
                 pass
 
