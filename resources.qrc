@@ -13,5 +13,6 @@
         <file>icons/save.png</file>
         <file>icons/filter.png</file>
         <file>icons/polygons.png</file>
+        <file>icons/kriging.png</file>
     </qresource>
 </RCC>
