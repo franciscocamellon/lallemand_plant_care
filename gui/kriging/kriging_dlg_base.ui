@@ -7,13 +7,13 @@
     <x>0</x>
     <y>0</y>
     <width>550</width>
-    <height>425</height>
+    <height>400</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
     <width>550</width>
-    <height>425</height>
+    <height>400</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -30,48 +30,6 @@
        <string>Kriging</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_2">
-       <item row="5" column="0">
-        <layout class="QHBoxLayout" name="horizontalLayout_13">
-         <property name="spacing">
-          <number>0</number>
-         </property>
-         <item>
-          <spacer name="horizontalSpacer_9">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item>
-          <widget class="QPushButton" name="interpolatePushButton">
-           <property name="minimumSize">
-            <size>
-             <width>100</width>
-             <height>23</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>16777215</width>
-             <height>28</height>
-            </size>
-           </property>
-           <property name="styleSheet">
-            <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
-           </property>
-           <property name="text">
-            <string>Interpolate</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
        <item row="0" column="0">
         <widget class="QGroupBox" name="parametersGroupBox">
          <property name="sizePolicy">
@@ -442,114 +400,6 @@
         </widget>
        </item>
        <item row="2" column="0">
-        <widget class="QGroupBox" name="tasksGroupBox">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>65</height>
-          </size>
-         </property>
-         <property name="font">
-          <font>
-           <weight>75</weight>
-           <bold>true</bold>
-          </font>
-         </property>
-         <property name="title">
-          <string>Tasks</string>
-         </property>
-         <property name="checkable">
-          <bool>true</bool>
-         </property>
-         <property name="checked">
-          <bool>false</bool>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_15">
-          <property name="spacing">
-           <number>5</number>
-          </property>
-          <property name="leftMargin">
-           <number>10</number>
-          </property>
-          <property name="topMargin">
-           <number>10</number>
-          </property>
-          <property name="rightMargin">
-           <number>10</number>
-          </property>
-          <property name="bottomMargin">
-           <number>10</number>
-          </property>
-          <item>
-           <layout class="QVBoxLayout" name="verticalLayout_5">
-            <property name="spacing">
-             <number>5</number>
-            </property>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_7">
-              <property name="spacing">
-               <number>5</number>
-              </property>
-              <item>
-               <widget class="QCheckBox" name="variogramCheckBox">
-                <property name="styleSheet">
-                 <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
-                </property>
-                <property name="text">
-                 <string>Variogram</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QCheckBox" name="interpolationCheckBox">
-                <property name="styleSheet">
-                 <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
-                </property>
-                <property name="text">
-                 <string>Interpolated map</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QCheckBox" name="saveParametersCheckBox">
-                <property name="styleSheet">
-                 <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
-                </property>
-                <property name="text">
-                 <string>Save parameters</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-           </layout>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <spacer name="verticalSpacer_3">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeType">
-          <enum>QSizePolicy::Fixed</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>5</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item row="4" column="0">
         <spacer name="verticalSpacer_4">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -561,6 +411,48 @@
           </size>
          </property>
         </spacer>
+       </item>
+       <item row="3" column="0">
+        <layout class="QHBoxLayout" name="horizontalLayout_13">
+         <property name="spacing">
+          <number>0</number>
+         </property>
+         <item>
+          <spacer name="horizontalSpacer_9">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QPushButton" name="interpolatePushButton">
+           <property name="minimumSize">
+            <size>
+             <width>100</width>
+             <height>23</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>28</height>
+            </size>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+           </property>
+           <property name="text">
+            <string>Interpolate</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
       </layout>
      </widget>
@@ -588,10 +480,6 @@
   <tabstop>pixelSizeYSpinBox</tabstop>
   <tabstop>outlinePolygonCheckBox</tabstop>
   <tabstop>boundaryLayerComboBox</tabstop>
-  <tabstop>tasksGroupBox</tabstop>
-  <tabstop>variogramCheckBox</tabstop>
-  <tabstop>interpolationCheckBox</tabstop>
-  <tabstop>saveParametersCheckBox</tabstop>
   <tabstop>interpolatePushButton</tabstop>
  </tabstops>
  <resources/>
