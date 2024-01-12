@@ -79,12 +79,12 @@ class TreatmentTask(QgsTask):
                 if self.taskParameters['boundary']:
                     boundaryLayerName = f'{layerName}_contour'
                     boundaryLayer = f"{self.filePath}/00_Data/00_Raw_Files/{boundaryLayerName}.shp"
-
-                    if not self.systemService.fileExist(treatmentLayer, task=True):
-                        AlgorithmRunner.runDissolvePolygons(treatmentPolygons, feedback=self.userFeedback, outputLayer=boundaryLayer)
-                        self.layerService.loadShapeFile(QGIS_TOC_GROUPS[0], boundaryLayer)
-                    else:
-                        raise FileExistsException(f'Sampling file {boundaryLayerName} already exists.')
+                    # TODO verify if file already exists
+                    # if not self.systemService.fileExist(treatmentLayer, task=True):
+                    AlgorithmRunner.runDissolvePolygons(treatmentPolygons, feedback=self.userFeedback, outputLayer=boundaryLayer)
+                    self.layerService.loadShapeFile(QGIS_TOC_GROUPS[0], boundaryLayer)
+                    # else:
+                    #     raise FileExistsException(f'Sampling file {boundaryLayerName} already exists.')
 
                 if self.reproject['reproject']:
                     epsg = self.reproject['epsg']
@@ -93,15 +93,15 @@ class TreatmentTask(QgsTask):
                         fileName = self.systemService.extractFileName(toReprojectFilePath)
                         reprojectedName = f"{fileName}_{self.reproject['operations'][1]}"
                         outputLayerFilePath = f"{self.filePath}/00_Data/01_Reproject/{reprojectedName}.shp"
+                        # TODO verify if file already exists
+                        # if not self.systemService.fileExist(outputLayerFilePath, task=True):
 
-                        if not self.systemService.fileExist(outputLayerFilePath, task=True):
+                        AlgorithmRunner.runReprojectLayer(toReprojectFilePath, epsg, self.reproject['operations'][3],
+                                                          feedback=self.userFeedback, outputLayer=outputLayerFilePath)
+                        self.layerService.loadShapeFile(QGIS_TOC_GROUPS[1], outputLayerFilePath)
 
-                            AlgorithmRunner.runReprojectLayer(toReprojectFilePath, epsg, self.reproject['operations'][3],
-                                                              feedback=self.userFeedback, outputLayer=outputLayerFilePath)
-                            self.layerService.loadShapeFile(QGIS_TOC_GROUPS[1], outputLayerFilePath)
-
-                        else:
-                            raise FileExistsException(f'Sampling file {reprojectedName} already exists.')
+                        # else:
+                        #     raise FileExistsException(f'Sampling file {reprojectedName} already exists.')
             else:
                 raise FileExistsException(f'Sampling file {treatmentLayer} already exists.')
 
