@@ -50,7 +50,6 @@ class OrdinaryKriging(QtWidgets.QDialog, Ui_Dialog):
         self.layerService = LayerService()
         self.boundaryLayerComboBox.setEnabled(False)
         self.setKrigingGui()
-        self.tasksGroupBox.toggled.connect(self.enableTasks)
         self.outlinePolygonCheckBox.stateChanged.connect(self.enableWidget)
         self.interpolatePushButton.clicked.connect(self.runSmartMap)
 
@@ -67,7 +66,6 @@ class OrdinaryKriging(QtWidgets.QDialog, Ui_Dialog):
         smartMap = self.smartMapPluginCheck()
         if self.samplingLayerComboBox.count() == 0 or not smartMap:
             self.parametersGroupBox.setEnabled(False)
-            self.tasksGroupBox.setEnabled(False)
             self.interpolatePushButton.setEnabled(False)
         else:
             boundaryLayer = self.layerService.filterByLayerName(list(layers.values()), ['contour'], kriging=True)
@@ -163,6 +161,3 @@ class OrdinaryKriging(QtWidgets.QDialog, Ui_Dialog):
         self.smartMap.pushButton_VariogramaAjust_clicked()
         self.smartMap.pushButton_Krigagem_clicked()
         self.smartMap.pushButton_VariogramaSave_clicked()
-
-        # smartMapDialog.show()
-        # self.close()
