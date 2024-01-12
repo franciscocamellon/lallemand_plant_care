@@ -27,6 +27,7 @@ import re
 
 from qgis.core import (
     QgsProject,
+    QgsFields,
     QgsVectorLayer,
     QgsFeature,
     QgsGeometry,
@@ -116,13 +117,31 @@ class LayerService:
             group.addLayer(layer)
 
     @staticmethod
-    def filterByLayerName(layers, filterNames):
-        regexPattern = '|'.join(map(re.escape, filterNames))
+    def filterByLayerName(layers, filterString, kriging=False):
+
+        regexPattern = '|'.join(map(re.escape, filterString))
         pattern = re.compile(regexPattern)
 
         filteredLayers = [layer for layer in layers if not pattern.search(layer.name())]
 
+        if kriging:
+            for layer in layers:
+                if layer.crs().isGeographic() and pattern.search(layer.name()):
+                    filteredLayers.append(layer)
+
         return filteredLayers
+
+    @staticmethod
+    def filterByFieldName(layer, filterString):
+        filteredFields = QgsFields()
+        regexPattern = '|'.join(map(re.escape, filterString))
+        pattern = re.compile(regexPattern)
+
+        for field in layer.fields():
+            if pattern.search(field.name()):
+                filteredFields.append(field)
+
+        return filteredFields
 
     def checkForSavedProject(self):
 

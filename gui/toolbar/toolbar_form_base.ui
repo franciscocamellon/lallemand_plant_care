@@ -193,7 +193,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton">
+        <widget class="QPushButton" name="krigingPushButton">
          <property name="maximumSize">
           <size>
            <width>30</width>
@@ -204,8 +204,8 @@
           <string/>
          </property>
          <property name="icon">
-          <iconset>
-           <normaloff>../../icons/filter_percentual2.png</normaloff>../../icons/filter_percentual2.png</iconset>
+          <iconset resource="../../resources.qrc">
+           <normaloff>:/plugins/lallemand_plant_care/icons/kriging.png</normaloff>:/plugins/lallemand_plant_care/icons/kriging.png</iconset>
          </property>
          <property name="iconSize">
           <size>

@@ -26,7 +26,7 @@ from qgis.PyQt.QtCore import QSettings
 from qgis.PyQt.QtGui import QIcon
 from qgis.gui import QgsOptionsWidgetFactory, QgsOptionsPageWidget
 
-from .options_settings_dlg_base import Ui_OptionsSettingsForm
+from .options_settings_dlg_base import Ui_Form
 
 SETTINGS_KEY = "LPC/postgresConnection"
 
@@ -43,7 +43,7 @@ class OptionsSettingsFactory(QgsOptionsWidgetFactory):
         return OptionsSettingsPage(parent)
 
 
-class OptionsSettingsPage(QgsOptionsPageWidget, Ui_OptionsSettingsForm):
+class OptionsSettingsPage(QgsOptionsPageWidget, Ui_Form):
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -57,10 +57,12 @@ class OptionsSettingsPage(QgsOptionsPageWidget, Ui_OptionsSettingsForm):
     def saveSettings(self):
         self.saveServerSettings()
         self.saveTreatmentPolygonsSettings()
+        self.saveKrigingSettings()
 
     def loadSettings(self):
         self.loadServerSettings()
         self.loadTreatmentPolygonsSettings()
+        self.loadKrigingSettings()
 
     def saveServerSettings(self):
         self.settings.setValue('LPC/database', self.databaseNameLineEdit.text())
@@ -98,3 +100,18 @@ class OptionsSettingsPage(QgsOptionsPageWidget, Ui_OptionsSettingsForm):
             self.settings.value('LPC/odd_polygons'),
             self.settings.value('LPC/even_polygons')
         )
+
+    def saveKrigingSettings(self):
+        self.settings.setValue('LPC/field_interpolate', self.fieldToInterpolateLineEdit.text())
+        self.settings.setValue('LPC/pixel_size_x', self.pixelSizeXSpinBox.value())
+        self.settings.setValue('LPC/pixel_size_y', self.pixelSizeYSpinBox.value())
+
+    def loadKrigingSettings(self):
+        self.fieldToInterpolateLineEdit.setText(self.settings.value('LPC/field_interpolate'))
+        self.pixelSizeXSpinBox.setValue(float(self.settings.value('LPC/pixel_size_x')))
+        self.pixelSizeYSpinBox.setValue(float(self.settings.value('LPC/pixel_size_y')))
+
+    def getKrigingSettings(self):
+        fields = self.settings.value('LPC/field_interpolate').split(';')
+        pixelSize = [self.settings.value('LPC/pixel_size_x'), self.settings.value('LPC/pixel_size_y')]
+        return fields, pixelSize
