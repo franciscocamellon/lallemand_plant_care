@@ -72,11 +72,16 @@ class OptionsSettingsPage(QgsOptionsPageWidget, Ui_Form):
         self.settings.setValue('LPC/password', self.serverPasswordLineEdit.text())
 
     def loadServerSettings(self):
-        self.databaseNameLineEdit.setText(self.settings.value('LPC/database'))
-        self.serverIpLineEdit.setText(self.settings.value('LPC/host'))
-        self.serverPortLineEdit.setText(self.settings.value('LPC/port'))
-        self.serverUserLineEdit.setText(self.settings.value('LPC/user'))
-        self.serverPasswordLineEdit.setText(self.settings.value('LPC/password'))
+        database = 'BD_GEOSTAT_LPC'
+        host = 'localhost'
+        port = 5432
+        user = 'postgres'
+        password = 'postgres'
+        self.databaseNameLineEdit.setText(self.settings.value('LPC/database', database))
+        self.serverIpLineEdit.setText(self.settings.value('LPC/host', host))
+        self.serverPortLineEdit.setText(self.settings.value('LPC/port', port))
+        self.serverUserLineEdit.setText(self.settings.value('LPC/user', user))
+        self.serverPasswordLineEdit.setText(self.settings.value('LPC/password', password))
 
     def getServerSettings(self):
         return {
@@ -92,8 +97,10 @@ class OptionsSettingsPage(QgsOptionsPageWidget, Ui_Form):
         self.settings.setValue('LPC/even_polygons', self.evenPolygonsNameLineEdit.text())
 
     def loadTreatmentPolygonsSettings(self):
-        self.oddPolygonsNameLineEdit.setText(self.settings.value('LPC/odd_polygons'))
-        self.evenPolygonsNameLineEdit.setText(self.settings.value('LPC/even_polygons'))
+        odd_polygons = 'T1'
+        even_polygons = 'T2'
+        self.oddPolygonsNameLineEdit.setText(self.settings.value('LPC/odd_polygons', odd_polygons))
+        self.evenPolygonsNameLineEdit.setText(self.settings.value('LPC/even_polygons', even_polygons))
 
     def getTreatmentPolygonsSettings(self):
         return (
@@ -107,9 +114,12 @@ class OptionsSettingsPage(QgsOptionsPageWidget, Ui_Form):
         self.settings.setValue('LPC/pixel_size_y', self.pixelSizeYSpinBox.value())
 
     def loadKrigingSettings(self):
-        self.fieldToInterpolateLineEdit.setText(self.settings.value('LPC/field_interpolate'))
-        self.pixelSizeXSpinBox.setValue(float(self.settings.value('LPC/pixel_size_x')))
-        self.pixelSizeYSpinBox.setValue(float(self.settings.value('LPC/pixel_size_y')))
+        field_interpolate = 'VRYIELDMAS;VRYIELD'
+        pixel_size_x = 1.5
+        pixel_size_y = 1.5
+        self.fieldToInterpolateLineEdit.setText(self.settings.value('LPC/field_interpolate', field_interpolate))
+        self.pixelSizeXSpinBox.setValue(float(self.settings.value('LPC/pixel_size_x', pixel_size_x)))
+        self.pixelSizeYSpinBox.setValue(float(self.settings.value('LPC/pixel_size_y', pixel_size_y)))
 
     def getKrigingSettings(self):
         fields = self.settings.value('LPC/field_interpolate').split(';')
