@@ -26,12 +26,13 @@ from qgis.PyQt.QtCore import pyqtSlot
 from qgis.PyQt.QtWidgets import QWidget
 
 from .filter.filtering_dlg import FilteringPoints
+from .kriging.kriging_dlg import OrdinaryKriging
 from .treatment.treatment_polygons_dlg import TreatmentPolygons
 from .geostatistics_trial.geostatistics_trial import GeostatisticsTrial
 from .layer_manager.load_files_dlg import LoadFiles
 from .lpc_team.farmer_manager import FarmerManager
 from .lpc_team.lpc_team_manager import RegisterLpcTeam
-from .toolbar.ui_toolbar_manager import Ui_Form
+from .toolbar.toolbar_form_base import Ui_Form
 from ..core.services.layer_service import LayerService
 
 
@@ -52,6 +53,7 @@ class ToolbarManager(QWidget, Ui_Form):
         self.farmerPushButton.clicked.connect(self.manageFarmer)
         self.treatmentPushButton.clicked.connect(self.treatments)
         self.filterPushButton.clicked.connect(self.filtering)
+        self.krigingPushButton.clicked.connect(self.ordinaryKriging)
 
     @staticmethod
     def initGui():
@@ -122,6 +124,15 @@ class ToolbarManager(QWidget, Ui_Form):
         project = self.layerService.checkForSavedProject()
         if project:
             dlg = FilteringPoints(self.iface, project)
+            dlg.show()
+            result = dlg.exec_()
+            if result:
+                pass
+
+    def ordinaryKriging(self):
+        project = self.layerService.checkForSavedProject()
+        if project:
+            dlg = OrdinaryKriging(self.iface, project)
             dlg.show()
             result = dlg.exec_()
             if result:

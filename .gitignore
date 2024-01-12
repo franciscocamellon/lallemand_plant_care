@@ -47,7 +47,6 @@ Temporary Items
 # =========================
 *.pyc
 tags
-.dsg_tools.py.swp
 
 # LINUX
 # =========================
@@ -59,14 +58,7 @@ tags
 .pydevproject
 .vscode/
 .idea/
-
-# Caching formats and other file handling temporary files
-# =========================
-*.xsd
-*.gpkg-shm
-*.gpkg-wal
 /.idea/.gitignore
-/.idea/terrain_master_pro.iml
 /.idea/misc.xml
 /.idea/modules.xml
 /.idea/inspectionProfiles/profiles_settings.xml
@@ -74,4 +66,9 @@ tags
 /.idea/vcs.xml
 /.idea/workspace.xml
 /.idea
-/core/factories/postgres_log.log
+
+# Caching formats and other file handling temporary files
+# =========================
+*.xsd
+*.gpkg-shm
+*.gpkg-wal
