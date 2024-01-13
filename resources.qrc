@@ -14,5 +14,7 @@
         <file>icons/filter.png</file>
         <file>icons/polygons.png</file>
         <file>icons/kriging.png</file>
+        <file>icons/folder_tree.png</file>
+        <file>icons/verified.png</file>
     </qresource>
 </RCC>

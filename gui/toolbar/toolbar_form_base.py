@@ -95,7 +95,7 @@ class Ui_Form(object):
         self.pushButton.setMaximumSize(QtCore.QSize(30, 30))
         self.pushButton.setText("")
         icon5 = QtGui.QIcon()
-        icon5.addPixmap(QtGui.QPixmap("../../icons/folder_tree_new_10x.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon5.addPixmap(QtGui.QPixmap("../../icons/folder_tree.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.pushButton.setIcon(icon5)
         self.pushButton.setIconSize(QtCore.QSize(24, 24))
         self.pushButton.setObjectName("pushButton")
