@@ -35,8 +35,11 @@ class AlgorithmRunner(QObject):
         pass
 
     @staticmethod
-    def _getLayerFromContext(outputDict, context, returnError=False):
-        lyr = QgsProcessingUtils.mapLayerFromString(outputDict['Carte_filtree'], context)
+    def _getLayerFromContext(outputDict, context, field=None, returnError=False):
+        if field:
+            lyr = QgsProcessingUtils.mapLayerFromString(outputDict[field], context)
+        else:
+            lyr = QgsProcessingUtils.mapLayerFromString(outputDict['Carte_filtree'], context)
         if returnError:
             errorLyr = QgsProcessingUtils.mapLayerFromString(outputDict['error'], context)
             return lyr, errorLyr
@@ -103,3 +106,25 @@ class AlgorithmRunner(QObject):
 
         outputDict = processing.run('r:Yield_map_filtering', parameters, context=context, feedback=feedback)
         return self._getLayerFromContext(outputDict, context)
+
+    def runAddRasterValuesToPoints(self, shape, grid, context=None, feedback=None):
+
+        parameters = {
+            'SHAPES': shape,
+            'GRIDS': grid,
+            'RESAMPLING': 0,
+            'RESULT': 'TEMPORARY_OUTPUT'
+        }
+        output = processing.run("saga:addrastervaluestopoints", parameters, context=context, feedback=feedback)
+        return self._getLayerFromContext(output, context, field='RESULT')
+
+    def runBasicStatisticsForFields(self, layer, field, context=None, feedback=None):
+
+        parameters = {
+            'INPUT_LAYER': layer,
+            'FIELD_NAME': field,
+            'OUTPUT_HTML_FILE': 'TEMPORARY_OUTPUT'
+        }
+        output = processing.run("qgis:basicstatisticsforfields", parameters, context=context, feedback=feedback)
+
+        return output
