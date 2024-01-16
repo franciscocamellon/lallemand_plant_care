@@ -24,7 +24,9 @@
 
 from qgis.PyQt.QtCore import pyqtSlot
 from qgis.PyQt.QtWidgets import QWidget
+from qgis.core import QgsMapLayer
 
+from ..core.constants import QGIS_TOC_GROUPS
 from .filter.filtering_dlg import FilteringPoints
 from .kriging.kriging_dlg import OrdinaryKriging
 from .treatment.treatment_polygons_dlg import TreatmentPolygons
@@ -33,6 +35,7 @@ from .layer_manager.load_files_dlg import LoadFiles
 from .lpc_team.farmer_manager import FarmerManager
 from .lpc_team.lpc_team_manager import RegisterLpcTeam
 from .toolbar.toolbar_form_base import Ui_Form
+from .validation.validation_dlg import SamplingValidation
 from ..core.services.layer_service import LayerService
 
 
@@ -54,6 +57,8 @@ class ToolbarManager(QWidget, Ui_Form):
         self.treatmentPushButton.clicked.connect(self.treatments)
         self.filterPushButton.clicked.connect(self.filtering)
         self.krigingPushButton.clicked.connect(self.ordinaryKriging)
+        self.samplingValidationPushButton.clicked.connect(self.validation)
+        self.clearStructurePushButton.clicked.connect(self.clearTreeView)
 
     @staticmethod
     def initGui():
@@ -137,3 +142,38 @@ class ToolbarManager(QWidget, Ui_Form):
             result = dlg.exec_()
             if result:
                 pass
+
+    def validation(self):
+        project = self.layerService.checkForSavedProject()
+        if project:
+            dlg = SamplingValidation(self.iface, project)
+            dlg.show()
+            result = dlg.exec_()
+            if result:
+                pass
+
+    def clearTreeView(self):
+        project = self.layerService.checkForSavedProject()
+        root = project.layerTreeRoot()
+        if project:
+            for layer in self.iface.mapCanvas().layers():
+                if layer.type() == QgsMapLayer.RasterLayer:
+                    layer_node = root.findLayer(layer.id())
+                    self.layerService.addMapLayer(layer, QGIS_TOC_GROUPS[3])
+                    # project.instance().removeMapLayer(layer.id())
+
+
+
+                    # Verifica se o grupo já existe, senão cria um novo grupo
+                    # group = root.findGroup(group_name)
+                    # if not group:
+                    #     group = root.addGroup(group_name)
+                    #
+                    # # Se o layer foi encontrado, move-o para o grupo
+                    # if layer_node:
+                    #     clone = layer_node.clone()  # Clona o node do layer
+                    parent = layer_node.parent()  # Obtém o parent do layer atual
+                    #     if parent:
+                    parent.removeChildNode(layer_node)  # Remove o node original
+                    #     group.insertChildNode(0, clone)  # Insere o clone no grupo
+                    # print(layer_node.name())
