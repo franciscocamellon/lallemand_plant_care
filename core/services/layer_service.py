@@ -27,6 +27,7 @@ import re
 
 from qgis.core import (
     QgsProject,
+    QgsField,
     QgsFields,
     QgsVectorLayer,
     QgsFeature,
@@ -42,8 +43,10 @@ from qgis.core import (
     QgsExpression
 )
 from qgis.PyQt.QtWidgets import QMessageBox, QFileDialog
+from qgis.PyQt.Qt import QVariant
 from .message_service import MessageService
 from .system_service import SystemService
+from ..constants import VALIDATION_FIELDS
 from ..tools.algorithm_runner import AlgorithmRunner
 
 
@@ -55,16 +58,8 @@ class LayerService:
         self.messageService = MessageService()
         self.systemService = SystemService()
 
-    @staticmethod
-    def _convertToSimpleGeometry(layer):
-        convertedLayerType = ''
-        if layer.geometryType() == QgsWkbTypes.PointZ:
-            convertedLayerType = "Point"
-        elif layer.geometryType() == QgsWkbTypes.LineStringZ:
-            convertedLayerType = "LineString"
-        elif layer.geometryType() == QgsWkbTypes.PolygonZ:
-            convertedLayerType = "Polygon"
-
+    def _convertToSimpleGeometry(self, layer):
+        convertedLayerType = self._identifyWkbType(layer)
         convertedLayer = QgsVectorLayer(f"{convertedLayerType}?crs={layer.crs().authid()}", layer.name(), "memory")
 
         for feature in layer.getFeatures():
@@ -73,6 +68,17 @@ class LayerService:
             convertedLayer.dataProvider().addFeature(convertedFeature)
 
         return convertedLayer
+
+    @staticmethod
+    def _identifyWkbType(layer):
+        convertedLayerType = ''
+        if layer.geometryType() == QgsWkbTypes.PointZ:
+            convertedLayerType = "Point"
+        elif layer.geometryType() == QgsWkbTypes.LineStringZ:
+            convertedLayerType = "LineString"
+        elif layer.geometryType() == QgsWkbTypes.PolygonZ:
+            convertedLayerType = "Polygon"
+        return convertedLayerType
 
     @staticmethod
     def _getWorldZonesPath():
@@ -132,16 +138,75 @@ class LayerService:
         return filteredLayers
 
     @staticmethod
-    def filterByFieldName(layer, filterString):
+    def filterByFieldName(layer, filterString, inverse=False):
         filteredFields = QgsFields()
         regexPattern = '|'.join(map(re.escape, filterString))
         pattern = re.compile(regexPattern)
 
         for field in layer.fields():
-            if pattern.search(field.name()):
+            if inverse and not pattern.search(field.name()):
+                filteredFields.append(field)
+            elif not inverse and pattern.search(field.name()):
                 filteredFields.append(field)
 
         return filteredFields
+
+    @staticmethod
+    def _getFieldsDictionary(layer):
+        fieldsDictionary = {}
+        fields = layer.fields()
+        for field in fields:
+            fieldsDictionary[fields.lookupField(field.name())] = field.name()
+        return fieldsDictionary
+
+    @staticmethod
+    def getFeaturesByRequest(layer, expression):
+        request = QgsExpression(expression)
+        return layer.getFeatures(QgsFeatureRequest(request))
+
+    @staticmethod
+    def getPercentualFeaturesById(layer, value):
+        ids = layer.allFeatureIds()
+        value = int(round(value / 100.0, 4) * len(ids))
+        randomSelection = random.sample(ids, value)
+
+        layer.selectByIds(randomSelection)
+
+        return layer.getSelectedFeatures()
+
+    @staticmethod
+    def _createQgsField(fieldName, fieldType):
+        return QgsField(fieldName, fieldType)
+
+    def createValidationFields(self, layer):
+
+        fields = [self._createQgsField(fieldName, QVariant.Double) for fieldName in VALIDATION_FIELDS]
+        provider = layer.dataProvider()
+        provider.addAttributes(fields)
+        layer.updateFields()
+
+        return layer
+
+    def deleteFields(self, layer, fields):
+        fieldsDictionary = self._getFieldsDictionary(layer)
+        provider = layer.dataProvider()
+        fieldsToDelete = []
+
+        for index, fieldName in fieldsDictionary.items():
+            for field in fields:
+                if field.name() == fieldName:
+                    fieldsToDelete.append(index)
+
+        provider.deleteAttributes(fieldsToDelete)
+        layer.updateFields()
+
+        return layer
+
+    def createValidationVectorLayer(self, layer):
+        # TODO with edit(layer):
+        fieldsToDelete = self.filterByFieldName(layer, ['1Krig', 'VRYIELDMAS', 'fid'], inverse=True)
+        newOutput = self.deleteFields(layer, fieldsToDelete)
+        return self.createValidationFields(newOutput)
 
     def checkForSavedProject(self):
 
@@ -172,6 +237,7 @@ class LayerService:
                 return None
 
     def loadLayerSamplingStyle(self):
+        # TODO
         mapLayers = self.project.instance().mapLayers().values()
 
     def loadShapeFile(self, groupName, file_path, style=False):
@@ -195,7 +261,7 @@ class LayerService:
                     group.addLayer(layer)
                 else:
                     self.project.addMapLayer(layer, False)
-                    root = self.create_layer_tree_group(self.project, groupName)
+                    root = self.createLayerTreeGroup(self.project, groupName)
                     group = root.findGroup(groupName)
                     group.addLayer(layer)
 
@@ -287,7 +353,7 @@ class LayerService:
             self.messageService.messageBox('Loading file', errorMessage, 5, 1)
             return False
 
-    def create_layer_tree_group(self, qgs_project, group_name):
+    def createLayerTreeGroup(self, qgs_project, group_name):
 
         try:
             root = qgs_project.instance().layerTreeRoot()
@@ -341,16 +407,3 @@ class LayerService:
 
         except Exception as e:
             self.messageService.criticalMessage('Saving file', f'An error occurred: {str(e)}')
-
-    @staticmethod
-    def getFeaturesByRequest(layer, expression):
-        request = QgsExpression(expression)
-        return layer.getFeatures(QgsFeatureRequest(request))
-
-    @staticmethod
-    def getPercentualFeaturesById(layer, value):
-        ids = layer.allFeatureIds()
-        value = int(round(value / 100.0, 4) * len(ids))
-        randomSelection = random.sample(ids, value)
-        layer.selectByIds(randomSelection)
-        return layer.getSelectedFeatures()
