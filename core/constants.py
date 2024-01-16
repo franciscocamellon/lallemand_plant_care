@@ -13,6 +13,13 @@ FILTERING_TARGET_PROJECTION = ['Lambert93', 'UTM']
 FILTERING_COLONNE_DATE = ['Yes', 'No']
 SAMPLING_LAYER_NAMES = ['T1_total', 'T1_80_perc', 'T1_20_perc', 'T2_total', 'T2_80_perc', 'T2_20_perc']
 
+DEFAULT_SETTINGS = {
+    'SERVER': ['BD_GEOSTAT_LPC', 'localhost', 5432, 'postgres', 'postgres'],
+    'TREATMENT': ['T1', 'T2', 0.0, 1.0],
+    'KRIGING': ['VRYIELDMAS;VRYIELD', 1.5, 1.5]
+}
+
+
 CROP_COLUMN_NAMES = ['Id', "Crop name", "Sowing date", "Harvesting date", "Variety", "InterRoCM", "Create date",
                      "Update date"]
 FARMER_COLUMN_NAMES = ['Id', "First name", "Last name", "Address", "Zipcode", "Town", "Country", "Create date",
@@ -64,3 +71,5 @@ DELETE_TRIAL_SQL = "DELETE FROM geostatistics.geostatistic_trial WHERE id = '{}'
 INSERT_TEAM_SQL = "INSERT INTO geostatistics.lpc_team (first_name, last_name, create_date) VALUES (%s, %s, %s);"
 UPDATE_TEAM_SQL = "UPDATE geostatistics.lpc_team SET first_name = %s, last_name = %s,  update_date = %s WHERE id = %s;"
 DELETE_TEAM_SQL = "DELETE FROM geostatistics.lpc_team WHERE id = '{}';"
+
+VALIDATION_FIELDS = ['estimated', 'error', 'sqr_error', 'rmse', '%_rmse']
