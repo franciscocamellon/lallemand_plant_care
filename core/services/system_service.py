@@ -93,3 +93,7 @@ class SystemService:
                 return self.messageService.standardButtonMessage('Load trial files',
                                                                  [f'{file} already exist!', 'Overwrite?'],
                                                                  4, [5, 6])
+
+    def getFieldName(self, string):
+        underscoreReplacedString = string.replace('_', '')
+        return underscoreReplacedString[0:11]
