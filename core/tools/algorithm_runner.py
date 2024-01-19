@@ -128,3 +128,11 @@ class AlgorithmRunner(QObject):
         output = processing.run("qgis:basicstatisticsforfields", parameters, context=context, feedback=feedback)
 
         return output
+
+    def runRasterCalculator(self, parameters, context=None, feedback=None):
+        output = processing.run("qgis:rastercalculator", parameters, context=context, feedback=feedback)
+        return self._getLayerFromContext(output, context, field='OUTPUT')
+
+    def runPixelsToPoints(self, parameters, context=None, feedback=None):
+        output = processing.run("native:pixelstopoints", parameters, context=context, feedback=feedback)
+        return self._getLayerFromContext(output, context, field='OUTPUT')

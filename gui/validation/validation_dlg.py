@@ -29,7 +29,7 @@ from qgis.PyQt import QtWidgets
 from qgis.PyQt.Qt import QVariant
 from qgis.core import QgsFieldProxyModel, QgsMapLayerProxyModel, QgsTask, QgsProcessingContext
 
-from ...core.constants import VALIDATION_FIELDS
+from ...core.constants import VALIDATION_FIELDS, QGIS_TOC_GROUPS
 from ...core.services.system_service import SystemService
 from ...core.tools.algorithm_runner import AlgorithmRunner
 from ...core.services.message_service import MessageService, UserFeedback
@@ -47,40 +47,85 @@ class SamplingValidation(QtWidgets.QDialog, Ui_Dialog):
         self.setupUi(self)
         self.iface = iface
         self.project = project
+        self.filePath = self.project.homePath()
         self.setWindowTitle('Sampling validation')
         self.layerService = LayerService()
         self.systemService = SystemService()
         self.context = QgsProcessingContext()
-        self.setValidationGui()
+        self.settings = OptionsSettingsPage().getKrigingSettings()
+        self.layers = self.project.instance().mapLayers()
+        self.setValidationUi()
+        self.setErrorCompensationUi()
+        self.setGainSurfaceUi()
         self.validatePushButton.clicked.connect(self.runValidate)
+        self.calculatePushButton.clicked.connect(self.runErrorCompensation)
+        self.gainSurfacePushButton.clicked.connect(self.runGainSurface)
 
-    def setValidationGui(self):
-        layers = self.project.instance().mapLayers()
-        samplingLayer = self.layerService.filterByLayerName(list(layers.values()), ['validation'])
+    def setValidationUi(self):
+        samplingLayer = self.layerService.filterByLayerName(list(self.layers.values()), ['validation'])
 
         self.validationLayerComboBox.setFilters(QgsMapLayerProxyModel.PointLayer)
         self.validationLayerComboBox.setExceptedLayerList(samplingLayer)
 
         self.krigingRasterComboBox.setFilters(QgsMapLayerProxyModel.RasterLayer)
+
         self.fieldToEstimateComboBox.setFilters(QgsFieldProxyModel.Numeric)
         self.fieldToEstimateComboBox.setLayer(self.validationLayerComboBox.currentLayer())
+        validationFields = self.layerService.filterByFieldName(self.validationLayerComboBox.currentLayer(),
+                                                               self.settings[0])
+        self.fieldToEstimateComboBox.setFields(validationFields)
+
+    def setErrorCompensationUi(self):
+        treatmentRasters = self.layerService.filterByLayerName(list(self.layers.values()), ['80'], kriging=True)
+        errorRasters = self.layerService.filterByLayerName(list(self.layers.values()), ['error', 'validation'],
+                                                           kriging=True)
+        self.t1RasterComboBox.setFilters(QgsMapLayerProxyModel.RasterLayer)
+        self.t2RasterComboBox.setFilters(QgsMapLayerProxyModel.RasterLayer)
+        self.t1errorRasterComboBox.setFilters(QgsMapLayerProxyModel.RasterLayer)
+        self.t2errorRasterComboBox.setFilters(QgsMapLayerProxyModel.RasterLayer)
+
+        self.t1RasterComboBox.setExceptedLayerList(treatmentRasters)
+        self.t2RasterComboBox.setExceptedLayerList(treatmentRasters)
+        self.t1errorRasterComboBox.setExceptedLayerList(errorRasters)
+        self.t2errorRasterComboBox.setExceptedLayerList(errorRasters)
+
+    def setGainSurfaceUi(self):
+        errorRasters = self.layerService.filterByLayerName(list(self.layers.values()), ['Final', 'surface'],
+                                                           kriging=True)
+        self.t1FinalSurfaceComboBox.setFilters(QgsMapLayerProxyModel.RasterLayer)
+        self.t2FinalSurfaceComboBox.setFilters(QgsMapLayerProxyModel.RasterLayer)
+        self.t1FinalSurfaceComboBox.setExceptedLayerList(errorRasters)
+        self.t2FinalSurfaceComboBox.setExceptedLayerList(errorRasters)
+
+    @staticmethod
+    def getRasterCalculatorParameters(expression, layer, filePath):
+
+        return {'EXPRESSION': expression,
+                'LAYERS': [layer],
+                'CELLSIZE': 0,
+                'EXTENT': None,
+                'CRS': layer.crs().authid(),
+                'OUTPUT': filePath}
 
     def runValidate(self):
         grid = self.krigingRasterComboBox.currentLayer()
         points = self.validationLayerComboBox.currentLayer()
         field = self.fieldToEstimateComboBox.currentField()
+        print(field)
         feedback = UserFeedback()
         output = AlgorithmRunner().runAddRasterValuesToPoints(points, [grid], context=self.context, feedback=feedback)
 
         fieldName = self.systemService.getFieldName(grid.name())
+        print(fieldName)
 
         output.startEditing()
         for feature in output.getFeatures():
             feature[VALIDATION_FIELDS[0]] = feature[fieldName]
             output.updateFeature(feature)
-            feature[VALIDATION_FIELDS[1]] = feature[field] - feature[fieldName]
-            feature[VALIDATION_FIELDS[2]] = math.pow(feature[VALIDATION_FIELDS[1]], 2)
-            output.updateFeature(feature)
+            if bool(feature[VALIDATION_FIELDS[0]]):
+                feature[VALIDATION_FIELDS[1]] = feature[field] - feature[VALIDATION_FIELDS[0]]
+                feature[VALIDATION_FIELDS[2]] = math.pow(feature[VALIDATION_FIELDS[1]], 2)
+                output.updateFeature(feature)
         output.commitChanges()
         output.triggerRepaint()
 
@@ -117,4 +162,45 @@ class SamplingValidation(QtWidgets.QDialog, Ui_Dialog):
         points.triggerRepaint()
         points.invertSelection()
 
+        feedback.close()
+
+    def runErrorCompensation(self):
+        t1FilePath = f"{self.filePath}/03_Error_Compensation/T1_Error_Compensation/T1_Final_Surface.tiff"
+        t2FilePath = f"{self.filePath}/03_Error_Compensation/T2_Error_Compensation/T2_Final_Surface.tiff"
+        t1Expression = f'"{self.t1RasterComboBox.currentLayer().name()}@1" + "{self.t1errorRasterComboBox.currentLayer().name()}@1"'
+        t2Expression = f'"{self.t2RasterComboBox.currentLayer().name()}@1" + "{self.t2errorRasterComboBox.currentLayer().name()}@1"'
+        t1Parameters = self.getRasterCalculatorParameters(t1Expression, self.t1RasterComboBox.currentLayer(),
+                                                          t1FilePath)
+        t2Parameters = self.getRasterCalculatorParameters(t2Expression, self.t2RasterComboBox.currentLayer(),
+                                                          t2FilePath)
+
+        for parameter in [t1Parameters, t2Parameters]:
+            feedback = UserFeedback()
+            finalSurface = AlgorithmRunner().runRasterCalculator(parameter, context=self.context, feedback=feedback)
+            self.layerService.addMapLayer(finalSurface, QGIS_TOC_GROUPS[5])
+            feedback.close()
+
+    @staticmethod
+    def getYieldPointsParameters(gainSurface, fieldName, filePath):
+        return {
+            'INPUT_RASTER': gainSurface,
+            'RASTER_BAND': 1,
+            'FIELD_NAME': fieldName,
+            'OUTPUT': filePath
+        }
+
+    def runGainSurface(self):
+        # self.yieldGainPointsCheckBox
+        gainSurfacePath = f"{self.filePath}/04_Gain_Surface/Yield_Gain.tiff"
+        expression = f'"{self.t2FinalSurfaceComboBox.currentLayer().name()}@1" - "{self.t1FinalSurfaceComboBox.currentLayer().name()}@1"'
+        parameter = self.getRasterCalculatorParameters(expression, self.t1FinalSurfaceComboBox.currentLayer(),
+                                                       gainSurfacePath)
+        feedback = UserFeedback()
+        gainSurface = AlgorithmRunner().runRasterCalculator(parameter, context=self.context, feedback=feedback)
+        self.layerService.addMapLayer(gainSurface, QGIS_TOC_GROUPS[6])
+        if self.yieldGainPointsCheckBox.isChecked():
+            pointsParameters = self.getYieldPointsParameters(gainSurface, 'yield',
+                                                             f'{self.filePath}/04_Gain_Surface/Yield_Gain_Points.shp')
+            gainPoints = AlgorithmRunner().runPixelsToPoints(pointsParameters, context=self.context, feedback=feedback)
+            self.layerService.addMapLayer(gainPoints, QGIS_TOC_GROUPS[6])
         feedback.close()
