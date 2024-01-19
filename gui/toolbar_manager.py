@@ -159,21 +159,11 @@ class ToolbarManager(QWidget, Ui_Form):
             for layer in self.iface.mapCanvas().layers():
                 if layer.type() == QgsMapLayer.RasterLayer:
                     layer_node = root.findLayer(layer.id())
+
                     self.layerService.addMapLayer(layer, QGIS_TOC_GROUPS[3])
-                    # project.instance().removeMapLayer(layer.id())
 
+                    if 'validation' in layer.name().split('_'):
+                        self.layerService.addMapLayer(layer, QGIS_TOC_GROUPS[5])
 
-
-                    # Verifica se o grupo já existe, senão cria um novo grupo
-                    # group = root.findGroup(group_name)
-                    # if not group:
-                    #     group = root.addGroup(group_name)
-                    #
-                    # # Se o layer foi encontrado, move-o para o grupo
-                    # if layer_node:
-                    #     clone = layer_node.clone()  # Clona o node do layer
-                    parent = layer_node.parent()  # Obtém o parent do layer atual
-                    #     if parent:
-                    parent.removeChildNode(layer_node)  # Remove o node original
-                    #     group.insertChildNode(0, clone)  # Insere o clone no grupo
-                    # print(layer_node.name())
+                    parent = layer_node.parent()
+                    parent.removeChildNode(layer_node)
