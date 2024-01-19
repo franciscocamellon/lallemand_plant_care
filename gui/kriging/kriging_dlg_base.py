@@ -163,10 +163,10 @@ class Ui_Dialog(object):
         self.horizontalLayout_5.setContentsMargins(5, 0, -1, -1)
         self.horizontalLayout_5.setSpacing(5)
         self.horizontalLayout_5.setObjectName("horizontalLayout_5")
-        self.outlinePolygonCheckBox = QtWidgets.QCheckBox(self.parametersGroupBox)
-        self.outlinePolygonCheckBox.setStyleSheet("font: 8pt \"MS Shell Dlg 2\"")
-        self.outlinePolygonCheckBox.setObjectName("outlinePolygonCheckBox")
-        self.horizontalLayout_5.addWidget(self.outlinePolygonCheckBox)
+        self.outlinePolygonLabel = QtWidgets.QLabel(self.parametersGroupBox)
+        self.outlinePolygonLabel.setStyleSheet("font: 8pt \"MS Shell Dlg 2\"")
+        self.outlinePolygonLabel.setObjectName("outlinePolygonLabel")
+        self.horizontalLayout_5.addWidget(self.outlinePolygonLabel)
         self.verticalLayout_4.addLayout(self.horizontalLayout_5)
         self.horizontalLayout_6 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_6.setContentsMargins(5, -1, -1, -1)
@@ -204,8 +204,7 @@ class Ui_Dialog(object):
         Dialog.setTabOrder(self.samplingLayerComboBox, self.samplingFieldComboBox)
         Dialog.setTabOrder(self.samplingFieldComboBox, self.pixelSizeXSpinBox)
         Dialog.setTabOrder(self.pixelSizeXSpinBox, self.pixelSizeYSpinBox)
-        Dialog.setTabOrder(self.pixelSizeYSpinBox, self.outlinePolygonCheckBox)
-        Dialog.setTabOrder(self.outlinePolygonCheckBox, self.boundaryLayerComboBox)
+        Dialog.setTabOrder(self.pixelSizeYSpinBox, self.boundaryLayerComboBox)
         Dialog.setTabOrder(self.boundaryLayerComboBox, self.interpolatePushButton)
 
     def retranslateUi(self, Dialog):
@@ -216,7 +215,7 @@ class Ui_Dialog(object):
         self.fieldLabel.setText(_translate("Dialog", "Field to interpolate"))
         self.pixelSizeXLabel.setText(_translate("Dialog", "Pixel size X"))
         self.pixelSizeYLabel.setText(_translate("Dialog", "Pixel size Y"))
-        self.outlinePolygonCheckBox.setText(_translate("Dialog", "Outline polygon"))
+        self.outlinePolygonLabel.setText(_translate("Dialog", "Outline polygon"))
         self.interpolatePushButton.setText(_translate("Dialog", "Interpolate"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.kriging), _translate("Dialog", "Kriging"))
 from qgsfieldcombobox import QgsFieldComboBox

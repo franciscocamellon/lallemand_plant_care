@@ -48,9 +48,9 @@ class OrdinaryKriging(QtWidgets.QDialog, Ui_Dialog):
         self.settings = OptionsSettingsPage().getKrigingSettings()
         self.task: Optional[QgsTask] = None
         self.layerService = LayerService()
-        self.boundaryLayerComboBox.setEnabled(False)
+        self.filterString = ''
         self.setKrigingGui()
-        self.outlinePolygonCheckBox.stateChanged.connect(self.enableWidget)
+        self.samplingLayerComboBox.layerChanged.connect(self.setFieldName)
         self.interpolatePushButton.clicked.connect(self.runSmartMap)
 
     def smartMapPluginCheck(self):
@@ -61,6 +61,18 @@ class OrdinaryKriging(QtWidgets.QDialog, Ui_Dialog):
         self.smartMap = plugins['Smart_Map']
         return True
 
+    def setFieldName(self):
+        name = self.samplingLayerComboBox.currentLayer().name()
+
+        if name in ['T1_validation', 'T2_validation']:
+            self.filterString = 'error'
+            samplingFields = self.layerService.filterByFieldName(self.samplingLayerComboBox.currentLayer(),
+                                                                 [self.filterString], inverse=False)
+            self.samplingFieldComboBox.setFields(samplingFields)
+
+        else:
+            self.filterString = self.settings[0]
+
     def setKrigingGui(self):
         layers = self.project.instance().mapLayers()
         smartMap = self.smartMapPluginCheck()
@@ -70,15 +82,20 @@ class OrdinaryKriging(QtWidgets.QDialog, Ui_Dialog):
         else:
             boundaryLayer = self.layerService.filterByLayerName(list(layers.values()), ['contour'], kriging=True)
             samplingLayer = self.layerService.filterByLayerName(list(layers.values()),
-                                                                ['Yield_Map', 'T1_80', 'T2_80', 'total'], kriging=True)
+                                                                ['Yield_Map', 'T1_80', 'T2_80', 'total', 'validation'],
+                                                                kriging=True)
 
             self.samplingLayerComboBox.setFilters(QgsMapLayerProxyModel.PointLayer)
             self.samplingLayerComboBox.setExceptedLayerList(samplingLayer)
 
             self.samplingFieldComboBox.setFilters(QgsFieldProxyModel.Numeric)
             self.samplingFieldComboBox.setLayer(self.samplingLayerComboBox.currentLayer())
+
+            self.setFieldName()
+
             samplingFields = self.layerService.filterByFieldName(self.samplingLayerComboBox.currentLayer(),
-                                                                 self.settings[0])
+                                                                 self.filterString)
+
             self.samplingFieldComboBox.setFields(samplingFields)
 
             self.boundaryLayerComboBox.setFilters(QgsMapLayerProxyModel.PolygonLayer)
@@ -87,25 +104,13 @@ class OrdinaryKriging(QtWidgets.QDialog, Ui_Dialog):
             self.pixelSizeXSpinBox.setValue(float(self.settings[1][0]))
             self.pixelSizeYSpinBox.setValue(float(self.settings[1][1]))
 
-    def enableTasks(self, state):
-        widgets = [self.variogramCheckBox, self.interpolationCheckBox,
-                   self.saveParametersCheckBox]
-        for widget in widgets:
-            widget.setChecked(state)
-
-    def enableWidget(self, state):
-        WidgetService.enableWidget(self.boundaryLayerComboBox, state)
-
     def getParameters(self):
         return {
             'layer': self.samplingLayerComboBox.currentLayer(),
             'field': self.samplingFieldComboBox.currentField(),
             'pixelSizeX': self.pixelSizeXSpinBox.value(),
             'pixelSizeY': self.pixelSizeYSpinBox.value(),
-            'outlinePolygon': self.boundaryLayerComboBox.currentLayer(),
-            'variogram': self.variogramCheckBox.isChecked(),
-            'interpolatedMap': self.interpolationCheckBox.isChecked(),
-            'saveParameters': self.saveParametersCheckBox.isChecked()
+            'outlinePolygon': self.boundaryLayerComboBox.currentLayer()
         }
 
     def getPathByLayer(self, layer):
@@ -117,6 +122,10 @@ class OrdinaryKriging(QtWidgets.QDialog, Ui_Dialog):
             return f"{self.filePath}/01_Kriging/03_T2_Total"
         elif 'T2_80' in layer.name():
             return f"{self.filePath}/01_Kriging/05_T2_80perc"
+        elif 'T1_validation' in layer.name():
+            return f"{self.filePath}/03_Error_Compensation/T1_Error_Compensation"
+        elif 'T2_validation' in layer.name():
+            return f"{self.filePath}/03_Error_Compensation/T2_Error_Compensation"
         else:
             return f"{self.filePath}/01_Kriging/01_T1_T2_Total"
 
