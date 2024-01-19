@@ -44,6 +44,8 @@ from qgis.core import (
 )
 from qgis.PyQt.QtWidgets import QMessageBox, QFileDialog
 from qgis.PyQt.Qt import QVariant
+
+from ...gui.settings.options_settings_dlg import OptionsSettingsPage
 from .message_service import MessageService
 from .system_service import SystemService
 from ..constants import VALIDATION_FIELDS
@@ -57,6 +59,9 @@ class LayerService:
         self.project = QgsProject.instance()
         self.messageService = MessageService()
         self.systemService = SystemService()
+        self.settings = OptionsSettingsPage()
+        self.treatmentSettings = self.settings.getTreatmentPolygonsSettings()
+        self.krigingSettings = self.settings.getKrigingSettings()
 
     def _convertToSimpleGeometry(self, layer):
         convertedLayerType = self._identifyWkbType(layer)
@@ -204,7 +209,10 @@ class LayerService:
 
     def createValidationVectorLayer(self, layer):
         # TODO with edit(layer):
-        fieldsToDelete = self.filterByFieldName(layer, ['1Krig', 'VRYIELDMAS', 'fid'], inverse=True)
+        fields = self.krigingSettings[0]
+        fields.append('1Krig')
+        fields.append('fid')
+        fieldsToDelete = self.filterByFieldName(layer, fields, inverse=True)
         newOutput = self.deleteFields(layer, fieldsToDelete)
         return self.createValidationFields(newOutput)
 
