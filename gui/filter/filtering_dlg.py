@@ -26,7 +26,7 @@ from typing import Optional
 from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtWidgets import QProgressBar
 from qgis.core import QgsFieldProxyModel, QgsMapLayerProxyModel, QgsApplication, \
-    QgsTask
+    QgsTask, QgsCoordinateReferenceSystem
 
 from .filtering_dlg_base import Ui_Dialog
 from ..settings.options_settings_dlg import OptionsSettingsPage
@@ -107,8 +107,17 @@ class FilteringPoints(QtWidgets.QDialog, Ui_Dialog):
         self.treatmentLayerIdComboBox.setLayer(self.treatmentLayerComboBox.currentLayer())
 
     def updateFilteringGui(self):
-        self.crsOperations = self.widgetService.updateGui(self.harvesterLayerComboBox, self.suggestedCrsSelectionWidget,
-                                                          self.crsWarningLabel, self.crsLabel)
+
+        if self.harvesterLayerComboBox.currentLayer().crs().isGeographic():
+            self.crsWarningLabel.show()
+            self.crsOperations = self.layerService.getSuggestedCrs(self.harvesterLayerComboBox.currentLayer())
+            self.suggestedCrsSelectionWidget.setCrs(QgsCoordinateReferenceSystem(self.crsOperations[2]))
+        else:
+            self.crsWarningLabel.hide()
+            self.suggestedCrsSelectionWidget.setCrs(self.harvesterLayerComboBox.currentLayer().crs())
+
+        self.crsLabel.setText(f'CRS -> {self.harvesterLayerComboBox.currentLayer().crs().authid()}')
+        self.setLayerFields()
 
     def updateSamplingGui(self):
         if self.samplingLayerComboBox.count() > 0:
@@ -150,8 +159,8 @@ class FilteringPoints(QtWidgets.QDialog, Ui_Dialog):
             'Polygones_pairs': self.settings[1],
             'Polygones_impairs': self.settings[0],
             'Colonne_date': self.colonneDateComboBox.currentIndex(),
-            'Largeur_coupe': self.largeurCoupeSpinBox.value(),
-            'Sous_Echantillonnage': self.sousEchantillonnageSpinBox.value(),
+            'Largeur_coupe': self.settings[2],
+            'Sous_Echantillonnage': self.settings[3],
             'RPLOTS': f"{self.filePath}/00_Data/00_Raw_Files/rPlots.html",
             'Carte_filtree': '',
             'Table_errors': f"{self.filePath}/00_Data/00_Raw_Files/table_errors.csv"
