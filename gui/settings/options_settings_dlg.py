@@ -101,7 +101,8 @@ class OptionsSettingsPage(QgsOptionsPageWidget, Ui_Form):
         self.oddPolygonsNameLineEdit.setText(self.settings.value('LPC/odd_polygons', self.treatment[0]))
         self.evenPolygonsNameLineEdit.setText(self.settings.value('LPC/even_polygons', self.treatment[1]))
         self.largeurCoupeSpinBox.setValue(float(self.settings.value('LPC/largeur_coupe', self.treatment[2])))
-        self.sousEchantillonnageSpinBox.setValue(float(self.settings.value('LPC/sous_echantillonnage', self.treatment[3])))
+        self.sousEchantillonnageSpinBox.setValue(
+            float(self.settings.value('LPC/sous_echantillonnage', self.treatment[3])))
 
     def getTreatmentPolygonsSettings(self):
         return (
@@ -115,7 +116,6 @@ class OptionsSettingsPage(QgsOptionsPageWidget, Ui_Form):
         self.settings.setValue('LPC/field_interpolate', self.fieldToInterpolateLineEdit.text())
         self.settings.setValue('LPC/pixel_size_x', self.pixelSizeXSpinBox.value())
         self.settings.setValue('LPC/pixel_size_y', self.pixelSizeYSpinBox.value())
-
 
     def loadKrigingSettings(self):
         self.fieldToInterpolateLineEdit.setText(self.settings.value('LPC/field_interpolate', self.kriging[0]))
