@@ -23,7 +23,7 @@
 """
 
 from qgis.PyQt.QtCore import QSettings
-from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtGui import QIcon, QColor
 from qgis.gui import QgsOptionsWidgetFactory, QgsOptionsPageWidget
 
 from ...core.constants import DEFAULT_SETTINGS
@@ -53,6 +53,7 @@ class OptionsSettingsPage(QgsOptionsPageWidget, Ui_Form):
         self.server = DEFAULT_SETTINGS['SERVER']
         self.treatment = DEFAULT_SETTINGS['TREATMENT']
         self.kriging = DEFAULT_SETTINGS['KRIGING']
+        self.histogram = DEFAULT_SETTINGS['HISTOGRAM']
         self.loadSettings()
 
     def apply(self):
@@ -62,11 +63,13 @@ class OptionsSettingsPage(QgsOptionsPageWidget, Ui_Form):
         self.saveServerSettings()
         self.saveTreatmentPolygonsSettings()
         self.saveKrigingSettings()
+        self.saveHistogramSettings()
 
     def loadSettings(self):
         self.loadServerSettings()
         self.loadTreatmentPolygonsSettings()
         self.loadKrigingSettings()
+        self.loadHistogramSettings()
 
     def saveServerSettings(self):
         self.settings.setValue('LPC/database', self.databaseNameLineEdit.text())
@@ -94,22 +97,24 @@ class OptionsSettingsPage(QgsOptionsPageWidget, Ui_Form):
     def saveTreatmentPolygonsSettings(self):
         self.settings.setValue('LPC/odd_polygons', self.oddPolygonsNameLineEdit.text())
         self.settings.setValue('LPC/even_polygons', self.evenPolygonsNameLineEdit.text())
+        self.settings.setValue('LPC/border_size', self.sizeBorderSpinBox.value())
         self.settings.setValue('LPC/largeur_coupe', self.largeurCoupeSpinBox.value())
         self.settings.setValue('LPC/sous_echantillonnage', self.sousEchantillonnageSpinBox.value())
 
     def loadTreatmentPolygonsSettings(self):
         self.oddPolygonsNameLineEdit.setText(self.settings.value('LPC/odd_polygons', self.treatment[0]))
         self.evenPolygonsNameLineEdit.setText(self.settings.value('LPC/even_polygons', self.treatment[1]))
-        self.largeurCoupeSpinBox.setValue(float(self.settings.value('LPC/largeur_coupe', self.treatment[2])))
+        self.sizeBorderSpinBox.setValue(float(self.settings.value('LPC/border_size', self.treatment[2])))
+        self.largeurCoupeSpinBox.setValue(float(self.settings.value('LPC/largeur_coupe', self.treatment[3])))
         self.sousEchantillonnageSpinBox.setValue(
-            float(self.settings.value('LPC/sous_echantillonnage', self.treatment[3])))
+            float(self.settings.value('LPC/sous_echantillonnage', self.treatment[4])))
 
     def getTreatmentPolygonsSettings(self):
         return (
-            self.settings.value('LPC/odd_polygons'),
-            self.settings.value('LPC/even_polygons'),
-            self.settings.value('LPC/largeur_coupe'),
-            self.settings.value('LPC/sous_echantillonnage')
+            [self.settings.value('LPC/odd_polygons'), self.settings.value('LPC/even_polygons')],
+            float(self.settings.value('LPC/largeur_coupe')),
+            float(self.settings.value('LPC/sous_echantillonnage')),
+            float(self.settings.value('LPC/border_size'))
         )
 
     def saveKrigingSettings(self):
@@ -124,5 +129,22 @@ class OptionsSettingsPage(QgsOptionsPageWidget, Ui_Form):
 
     def getKrigingSettings(self):
         fields = self.settings.value('LPC/field_interpolate').split(';')
-        pixelSize = [self.settings.value('LPC/pixel_size_x'), self.settings.value('LPC/pixel_size_y')]
+        pixelSize = [float(self.settings.value('LPC/pixel_size_x')), float(self.settings.value('LPC/pixel_size_y'))]
         return fields, pixelSize
+
+    def saveHistogramSettings(self):
+        self.settings.setValue('LPC/histogram_bins', self.binsSpinBox.value())
+        self.settings.setValue('LPC/histogram_color', self.colorColorButton.color())
+        self.settings.setValue('LPC/histogram_edge_color', self.edgeColorButton.color())
+
+    def loadHistogramSettings(self):
+        self.binsSpinBox.setValue(int(self.settings.value('LPC/histogram_bins', self.histogram[0])))
+        self.colorColorButton.setColor(self.settings.value('LPC/histogram_color', QColor(self.histogram[1])))
+        self.edgeColorButton.setColor(self.settings.value('LPC/histogram_edge_color', QColor(self.histogram[2])))
+
+    def getHistogramSettings(self):
+        return (
+            int(self.settings.value('LPC/histogram_bins')),
+            QColor(self.settings.value('LPC/histogram_color')),
+            QColor(self.settings.value('LPC/histogram_edge_color'))
+        )

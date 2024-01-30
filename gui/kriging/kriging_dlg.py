@@ -72,18 +72,24 @@ class OrdinaryKriging(QtWidgets.QDialog, Ui_Dialog):
 
         else:
             self.filterString = self.settings[0]
+            samplingFields = self.layerService.filterByFieldName(self.samplingLayerComboBox.currentLayer(),
+                                                                 self.filterString, inverse=False)
+            self.samplingFieldComboBox.setFields(samplingFields)
 
     def setKrigingGui(self):
+
         layers = self.project.instance().mapLayers()
         smartMap = self.smartMapPluginCheck()
+
         if self.samplingLayerComboBox.count() == 0 or not smartMap:
             self.parametersGroupBox.setEnabled(False)
             self.interpolatePushButton.setEnabled(False)
+
         else:
-            boundaryLayer = self.layerService.filterByLayerName(list(layers.values()), ['contour'], kriging=True)
+            boundaryLayer = self.layerService.filterByLayerName(list(layers.values()), ['contour_'])
             samplingLayer = self.layerService.filterByLayerName(list(layers.values()),
-                                                                ['Yield_Map', 'T1_80', 'T2_80', 'total', 'validation'],
-                                                                kriging=True)
+                                                                ['Yield_Map_', 'T1_80_perc', 'T2_80_perc', 'T1_total', 'T2_total', 'T1_validation', 'T2_validation'],
+                                                                )
 
             self.samplingLayerComboBox.setFilters(QgsMapLayerProxyModel.PointLayer)
             self.samplingLayerComboBox.setExceptedLayerList(samplingLayer)
@@ -92,9 +98,10 @@ class OrdinaryKriging(QtWidgets.QDialog, Ui_Dialog):
             self.samplingFieldComboBox.setLayer(self.samplingLayerComboBox.currentLayer())
 
             self.setFieldName()
-
             samplingFields = self.layerService.filterByFieldName(self.samplingLayerComboBox.currentLayer(),
                                                                  self.filterString)
+            print([field.name() for field in samplingFields])
+
 
             self.samplingFieldComboBox.setFields(samplingFields)
 
@@ -103,6 +110,8 @@ class OrdinaryKriging(QtWidgets.QDialog, Ui_Dialog):
 
             self.pixelSizeXSpinBox.setValue(float(self.settings[1][0]))
             self.pixelSizeYSpinBox.setValue(float(self.settings[1][1]))
+
+
 
     def getParameters(self):
         return {
@@ -132,7 +141,6 @@ class OrdinaryKriging(QtWidgets.QDialog, Ui_Dialog):
     def runSmartMap(self):
         parameters = self.getParameters()
         path = self.getPathByLayer(parameters['layer'])
-        print(path)
 
         smartMapDialog = self.smartMap.dlg
         self.smartMap.reset_gui()

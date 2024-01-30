@@ -76,9 +76,8 @@ class SamplingValidation(QtWidgets.QDialog, Ui_Dialog):
         self.fieldToEstimateComboBox.setFields(validationFields)
 
     def setErrorCompensationUi(self):
-        treatmentRasters = self.layerService.filterByLayerName(list(self.layers.values()), ['80'], kriging=True)
-        errorRasters = self.layerService.filterByLayerName(list(self.layers.values()), ['error', 'validation'],
-                                                           kriging=True)
+        treatmentRasters = self.layerService.filterByLayerName(list(self.layers.values()), ['80'])
+        errorRasters = self.layerService.filterByLayerName(list(self.layers.values()), ['error', 'validation'])
         self.t1RasterComboBox.setFilters(QgsMapLayerProxyModel.RasterLayer)
         self.t2RasterComboBox.setFilters(QgsMapLayerProxyModel.RasterLayer)
         self.t1errorRasterComboBox.setFilters(QgsMapLayerProxyModel.RasterLayer)
@@ -90,8 +89,7 @@ class SamplingValidation(QtWidgets.QDialog, Ui_Dialog):
         self.t2errorRasterComboBox.setExceptedLayerList(errorRasters)
 
     def setGainSurfaceUi(self):
-        errorRasters = self.layerService.filterByLayerName(list(self.layers.values()), ['Final', 'surface'],
-                                                           kriging=True)
+        errorRasters = self.layerService.filterByLayerName(list(self.layers.values()), ['Final', 'surface'])
         self.t1FinalSurfaceComboBox.setFilters(QgsMapLayerProxyModel.RasterLayer)
         self.t2FinalSurfaceComboBox.setFilters(QgsMapLayerProxyModel.RasterLayer)
         self.t1FinalSurfaceComboBox.setExceptedLayerList(errorRasters)
@@ -106,6 +104,15 @@ class SamplingValidation(QtWidgets.QDialog, Ui_Dialog):
                 'EXTENT': None,
                 'CRS': layer.crs().authid(),
                 'OUTPUT': filePath}
+
+    @staticmethod
+    def getYieldPointsParameters(gainSurface, fieldName, filePath):
+        return {
+            'INPUT_RASTER': gainSurface,
+            'RASTER_BAND': 1,
+            'FIELD_NAME': fieldName,
+            'OUTPUT': filePath
+        }
 
     def runValidate(self):
         grid = self.krigingRasterComboBox.currentLayer()
@@ -165,6 +172,7 @@ class SamplingValidation(QtWidgets.QDialog, Ui_Dialog):
         feedback.close()
 
     def runErrorCompensation(self):
+        # self.surfacePointsCheckBox
         t1FilePath = f"{self.filePath}/03_Error_Compensation/T1_Error_Compensation/T1_Final_Surface.tiff"
         t2FilePath = f"{self.filePath}/03_Error_Compensation/T2_Error_Compensation/T2_Final_Surface.tiff"
         t1Expression = f'"{self.t1RasterComboBox.currentLayer().name()}@1" + "{self.t1errorRasterComboBox.currentLayer().name()}@1"'
@@ -177,17 +185,17 @@ class SamplingValidation(QtWidgets.QDialog, Ui_Dialog):
         for parameter in [t1Parameters, t2Parameters]:
             feedback = UserFeedback()
             finalSurface = AlgorithmRunner().runRasterCalculator(parameter, context=self.context, feedback=feedback)
+
+            if self.surfacePointsCheckBox.isChecked():
+                finalSurfacePointsParameters = self.getYieldPointsParameters(finalSurface, 'yield',
+                                                                             f"{self.filePath}/03_Error_Compensation/T1_Error_Compensation/{finalSurface.name()}_Points.shp")
+
+                finalSurfacePoints = AlgorithmRunner().runPixelsToPoints(finalSurfacePointsParameters,
+                                                                         context=self.context, feedback=feedback)
+                self.layerService.addMapLayer(finalSurfacePoints, QGIS_TOC_GROUPS[5])
+
             self.layerService.addMapLayer(finalSurface, QGIS_TOC_GROUPS[5])
             feedback.close()
-
-    @staticmethod
-    def getYieldPointsParameters(gainSurface, fieldName, filePath):
-        return {
-            'INPUT_RASTER': gainSurface,
-            'RASTER_BAND': 1,
-            'FIELD_NAME': fieldName,
-            'OUTPUT': filePath
-        }
 
     def runGainSurface(self):
         # self.yieldGainPointsCheckBox

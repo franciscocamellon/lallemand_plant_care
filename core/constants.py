@@ -1,3 +1,4 @@
+
 QGIS_TOC_GROUPS = ['Raw_Data', 'Reprojected_Data', 'Sampling', 'Kriging', 'Validation', 'Error_Compensation',
                    'Gain_Surface']
 
@@ -15,10 +16,32 @@ SAMPLING_LAYER_NAMES = ['T1_total', 'T1_80_perc', 'T1_20_perc', 'T2_total', 'T2_
 
 DEFAULT_SETTINGS = {
     'SERVER': ['BD_GEOSTAT_LPC', 'localhost', 5432, 'postgres', 'postgres'],
-    'TREATMENT': ['T1', 'T2', 0.0, 1.0],
-    'KRIGING': ['VRYIELDMAS;VRYIELD', 1.5, 1.5]
+    'TREATMENT': ['T1', 'T2', 10.0, 0.0, 1.0],
+    'KRIGING': ['VRYIELDMAS;VRYIELD', 1.5, 1.5],
+    'HISTOGRAM': [30, '#636efa', '#000000']
 }
 
+STATISTICS_INTERVAL = {'DATA': [], 'YIELD_SUM': float, 'SQ_AREA': float, 'PERC_AREA': float, 'YIELD_BY_PERC_AREA': float}
+
+
+STATISTICS_INTERVALS = {
+    'FIRST_INTERVAL': {'DATA': [], 'SQ_AREA': float, 'PERC_AREA': float, 'YIELD_BY_PERC_AREA': float},
+    'SECOND_INTERVAL': {'DATA': [], 'SQ_AREA': float, 'PERC_AREA': float, 'YIELD_BY_PERC_AREA': float},
+    'THIRD_INTERVAL': {'DATA': [], 'SQ_AREA': float, 'PERC_AREA': float, 'YIELD_BY_PERC_AREA': float},
+    'FOURTH_INTERVAL': {'DATA': [], 'SQ_AREA': float, 'PERC_AREA': float, 'YIELD_BY_PERC_AREA': float},
+}
+
+GAIN_SURFACE_DATA = {
+    'SUM': float,
+    'MEAN': float,
+    'MODE': float,
+    'MEDIAN': float,
+    'STD_DEV': float,
+    'ANOVA': [],
+    'INTERVALS': STATISTICS_INTERVALS,
+    'TOTAL_AREA': float,
+    'TOTAL_YIELD_PRODUCTION': float,
+}
 
 CROP_COLUMN_NAMES = ['Id', "Crop name", "Sowing date", "Harvesting date", "Variety", "InterRoCM", "Create date",
                      "Update date"]

@@ -24,8 +24,9 @@
 
 from qgis.PyQt.QtCore import pyqtSlot
 from qgis.PyQt.QtWidgets import QWidget
-from qgis.core import QgsMapLayer
+from qgis.core import QgsMapLayer, QgsApplication
 
+from ..core.tasks.composer_layout_task import ComposerLayoutTask
 from ..core.constants import QGIS_TOC_GROUPS
 from .filter.filtering_dlg import FilteringPoints
 from .kriging.kriging_dlg import OrdinaryKriging
@@ -36,6 +37,7 @@ from .lpc_team.farmer_manager import FarmerManager
 from .lpc_team.lpc_team_manager import RegisterLpcTeam
 from .toolbar.toolbar_form_base import Ui_Form
 from .validation.validation_dlg import SamplingValidation
+from .report.report_dlg import StatisticsReport
 from ..core.services.layer_service import LayerService
 
 
@@ -48,8 +50,6 @@ class ToolbarManager(QWidget, Ui_Form):
         self.toolbar = toolbar
         self.layerService = LayerService()
         self.splitter.hide()
-        self.settingsPushButton.hide()
-        self.reportPushButton.hide()
         self.createTrialPushButton.clicked.connect(self.createTrialProject)
         self.loadFilePushButton.clicked.connect(self.loadFiles)
         self.lpcTeamPushButton.clicked.connect(self.manageLpcTeam)
@@ -59,6 +59,8 @@ class ToolbarManager(QWidget, Ui_Form):
         self.krigingPushButton.clicked.connect(self.ordinaryKriging)
         self.samplingValidationPushButton.clicked.connect(self.validation)
         self.clearStructurePushButton.clicked.connect(self.clearTreeView)
+        self.reportPushButton.clicked.connect(self.getReport)
+        self.settingsPushButton.clicked.connect(self.composer)
 
     @staticmethod
     def initGui():
@@ -167,3 +169,19 @@ class ToolbarManager(QWidget, Ui_Form):
 
                     parent = layer_node.parent()
                     parent.removeChildNode(layer_node)
+
+    def getReport(self):
+        project = self.layerService.checkForSavedProject()
+        if project:
+            dlg = StatisticsReport(self.iface, project)
+            dlg.show()
+            result = dlg.exec_()
+            if result:
+                pass
+
+    def composer(self):
+        project = self.layerService.checkForSavedProject()
+
+        self.composerTask = ComposerLayoutTask(project)
+
+        QgsApplication.taskManager().addTask(self.composerTask)

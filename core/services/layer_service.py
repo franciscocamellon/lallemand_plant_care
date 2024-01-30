@@ -24,12 +24,14 @@
 import os
 import random
 import re
+from contextlib import contextmanager
 
 from qgis.core import (
     QgsProject,
     QgsField,
     QgsFields,
     QgsVectorLayer,
+    QgsRasterLayer,
     QgsFeature,
     QgsGeometry,
     QgsPointXY,
@@ -40,11 +42,16 @@ from qgis.core import (
     QgsCoordinateTransformContext,
     QgsWkbTypes,
     QgsFeatureRequest,
-    QgsExpression
+    QgsExpression,
+    QgsGraduatedSymbolRenderer,
+    QgsRendererRange,
+    QgsMarkerSymbol
 )
 from qgis.PyQt.QtWidgets import QMessageBox, QFileDialog
 from qgis.PyQt.Qt import QVariant
+from qgis.PyQt.QtGui import QColor
 
+from .plot_service import PlotterService
 from ...gui.settings.options_settings_dlg import OptionsSettingsPage
 from .message_service import MessageService
 from .system_service import SystemService
@@ -59,20 +66,9 @@ class LayerService:
         self.project = QgsProject.instance()
         self.messageService = MessageService()
         self.systemService = SystemService()
+        self.plotterService = PlotterService()
         self.settings = OptionsSettingsPage()
-        self.treatmentSettings = self.settings.getTreatmentPolygonsSettings()
         self.krigingSettings = self.settings.getKrigingSettings()
-
-    def _convertToSimpleGeometry(self, layer):
-        convertedLayerType = self._identifyWkbType(layer)
-        convertedLayer = QgsVectorLayer(f"{convertedLayerType}?crs={layer.crs().authid()}", layer.name(), "memory")
-
-        for feature in layer.getFeatures():
-            convertedFeature = QgsFeature(layer.fields())
-            convertedFeature.setGeometry(QgsWkbTypes.dropZ(feature.geometry().wkbType()))
-            convertedLayer.dataProvider().addFeature(convertedFeature)
-
-        return convertedLayer
 
     @staticmethod
     def _identifyWkbType(layer):
@@ -92,10 +88,10 @@ class LayerService:
         return os.path.join(parentDirectory, 'resources', 'world_zones.geojson')
 
     @staticmethod
-    def _getLayerStylePath():
+    def getComposerLayoutPath():
         currentDirectory = os.path.dirname(__file__)
         parentDirectory = os.path.join(currentDirectory, '..')
-        return os.path.join(parentDirectory, 'resources', 'sampling_style.qml')
+        return os.path.join(parentDirectory, 'resources', 'composer')
 
     @staticmethod
     def _getGeometryFromWkbType(wkbType):
@@ -127,18 +123,26 @@ class LayerService:
             project.instance().addMapLayer(layer, False)
             group.addLayer(layer)
 
-    @staticmethod
-    def filterByLayerName(layers, filterString, kriging=False):
+    def krigingFilterLayerByName(self, layers, filterString, inverse=False):
+        krigingLayers = []
 
+        for layer in layers:
+            if not layer.crs().isGeographic():
+                krigingLayers.append(layer)
+
+        return self.filterByLayerName(krigingLayers, filterString, inverse=inverse)
+
+    @staticmethod
+    def filterByLayerName(layers, filterString, inverse=False):
+        filteredLayers = []
         regexPattern = '|'.join(map(re.escape, filterString))
         pattern = re.compile(regexPattern)
 
-        filteredLayers = [layer for layer in layers if not pattern.search(layer.name())]
-
-        if kriging:
-            for layer in layers:
-                if layer.crs().isGeographic() and pattern.search(layer.name()):
-                    filteredLayers.append(layer)
+        for layer in layers:
+            if inverse and pattern.search(layer.name()):
+                filteredLayers.append(layer)
+            elif not inverse and not pattern.search(layer.name()):
+                filteredLayers.append(layer)
 
         return filteredLayers
 
@@ -182,6 +186,32 @@ class LayerService:
     @staticmethod
     def _createQgsField(fieldName, fieldType):
         return QgsField(fieldName, fieldType)
+
+    @contextmanager
+    def safe_file_operations(self, file_path, mode='r'):
+        """Context manager for safe file operations."""
+        file = None
+        try:
+            file = open(file_path, mode)
+            yield file
+        finally:
+            if file:
+                file.close()
+
+    def populateFrequencyHistogram(self, layer, field, data, path):
+        histogramValues = [feature[field] for feature in layer.getFeatures()]
+        self.plotterService.createFrequencyHistogram(histogramValues, data, layer.name(), exportPng=True, path=path)
+
+    def _convertToSimpleGeometry(self, layer):
+        convertedLayerType = self._identifyWkbType(layer)
+        convertedLayer = QgsVectorLayer(f"{convertedLayerType}?crs={layer.crs().authid()}", layer.name(), "memory")
+
+        for feature in layer.getFeatures():
+            convertedFeature = QgsFeature(layer.fields())
+            convertedFeature.setGeometry(QgsWkbTypes.dropZ(feature.geometry().wkbType()))
+            convertedLayer.dataProvider().addFeature(convertedFeature)
+
+        return convertedLayer
 
     def createValidationFields(self, layer):
 
@@ -244,19 +274,14 @@ class LayerService:
                 self.messageService.warningMessage("Project Save", "Project not saved.")
                 return None
 
-    def loadLayerSamplingStyle(self):
-        # TODO
-        mapLayers = self.project.instance().mapLayers().values()
-
-    def loadShapeFile(self, groupName, file_path, style=False):
+    def loadShapeFile(self, groupName, file_path, fieldName, style=False):
 
         try:
             fileName = self.systemService.extractFileName(file_path)
             layer = self.createVectorLayer(fileName, file_path)
 
             if style:
-                layer.loadNamedStyle(self._getLayerStylePath())
-                layer.triggerRepaint()
+                self.applySymbology(layer, fieldName)
 
             if groupName is None:
                 self.project.addMapLayer(layer)
@@ -415,3 +440,73 @@ class LayerService:
 
         except Exception as e:
             self.messageService.criticalMessage('Saving file', f'An error occurred: {str(e)}')
+
+    def getLoadedVectorLayers(self, layers, geographic=False):
+        vectorLayers = []
+        for layer in layers:
+            if geographic:
+                if isinstance(layer, QgsVectorLayer) and layer.crs().isGeographic():
+                    vectorLayers.append(layer)
+            else:
+                if isinstance(layer, QgsVectorLayer) and not layer.crs().isGeographic():
+                    vectorLayers.append(layer)
+        return vectorLayers
+
+    def getLoadedRasterLayers(self, layers):
+        return [layer for layer in layers if isinstance(layer, QgsRasterLayer)]
+
+    @staticmethod
+    def extractValueFromRaster(raster, feature, fieldName):
+        """
+        Extracts a value from a raster at the location of a feature's geometry point.
+        :param raster: The raster layer from which to extract the value.
+        :param feature: The feature for which the value is extracted.
+        :param fieldName: The name of the field where the extracted value will be stored.
+        :returns: The updated feature with the extracted value.
+        """
+        geometry = feature.geometry()
+        observation_point = geometry.asPoint()
+        x, y = observation_point.x(), observation_point.y()
+
+        pixel_value, success = raster.dataProvider().sample(QgsPointXY(x, y), 1)
+
+        if success:
+            feature[fieldName] = pixel_value
+
+        return feature
+
+    def createLayerSymbology(self, layer, fieldName):
+
+        minValue = layer.minimumValue(layer.fields().indexOf(fieldName))
+        maxValue = layer.maximumValue(layer.fields().indexOf(fieldName))
+
+        step = (maxValue - minValue) / 4
+        adjustedIntervals = [round((maxValue - i * step), 1) for i in range(5)]
+
+        colors = ['#bfbcbc', '#ffff00', '#55ff00', '#267300']
+        colors.reverse()
+
+        ranges = []
+        for i in range(4):
+            symbol = QgsMarkerSymbol.createSimple({'size': '2'})
+            symbol.setColor(QColor(colors[i]))
+
+            if i == 0:
+                label = f"> {adjustedIntervals[i + 1]}"
+            elif i == 3:
+                label = f"< {adjustedIntervals[i]}"
+            else:
+                label = f"{adjustedIntervals[i + 1]} - {adjustedIntervals[i]}"
+
+            intervalRange = QgsRendererRange(adjustedIntervals[i + 1], adjustedIntervals[i], symbol, label)
+            ranges.append(intervalRange)
+
+        renderer = QgsGraduatedSymbolRenderer(fieldName, ranges)
+        renderer.setMode(QgsGraduatedSymbolRenderer.EqualInterval)
+
+        return renderer
+
+    def applySymbology(self, layer, fieldName):
+        renderer = self.createLayerSymbology(layer, fieldName)
+        layer.setRenderer(renderer)
+        layer.triggerRepaint()
