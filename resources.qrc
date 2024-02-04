@@ -16,5 +16,6 @@
         <file>icons/kriging.png</file>
         <file>icons/folder_tree.png</file>
         <file>icons/verified.png</file>
+        <file>icons/maps.png</file>
     </qresource>
 </RCC>

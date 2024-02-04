@@ -30,7 +30,8 @@ from qgis.core import (
     QgsProcessingContext,
     QgsReadWriteContext,
     QgsLayoutExporter,
-    QgsPrintLayout
+    QgsPrintLayout,
+    QgsLayoutItemMap
 )
 from qgis.PyQt.QtXml import QDomDocument
 from qgis.gui import QgisInterface
@@ -57,7 +58,9 @@ class ComposerLayoutTask(QgsTask):
     def run(self):
 
         try:
-
+            layers = self.project.instance().mapLayers().values()
+            contour = self.layerService.filterByLayerName(list(layers), ['_contour_'], inverse=True)
+            print(contour)
             # Create a new print layout
             layout = QgsPrintLayout(self.project)
 
@@ -72,6 +75,12 @@ class ComposerLayoutTask(QgsTask):
                 if os.path.isfile(file_path):
                     template.setContent(open(file_path).read())
                     layout.loadFromTemplate(template, QgsReadWriteContext())
+
+                    item = layout.itemById('Map 1')
+                    if item and isinstance(item, QgsLayoutItemMap):
+                        # Cast the item to QgsLayoutItemMap
+                        mapItem = item
+                        mapItem.setLayers([contour])
 
                     # Create an exporter object
                     exporter = QgsLayoutExporter(layout)

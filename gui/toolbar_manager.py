@@ -60,7 +60,7 @@ class ToolbarManager(QWidget, Ui_Form):
         self.samplingValidationPushButton.clicked.connect(self.validation)
         self.clearStructurePushButton.clicked.connect(self.clearTreeView)
         self.reportPushButton.clicked.connect(self.getReport)
-        self.settingsPushButton.clicked.connect(self.composer)
+        self.mapsPushButton.clicked.connect(self.composer)
 
     @staticmethod
     def initGui():
