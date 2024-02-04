@@ -94,6 +94,12 @@ class LayerService:
         return os.path.join(parentDirectory, 'resources', 'composer')
 
     @staticmethod
+    def getReportPath():
+        currentDirectory = os.path.dirname(__file__)
+        parentDirectory = os.path.join(currentDirectory, '..')
+        return os.path.join(parentDirectory, 'resources', 'report')
+
+    @staticmethod
     def _getGeometryFromWkbType(wkbType):
         return QgsWkbTypes.displayString(wkbType)
 
@@ -152,11 +158,12 @@ class LayerService:
         regexPattern = '|'.join(map(re.escape, filterString))
         pattern = re.compile(regexPattern)
 
-        for field in layer.fields():
-            if inverse and not pattern.search(field.name()):
-                filteredFields.append(field)
-            elif not inverse and pattern.search(field.name()):
-                filteredFields.append(field)
+        if layer:
+            for field in layer.fields():
+                if inverse and not pattern.search(field.name()):
+                    filteredFields.append(field)
+                elif not inverse and pattern.search(field.name()):
+                    filteredFields.append(field)
 
         return filteredFields
 
@@ -274,14 +281,11 @@ class LayerService:
                 self.messageService.warningMessage("Project Save", "Project not saved.")
                 return None
 
-    def loadShapeFile(self, groupName, file_path, fieldName, style=False):
+    def loadShapeFile(self, groupName, file_path):
 
         try:
             fileName = self.systemService.extractFileName(file_path)
             layer = self.createVectorLayer(fileName, file_path)
-
-            if style:
-                self.applySymbology(layer, fieldName)
 
             if groupName is None:
                 self.project.addMapLayer(layer)
@@ -298,7 +302,7 @@ class LayerService:
                     group = root.findGroup(groupName)
                     group.addLayer(layer)
 
-            return layer.crs()
+            return layer
 
         except Exception as load_file_exception:
             errorMessage = f'Error loading shape file: {str(load_file_exception)}'
@@ -476,15 +480,15 @@ class LayerService:
         return feature
 
     def createLayerSymbology(self, layer, fieldName):
-
+        print(fieldName)
         minValue = layer.minimumValue(layer.fields().indexOf(fieldName))
         maxValue = layer.maximumValue(layer.fields().indexOf(fieldName))
+        print(maxValue, minValue)
 
         step = (maxValue - minValue) / 4
         adjustedIntervals = [round((maxValue - i * step), 1) for i in range(5)]
 
-        colors = ['#bfbcbc', '#ffff00', '#55ff00', '#267300']
-        colors.reverse()
+        colors = ['#267300', '#55ff00', '#ffff00', '#bfbcbc']
 
         ranges = []
         for i in range(4):
