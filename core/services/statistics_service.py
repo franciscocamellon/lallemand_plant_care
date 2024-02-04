@@ -21,8 +21,11 @@
  *                                                                         *
  ***************************************************************************/
 """
+import os.path
+
 import pandas as pd
 import numpy as np
+from docx import Document
 
 from qgis.core import (
     QgsProject,
@@ -49,6 +52,7 @@ from .plot_service import PlotterService
 from ...gui.settings.options_settings_dlg import OptionsSettingsPage
 from .message_service import MessageService
 from .system_service import SystemService
+from .layer_service import LayerService
 from ..constants import VALIDATION_FIELDS, GAIN_SURFACE_DATA, STATISTICS_INTERVALS, STATISTICS_INTERVAL
 from ..tools.algorithm_runner import AlgorithmRunner
 
@@ -60,6 +64,7 @@ class StatisticsService:
         self.krigingSettings = self.settings.getKrigingSettings()
         self.surfaceGainData = GAIN_SURFACE_DATA
         self.statisticsInterval = STATISTICS_INTERVAL
+        self.layerService = LayerService()
 
     def runStatistics(self, layer):
 
@@ -67,7 +72,6 @@ class StatisticsService:
         T1 = [feature['yield'] for feature in layer.getFeatures()]
 
         # Area calculation
-        print(self.krigingSettings[1])
         area = (self.krigingSettings[1][0]) * self.krigingSettings[1][1]
         sq_area = [area for value in T1]
 
@@ -109,6 +113,8 @@ class StatisticsService:
                 'Yield per Area Percent': self.statisticsInterval['YIELD_BY_PERC_AREA']
             }
         print(results)
+        return results
+
         # # Load the spreadsheet to be updated
         # spreadsheet_path = '/mnt/data/Tables_Statistics.xlsx'
         # spreadsheet = pd.read_excel(spreadsheet_path)
@@ -134,4 +140,17 @@ class StatisticsService:
         # updated_spreadsheet_path = '/mnt/data/Updated_Tables_Statistics.xlsx'
         # spreadsheet.to_excel(updated_spreadsheet_path, index=False)
 
-
+    def replacePlaceholder(self, layer, filePath):
+        result = self.runStatistics(layer)
+        doc = os.path.join(self.layerService.getReportPath(), 'report_template.docx')
+        reportDocument = Document(doc)
+        for paragraph in reportDocument.paragraphs:
+            if '{TOTAL_AREA_SUM}' in paragraph.text:
+                inline = paragraph.runs
+                for i in range(len(inline)):
+                    if '{TOTAL_AREA_SUM}' in inline[i].text:
+                        text = inline[i].text.replace('{TOTAL_AREA_SUM}', str(result['yield<0']['Total Area Sum']))
+                        inline[i].text = text
+        output = os.path.join(filePath, '05_Results', 'output_report.docx')
+        print(output)
+        reportDocument.save(output)

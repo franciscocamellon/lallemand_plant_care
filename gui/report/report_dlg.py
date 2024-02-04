@@ -70,4 +70,4 @@ class StatisticsReport(QtWidgets.QDialog, Ui_Dialog):
         self.t2SurfacePointsComboBox.setExceptedLayerList(t2Surface)
 
     def runReport(self):
-        StatisticsService().runStatistics(self.gainSurfacePointsComboBox.currentLayer())
+        StatisticsService().replacePlaceholder(self.gainSurfacePointsComboBox.currentLayer(), self.filePath)

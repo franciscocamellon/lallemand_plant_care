@@ -1,4 +1,3 @@
-
 QGIS_TOC_GROUPS = ['Raw_Data', 'Reprojected_Data', 'Sampling', 'Kriging', 'Validation', 'Error_Compensation',
                    'Gain_Surface']
 
@@ -21,8 +20,8 @@ DEFAULT_SETTINGS = {
     'HISTOGRAM': [30, '#636efa', '#000000']
 }
 
-STATISTICS_INTERVAL = {'DATA': [], 'YIELD_SUM': float, 'SQ_AREA': float, 'PERC_AREA': float, 'YIELD_BY_PERC_AREA': float}
-
+STATISTICS_INTERVAL = {'DATA': [], 'YIELD_SUM': float, 'SQ_AREA': float, 'PERC_AREA': float,
+                       'YIELD_BY_PERC_AREA': float}
 
 STATISTICS_INTERVALS = {
     'FIRST_INTERVAL': {'DATA': [], 'SQ_AREA': float, 'PERC_AREA': float, 'YIELD_BY_PERC_AREA': float},
@@ -96,3 +95,18 @@ UPDATE_TEAM_SQL = "UPDATE geostatistics.lpc_team SET first_name = %s, last_name 
 DELETE_TEAM_SQL = "DELETE FROM geostatistics.lpc_team WHERE id = '{}';"
 
 VALIDATION_FIELDS = ['estimated', 'error', 'sqr_error', 'rmse', '%_rmse']
+
+# COMPOSER LAYOUT CONSTANTS
+from qgis.core import QgsLayoutItem
+
+REFERENCE_POINTS = {
+    0: QgsLayoutItem.UpperLeft,
+    1: QgsLayoutItem.UpperMiddle,
+    2: QgsLayoutItem.UpperRight,
+    3: QgsLayoutItem.MiddleLeft,
+    4: QgsLayoutItem.Middle,
+    5: QgsLayoutItem.MiddleRight,
+    6: QgsLayoutItem.LowerLeft,
+    7: QgsLayoutItem.LowerMiddle,
+    8: QgsLayoutItem.LowerRight
+}
