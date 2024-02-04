@@ -78,7 +78,7 @@ class FilteringPoints(QtWidgets.QDialog, Ui_Dialog):
                                                                  inverse=True)
             boundaryLayer = self.layerService.filterByLayerName(list(layers.values()), ['contour'])
             treatmentLayer = self.layerService.filterByLayerName(list(layers.values()), ['treatment'])
-            samplingLayer = self.layerService.filterByLayerName(list(layers.values()), ['filtermap', 'Yield_Map'])
+            samplingLayer = self.layerService.filterByLayerName(list(layers.values()), ['filtermap', 'Yield_Map', 'T1_T2_total'])
 
             self.harvesterLayerComboBox.setFilters(QgsMapLayerProxyModel.PointLayer)
             self.harvesterLayerComboBox.setExceptedLayerList(harvesterLayer)
@@ -178,7 +178,7 @@ class FilteringPoints(QtWidgets.QDialog, Ui_Dialog):
         }
 
     def getReprojectionParameters(self):
-        reprojectedLayerName = f'Yield_Map_{self.crsOperations[1]}'
+        reprojectedLayerName = 'T1_T2_total'
         return {
             'reproject': self.reprojectCheckBox.isChecked(),
             'layerName': reprojectedLayerName,
@@ -190,7 +190,7 @@ class FilteringPoints(QtWidgets.QDialog, Ui_Dialog):
     def runFilter(self):
 
         self.task = FilterTask(self.getFilterTaskParameters(), self.project,
-                               self.yieldFieldComboBox.currentField())
+                               self.harvesterLayerYeldComboBox.currentField())
 
         QgsApplication.taskManager().addTask(self.task)
         self.close()

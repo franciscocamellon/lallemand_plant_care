@@ -23,15 +23,15 @@
 """
 from typing import Optional
 
-from qgis.utils import plugins
 from qgis.PyQt import QtWidgets
 from qgis.core import QgsFieldProxyModel, QgsMapLayerProxyModel, QgsTask
+from qgis.utils import plugins
 
-from ...core.services.message_service import MessageService
 from .kriging_dlg_base import Ui_Dialog
 from ..settings.options_settings_dlg import OptionsSettingsPage
 from ...core.services.layer_service import LayerService
-from ...core.services.widget_service import WidgetService
+from ...core.services.message_service import MessageService
+from ...core.services.system_service import SystemService
 
 
 class OrdinaryKriging(QtWidgets.QDialog, Ui_Dialog):
@@ -48,6 +48,7 @@ class OrdinaryKriging(QtWidgets.QDialog, Ui_Dialog):
         self.settings = OptionsSettingsPage().getKrigingSettings()
         self.task: Optional[QgsTask] = None
         self.layerService = LayerService()
+        self.systemService = SystemService()
         self.filterString = ''
         self.setKrigingGui()
         self.samplingLayerComboBox.layerChanged.connect(self.setFieldName)
@@ -88,7 +89,8 @@ class OrdinaryKriging(QtWidgets.QDialog, Ui_Dialog):
         else:
             boundaryLayer = self.layerService.filterByLayerName(list(layers.values()), ['contour_'])
             samplingLayer = self.layerService.filterByLayerName(list(layers.values()),
-                                                                ['Yield_Map_', 'T1_80_perc', 'T2_80_perc', 'T1_total', 'T2_total', 'T1_validation', 'T2_validation'],
+                                                                ['Yield_Map_', 'T1_80_perc', 'T2_80_perc', 'T1_total',
+                                                                 'T2_total', 'T1_validation', 'T2_validation'],
                                                                 )
 
             self.samplingLayerComboBox.setFilters(QgsMapLayerProxyModel.PointLayer)
@@ -100,8 +102,6 @@ class OrdinaryKriging(QtWidgets.QDialog, Ui_Dialog):
             self.setFieldName()
             samplingFields = self.layerService.filterByFieldName(self.samplingLayerComboBox.currentLayer(),
                                                                  self.filterString)
-            print([field.name() for field in samplingFields])
-
 
             self.samplingFieldComboBox.setFields(samplingFields)
 
@@ -110,8 +110,6 @@ class OrdinaryKriging(QtWidgets.QDialog, Ui_Dialog):
 
             self.pixelSizeXSpinBox.setValue(float(self.settings[1][0]))
             self.pixelSizeYSpinBox.setValue(float(self.settings[1][1]))
-
-
 
     def getParameters(self):
         return {
@@ -123,7 +121,9 @@ class OrdinaryKriging(QtWidgets.QDialog, Ui_Dialog):
         }
 
     def getPathByLayer(self, layer):
-        if 'T1_total' in layer.name():
+        if 'T1_T2_total' in layer.name():
+            return f"{self.filePath}/01_Kriging/01_T1_T2_Total"
+        elif 'T1_total' in layer.name():
             return f"{self.filePath}/01_Kriging/02_T1_Total"
         elif 'T1_80' in layer.name():
             return f"{self.filePath}/01_Kriging/04_T1_80perc"
@@ -135,8 +135,6 @@ class OrdinaryKriging(QtWidgets.QDialog, Ui_Dialog):
             return f"{self.filePath}/03_Error_Compensation/T1_Error_Compensation"
         elif 'T2_validation' in layer.name():
             return f"{self.filePath}/03_Error_Compensation/T2_Error_Compensation"
-        else:
-            return f"{self.filePath}/01_Kriging/01_T1_T2_Total"
 
     def runSmartMap(self):
         parameters = self.getParameters()
@@ -176,5 +174,15 @@ class OrdinaryKriging(QtWidgets.QDialog, Ui_Dialog):
         self.smartMap.pushButton_Area_Contorno_clicked()
 
         self.smartMap.pushButton_VariogramaAjust_clicked()
+
+        # smartMapDialog.tabWidget_Interpolacao_OK.setCurrentIndex(2)
         self.smartMap.pushButton_Krigagem_clicked()
+
+        # smartMapDialog.tabWidget_Interpolacao_OK.setCurrentIndex(3)
         self.smartMap.pushButton_VariogramaSave_clicked()
+
+        # smartMapDialog.tabWidget_Interpolacao_OK.setCurrentIndex(0)
+        smartMapDialog.comboBox_Modelo.setCurrentIndex(2)
+        self.smartMap.comboBox_Modelo_changed(2)
+
+        self.systemService.copyVariogram(path, f'{self.filePath}/05_Results/02_Variograms')

@@ -76,7 +76,9 @@ class SamplingTask(QgsTask):
                                                                                       fields=layer.fields(),
                                                                                       features=selectedFeatures)
                     self.layerService.saveVectorLayer(selectedFeaturesLayer, totalOutputPath)
-                    self.layerService.loadShapeFile(QGIS_TOC_GROUPS[2], totalOutputPath, style=True)
+                    loadedLayer = self.layerService.loadShapeFile(QGIS_TOC_GROUPS[2], totalOutputPath)
+                    self.layerService.applySymbology(loadedLayer, self.yieldField)
+
                     staTotalTable = self.getHistogramParameters(selectedFeaturesLayer, self.yieldField)
                     self.layerService.populateFrequencyHistogram(selectedFeaturesLayer, self.yieldField, staTotalTable,
                                                                  histogramTotalPath)
@@ -100,7 +102,8 @@ class SamplingTask(QgsTask):
                                     features=percentFeatures)
 
                                 self.layerService.saveVectorLayer(percentFeaturesLayer, percentLayerPath)
-                                self.layerService.loadShapeFile(QGIS_TOC_GROUPS[2], percentLayerPath, self.yieldField, style=True)
+                                loadedLayer = self.layerService.loadShapeFile(QGIS_TOC_GROUPS[2], percentLayerPath)
+                                self.layerService.applySymbology(loadedLayer, self.yieldField)
 
                                 staPercentTable = self.getHistogramParameters(percentFeaturesLayer, self.yieldField)
                                 self.layerService.populateFrequencyHistogram(percentFeaturesLayer, self.yieldField, staPercentTable,
@@ -122,7 +125,8 @@ class SamplingTask(QgsTask):
                                 validationLayer = self.layerService.createValidationVectorLayer(percentFeaturesLayer)
 
                                 self.layerService.saveVectorLayer(validationLayer, validationLayerPath)
-                                self.layerService.loadShapeFile(QGIS_TOC_GROUPS[4], validationLayerPath, self.yieldField, style=True)
+                                self.layerService.loadShapeFile(QGIS_TOC_GROUPS[4], validationLayerPath)
+
                             else:
                                 raise FileExistsException(f'Sampling file {validationLayerName} already exists.')
 

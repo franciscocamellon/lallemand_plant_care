@@ -69,8 +69,7 @@ class FilterTask(QgsTask):
                 output = AlgorithmRunner().runYieldMapFiltering(filterParameters, context=self.context,
                                                                 feedback=self.feedback)
 
-                filteredFeatures = self.layerService.getFeaturesByRequest(output,
-                                                                          "\"Biais_rendement\"='F - Pas de biais'")
+                filteredFeatures = self.layerService.getFeaturesByRequest(output, "\"Biais_rendement\"='F - Pas de biais'")
                 self.yieldMapVector = self.layerService.createMemoryVectorLayer(output.wkbType(), 'Yield_Map',
                                                                                 output.crs().authid(),
                                                                                 fields=output.fields(),
@@ -86,8 +85,10 @@ class FilterTask(QgsTask):
 
                 if self.yieldMapVector.isValid():
                     self.layerService.saveVectorLayer(self.yieldMapVector, filteredMapLayerPath)
-                    self.layerService.loadShapeFile(QGIS_TOC_GROUPS[0], filteredMapLayerPath, self.yieldField, style=True)
-                    self.layerService.loadShapeFile(QGIS_TOC_GROUPS[1], outputReprojectLayer, self.yieldField, style=True)
+                    self.layerService.loadShapeFile(QGIS_TOC_GROUPS[0], filteredMapLayerPath)
+
+                    reprojectedLoadedLayer = self.layerService.loadShapeFile(QGIS_TOC_GROUPS[2], outputReprojectLayer)
+                    self.layerService.applySymbology(reprojectedLoadedLayer, self.yieldField)
 
                     yieldHistogramPath = f"{self.filePath}/05_Results/01_Histograms/T1_T2_total.png"
 

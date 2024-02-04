@@ -84,6 +84,16 @@ class SystemService:
     def copyFile(source, target):
         shutil.copyfile(source, target)
 
+    def copyVariogram(self, sourcePath, targetPath):
+        if not os.path.exists(targetPath):
+            os.makedirs(targetPath)
+
+        for resultFile in os.listdir(sourcePath):
+            if "0_Variograma" in resultFile:
+                oldFilePath = os.path.join(sourcePath, resultFile)
+                newFilePath = os.path.join(targetPath, resultFile)
+                self.copyFile(oldFilePath, newFilePath)
+
     def fileExist(self, path, task=False):
         if os.path.isfile(path):
             file = os.path.basename(path)
