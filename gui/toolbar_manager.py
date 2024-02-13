@@ -39,6 +39,7 @@ from .validation.validation_dlg import SamplingValidation
 from ..core.constants import QGIS_TOC_GROUPS
 from ..core.services.layer_service import LayerService
 from ..core.tools.composer_layout_runner import ComposerLayoutRunner
+from ..core.tools.export_layout_runner import ExportLayoutRunner
 
 
 class ToolbarManager(QWidget, Ui_Form):
@@ -61,6 +62,8 @@ class ToolbarManager(QWidget, Ui_Form):
         self.clearStructurePushButton.clicked.connect(self.clearTreeView)
         self.reportPushButton.clicked.connect(self.getReport)
         self.mapsPushButton.clicked.connect(self.composer)
+        self.exportMapPushButton.clicked.connect(self.exportMaps)
+
 
     @staticmethod
     def initGui():
@@ -181,5 +184,10 @@ class ToolbarManager(QWidget, Ui_Form):
 
     def composer(self):
         project = self.layerService.checkForSavedProject()
-        composerLayoutRunner = ComposerLayoutRunner(project)
+        composerLayoutRunner = ComposerLayoutRunner(self.iface, project)
         composerLayoutRunner.run()
+
+    def exportMaps(self):
+        project = self.layerService.checkForSavedProject()
+        exportLayoutRunner = ExportLayoutRunner(self.iface, project)
+        exportLayoutRunner.run()

@@ -375,7 +375,30 @@
          </property>
          <property name="icon">
           <iconset resource="../../resources.qrc">
-           <normaloff>:/plugins/lallemand_plant_care/icons/maps.png</normaloff>:/plugins/lallemand_plant_care/icons/maps.png</iconset>
+           <normaloff>:/plugins/lallemand_plant_care/icons/load_layout.png</normaloff>:/plugins/lallemand_plant_care/icons/load_layout.png</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>24</width>
+           <height>24</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="exportMapPushButton">
+         <property name="maximumSize">
+          <size>
+           <width>30</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="../../resources.qrc">
+           <normaloff>:/plugins/lallemand_plant_care/icons/export_layout.png</normaloff>:/plugins/lallemand_plant_care/icons/export_layout.png</iconset>
          </property>
          <property name="iconSize">
           <size>
