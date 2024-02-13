@@ -110,3 +110,21 @@ REFERENCE_POINTS = {
     7: QgsLayoutItem.LowerMiddle,
     8: QgsLayoutItem.LowerRight
 }
+
+COMPOSER_LAYERS = (
+    'T1_T2_total', 'T1_total', 'T2_total', 'T1_80_perc', 'T2_80_perc', '1_Krig_T1_T2_total_', '1_Krig_T1_total_',
+    '1_Krig_T2_total_', '1_Krig_T1_80_perc_', '1_Krig_T2_80_perc_', 'Yield_Gain')
+
+COMPOSER_LAYOUTS = {
+    'T1_T2_total': '01_Points_with_measured_yield_values.qpt',
+    'T1_total': '02_T1_Measured_yield.qpt',
+    'T2_total': '03_T2_Measured_yield.qpt',
+    'T1_80_perc': '04_T1_Sample_for_model_generation.qpt',
+    'T2_80_perc': '05_T2_Sample_for_model_generation.qpt',
+    '1_Krig_T1_T2_total_': '06_Model_T1_T2.qpt',
+    '1_Krig_T1_total_': '07_Model_T1.qpt',
+    '1_Krig_T2_total_': '08_Model_T2.qpt',
+    '1_Krig_T1_80_perc_': '09_Model_T1_80perc.qpt',
+    '1_Krig_T2_80_perc_': '10_Model_T2_80perc.qpt',
+    'Yield_Gain': '11_Yield_gain_using_T2.qpt',
+}

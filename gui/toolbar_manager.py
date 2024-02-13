@@ -24,21 +24,21 @@
 
 from qgis.PyQt.QtCore import pyqtSlot
 from qgis.PyQt.QtWidgets import QWidget
-from qgis.core import QgsMapLayer, QgsApplication
+from qgis.core import QgsMapLayer
 
-from ..core.tasks.composer_layout_task import ComposerLayoutTask
-from ..core.constants import QGIS_TOC_GROUPS
 from .filter.filtering_dlg import FilteringPoints
-from .kriging.kriging_dlg import OrdinaryKriging
-from .treatment.treatment_polygons_dlg import TreatmentPolygons
 from .geostatistics_trial.geostatistics_trial import GeostatisticsTrial
+from .kriging.kriging_dlg import OrdinaryKriging
 from .layer_manager.load_files_dlg import LoadFiles
 from .lpc_team.farmer_manager import FarmerManager
 from .lpc_team.lpc_team_manager import RegisterLpcTeam
-from .toolbar.toolbar_form_base import Ui_Form
-from .validation.validation_dlg import SamplingValidation
 from .report.report_dlg import StatisticsReport
+from .toolbar.toolbar_form_base import Ui_Form
+from .treatment.treatment_polygons_dlg import TreatmentPolygons
+from .validation.validation_dlg import SamplingValidation
+from ..core.constants import QGIS_TOC_GROUPS
 from ..core.services.layer_service import LayerService
+from ..core.tools.composer_layout_runner import ComposerLayoutRunner
 
 
 class ToolbarManager(QWidget, Ui_Form):
@@ -181,7 +181,5 @@ class ToolbarManager(QWidget, Ui_Form):
 
     def composer(self):
         project = self.layerService.checkForSavedProject()
-
-        self.composerTask = ComposerLayoutTask(project)
-
-        QgsApplication.taskManager().addTask(self.composerTask)
+        composerLayoutRunner = ComposerLayoutRunner(project)
+        composerLayoutRunner.run()

@@ -24,10 +24,13 @@
 import os
 import random
 import re
+from collections import OrderedDict
 from contextlib import contextmanager
 
 from qgis.core import (
     QgsProject,
+    QgsVectorLayer,
+    QgsRasterLayer,
     QgsLayerTree,
     QgsPrintLayout,
     QgsLayoutPoint,
@@ -42,24 +45,33 @@ from qgis.core import (
     QgsUnitTypes,
     QgsLayoutSize,
     QgsLayoutMeasurement,
-    QgsLayoutExporter
+    QgsLayoutExporter,
+    QgsTextFormat, QgsFontUtils, QgsMapLayerLegendUtils, QgsReadWriteContext
 )
+from qgis.PyQt.QtXml import QDomDocument
 from qgis.PyQt.QtWidgets import QMessageBox, QFileDialog
 from qgis.PyQt.QtCore import Qt, QRectF
 from qgis.PyQt.QtGui import QColor, QFont
 
+from .layer_service import LayerService
 from .plot_service import PlotterService
 from ...gui.settings.options_settings_dlg import OptionsSettingsPage
 from .message_service import MessageService
 from .system_service import SystemService
-from ..constants import VALIDATION_FIELDS, REFERENCE_POINTS
+from ..constants import VALIDATION_FIELDS, REFERENCE_POINTS, COMPOSER_LAYOUTS, QGIS_TOC_GROUPS
 from ..tools.algorithm_runner import AlgorithmRunner
 
 
 class ComposerService:
 
-    def __init__(self, project):
+    def __init__(self, project, extent):
         self.project = project
+        self.extent = extent
+        self.crs = self.extent.crs()
+        self.fontName = 'Times new Roman'
+        self.layerService = LayerService()
+        self._hideGroupsOnLegend(project)
+        self.layout = self.createLayout()
 
     @staticmethod
     def _setLayoutPageSize(layout, width, height):
@@ -67,20 +79,16 @@ class ComposerService:
         layout.pageCollection().pages()[0].setPageSize(layoutSize)
 
     @staticmethod
-    def createItemLabel(layout, text):
-        itemLabel = QgsLayoutItemLabel(layout)
-        itemLabel.setText(text)
-        return itemLabel.adjustSizeToText()
+    def _setItemLabelFont(item, font, size, style=None):
 
-    @staticmethod
-    def _setItemLabelFont(label, font, size, bold=False):
-        if bold:
-            return label.setFont(QFont(font, size, QFont.Bold))
-        return label.setFont(QFont(font, size))
+        if style == 'bold':
+            font = QFont(font, size, QFont.Bold)
+        elif style == 'light':
+            font = QFont(font, size, QFont.Light)
+        else:
+            font = QFont(font, size, QFont.Normal)
 
-    @staticmethod
-    def _setItemLabelColor(label, color):
-        label.setFontColor(QColor(color))
+        return item.setFont(font)
 
     @staticmethod
     def _setItemRectangle(item, x, y, width, height):
@@ -99,15 +107,6 @@ class ComposerService:
             QgsLayoutSize(width, height, QgsUnitTypes.LayoutMillimeters))
 
     @staticmethod
-    def _setItemMapScale(itemMap, layer):
-        buffer = 1
-        layer.selectAll()
-        boundingBox = layer.boundingBoxOfSelected()
-        extent = boundingBox.buffered(buffer)
-        itemMap.setExtent(extent)
-        itemMap.zoomToExtent(extent)
-
-    @staticmethod
     def _setLegendStyle(font, size, bold=False):
         style = QgsLegendStyle()
         if bold:
@@ -117,19 +116,19 @@ class ComposerService:
         return style
 
     @staticmethod
-    def createItemMapGrid(itemMap):
+    def createItemMapGrid(itemMap, fontName):
         gridStack = itemMap.grids()
         itemMapGrid = QgsLayoutItemMapGrid('Grid', itemMap)
         itemMapGrid.setIntervalX(100)
         itemMapGrid.setIntervalY(100)
         itemMapGrid.setStyle(3)
-        itemMapGrid.setFrameStyle(4)
+
+        itemMapGrid.setFrameStyle(3)
         itemMapGrid.setFrameDivisions(1, 0)
         itemMapGrid.setFrameDivisions(2, 2)
         itemMapGrid.setFrameDivisions(3, 1)
         itemMapGrid.setFrameDivisions(3, 3)
         itemMapGrid.setFrameWidth(1.0)
-
         itemMapGrid.setFramePenSize(0.3)
 
         itemMapGrid.setAnnotationEnabled(True)
@@ -138,56 +137,15 @@ class ComposerService:
         itemMapGrid.setAnnotationDisplay(2, 2)
         itemMapGrid.setAnnotationDisplay(3, 1)
         itemMapGrid.setAnnotationDisplay(3, 3)
-
         itemMapGrid.setAnnotationDirection(2, 0)
         itemMapGrid.setAnnotationDirection(1, 0)
         itemMapGrid.setAnnotationPrecision(0)
-        itemMapGrid.setAnnotationFont(QFont("Times New Roman", 8))
+        itemMapGrid.setAnnotationFont(QFont(fontName, 8))
 
         gridStack.addGrid(itemMapGrid)
-        itemMap.update()
 
     @staticmethod
-    def createLayoutExporter(layout, fileName, projectPath):
-        exporter = QgsLayoutExporter(layout)
-        exportedMapPath = f"{projectPath}/05_Results/03_Maps/{fileName}.png"
-        exporter.exportToImage(exportedMapPath, QgsLayoutExporter.ImageExportSettings())
-
-    def createLayout(self):
-        layout = QgsPrintLayout(self.project)
-        layout.initializeDefaults()
-        self._setLayoutPageSize(layout, 200, 140)
-        return layout
-
-    def createTitleLabel(self, layout, title):
-        label = self.createItemLabel(layout, title)
-        label.setHAlign(Qt.AlignHCenter)
-        label.setVAlign(Qt.AlignVCenter)
-        self._setItemRectangle(label, 100, 7, 186, 8)
-        self._setItemLabelFont(label, 'Times new Roman', 20, True)
-        self._setItemLabelColor(label, 'black')
-        self._setItemReferencePoint(label, 4)
-        self._setItemPosition(label, 100, 7, 186, 8)
-
-    def createItemMap(self, layout, layers):
-        itemMap = QgsLayoutItemMap(layout)
-        self._setItemRectangle(itemMap, 100, 73, 185, 120)
-        itemMap.setFrameEnabled(True)
-        itemMap.setFrameStrokeWidth(QgsLayoutMeasurement(0.3, QgsUnitTypes.LayoutMillimeters))
-        itemMap.setBackgroundColor(QColor(255, 255, 255, 0))
-        itemMap.setCrs(layers[0].crs())
-        itemMap.setExtent(layers[0].extent())
-        itemMap.setLayers(layers)
-        itemMap.refresh()
-        self._setItemReferencePoint(itemMap, 4)
-        self._setItemPosition(itemMap, 100, 73, 185, 120)
-        self._setItemMapScale(itemMap, layers[0])
-        layout.addItem(itemMap)
-        self.createItemMapGrid(itemMap)
-
-    def createItemScaleBar(self, layout, itemMap):
-        scaleBar = QgsLayoutItemScaleBar(layout)
-        scaleBar.setLinkedMap(itemMap)
+    def _setItemScaleBarStyle(scaleBar):
         scaleBar.setStyle('Line Ticks Up')
         scaleBar.setUnits(QgsUnitTypes.DistanceMeters)
         scaleBar.setSegmentSizeMode(0)
@@ -199,28 +157,153 @@ class ComposerService:
         scaleBar.setLabelBarSpace(0.7)
         scaleBar.setLineWidth(0.3)
         scaleBar.setUnitLabel('m')
-        scaleBar.setHeight(1.3)
-        scaleBar.setFont(QFont("Times New Roman", 8))
+        scaleBar.setHeight(1.0)
 
+    @staticmethod
+    def _hideGroupsOnLegend(project):
+        root = project.instance().layerTreeRoot()
+
+        for group in QGIS_TOC_GROUPS:
+            groupTreeLayer = root.findGroup(group)
+            QgsLegendRenderer.setNodeLegendStyle(groupTreeLayer, QgsLegendStyle.Hidden)
+
+    @staticmethod
+    def _hideLayersOnLegend(legendModel, layers):
+        for layer in layers:
+            layerTreeLayer = legendModel.rootGroup().findLayer(layer)
+            QgsLegendRenderer.setNodeLegendStyle(layerTreeLayer, QgsLegendStyle.Hidden)
+
+    @staticmethod
+    def loadLayoutFromTemplate(layout, layoutPath):
+        template = QDomDocument()
+        template.setContent(open(layoutPath).read())
+        layout.loadFromTemplate(template, QgsReadWriteContext())
+
+    @staticmethod
+    def createLayoutExporter(layout, fileName, projectPath):
+        exporter = QgsLayoutExporter(layout)
+        exportedMapPath = f"{projectPath}/05_Results/03_Maps/{fileName}.png"
+        exporter.exportToImage(exportedMapPath, QgsLayoutExporter.ImageExportSettings())
+
+    def _setItemMapScale(self, itemMap):
+        buffer = 75
+        extent = self.extent.extent().buffered(buffer)
+        itemMap.setExtent(extent)
+        itemMap.zoomToExtent(extent)
+
+    def createLayout(self):
+        layout = QgsPrintLayout(self.project)
+        layout.initializeDefaults()
+        self._setLayoutPageSize(layout, 200, 140)
+        return layout
+
+    def updateTitleLabel(self, label):
+
+        label.setHAlign(Qt.AlignHCenter)
+        label.setVAlign(Qt.AlignVCenter)
+        self._setItemRectangle(label, 100, 7, 186, 10)
+        self._setItemLabelFont(label, self.fontName, 20, 'bold')
+        label.setFontColor(QColor('black'))
+        self._setItemReferencePoint(label, 4)
+        self._setItemPosition(label, 100, 7, 186, 10)
+
+        label.refresh()
+
+    def updateCrsLabelGroup(self, layout, layer):
+        crsLabel = layout.itemById('crs_description')
+        crsLabel.setText(layer.crs().description())
+        self._setItemLabelFont(crsLabel, self.fontName, 8)
+        self._setItemPosition(crsLabel, 170, 127.5, 45, 4)
+        crsLabel.refresh()
+
+        crsTitle = layout.itemById('crs_title')
+        self._setItemLabelFont(crsTitle, self.fontName, 8)
+        self._setItemPosition(crsTitle, 170, 124, 45, 4)
+        crsTitle.refresh()
+
+        dataOwner = layout.itemById('data_owner')
+        self._setItemLabelFont(dataOwner, self.fontName, 8)
+        self._setItemPosition(dataOwner, 170, 131, 45, 4)
+        dataOwner.refresh()
+
+    def updateItemMap(self, itemMap, layer, contour):
+
+        self._setItemRectangle(itemMap, 100, 73, 185, 120)
+
+        itemMap.setFrameEnabled(True)
+        itemMap.setFrameStrokeWidth(QgsLayoutMeasurement(0.3, QgsUnitTypes.LayoutMillimeters))
+        itemMap.setBackgroundColor(QColor(255, 255, 255, 0))
+        itemMap.setCrs(self.crs)
+
+        self._setItemMapScale(itemMap)
+
+        itemMap.setLayers([contour, layer])
+        itemMap.refresh()
+
+        self._setItemReferencePoint(itemMap, 4)
+        self._setItemPosition(itemMap, 100, 73, 185, 120)
+        self.createItemMapGrid(itemMap, self.fontName)
+
+        itemMap.update()
+
+    def updateItemScaleBar(self, scaleBar, itemMap):
+        scaleBar.setLinkedMap(itemMap)
+        self._setItemScaleBarStyle(scaleBar)
+        self._setItemLabelFont(scaleBar, self.fontName, 8, 'light')
         scaleBar.update()
-        self._setItemReferencePoint(scaleBar, 4)
-        self._setItemPosition(scaleBar, 37, 125, 50, 13)
+        self._setItemReferencePoint(scaleBar, 3)
+        self._setItemPosition(scaleBar, 10, 127, 40, 7.5)
 
-        layout.addItem(scaleBar)
+        scaleBar.refresh()
 
-    def createItemLegend(self, layout, title, layer):
-        legend = QgsLayoutItemLegend(layout)
+    def updateItemLegend(self, legend, itemMap, title, layer, contour):
+
+        legend.setLinkedMap(itemMap)
         legend.setTitle(title)
+        legend.setAutoUpdateModel(True)
+        legend.setBackgroundEnabled(False)
+        legend.setLegendFilterByMapEnabled(True)
+        legend.updateFilterByMap(True)
         legend.setAutoUpdateModel(False)
 
-        layerTree = QgsLayerTree()
-        layerTreeLayer = layerTree.addLayer(layer)
-        QgsLegendRenderer.setNodeLegendStyle(layerTreeLayer, QgsLegendStyle.Hidden)
-        legend.model().setRootGroup(layerTree)
+        self._hideLayersOnLegend(legend.model(), [layer, contour])
 
-        legend.setStyle(QgsLegendStyle.Title, self._setLegendStyle('Times New Roman', 8, True))
-        legend.setStyle(QgsLegendStyle.SymbolLabel, self._setLegendStyle('Times New Roman', 8, False))
+        legend.setStyle(QgsLegendStyle.Title, self._setLegendStyle(self.fontName, 10, True))
+        legend.setStyle(QgsLegendStyle.SymbolLabel, self._setLegendStyle(self.fontName, 8, False))
 
         self._setItemReferencePoint(legend, 4)
-        self._setItemPosition(legend, 170, 88, 21, 8)
-        layout.addItem(legend)
+        self._setItemPosition(legend, 170, 97, 20, 26)
+
+        legend.updateLegend()
+        legend.refresh()
+
+    def mapLayersToLayouts(self, layers):
+        layerLayoutMapping = OrderedDict()
+        layouts = self.layerService.listQptFiles()
+        for layer in layers:
+            matchedLayoutPath = None
+            for part, partialFilename in COMPOSER_LAYOUTS.items():
+                if re.match(part, layer.name(), re.IGNORECASE):
+                    for filePath in layouts:
+                        if partialFilename in os.path.basename(filePath):
+                            matchedLayoutPath = filePath
+                            break
+            if matchedLayoutPath:
+                layerLayoutMapping[layer] = matchedLayoutPath
+
+        return layerLayoutMapping
+
+    def updateComposerLayout(self, layout, layer, contour):
+        itemLabelTitle = layout.itemById('title')
+        self.updateTitleLabel(itemLabelTitle)
+
+        itemMap = layout.itemById('map')
+        self.updateItemMap(itemMap, layer, contour)
+
+        itemScaleBar = layout.itemById('scalebar')
+        self.updateItemScaleBar(itemScaleBar, itemMap)
+
+        itemLegend = layout.itemById('legend')
+        self.updateItemLegend(itemLegend, itemMap, 'Yield (kg)', layer, contour)
+
+        self.updateCrsLabelGroup(layout, layer)

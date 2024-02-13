@@ -45,7 +45,8 @@ from qgis.core import (
     QgsExpression,
     QgsGraduatedSymbolRenderer,
     QgsRendererRange,
-    QgsMarkerSymbol
+    QgsMarkerSymbol, QgsLegendRenderer,
+    QgsLegendStyle,
 )
 from qgis.PyQt.QtWidgets import QMessageBox, QFileDialog
 from qgis.PyQt.Qt import QVariant
@@ -93,6 +94,10 @@ class LayerService:
         parentDirectory = os.path.join(currentDirectory, '..')
         return os.path.join(parentDirectory, 'resources', 'composer')
 
+    def listQptFiles(self):
+        directoryPath = self.getComposerLayoutPath()
+        return [os.path.join(directoryPath, file) for file in os.listdir(directoryPath) if file.endswith('.qpt')]
+
     @staticmethod
     def getReportPath():
         currentDirectory = os.path.dirname(__file__)
@@ -118,6 +123,7 @@ class LayerService:
         project = QgsProject.instance()
         root = project.instance().layerTreeRoot()
         group = root.findGroup(groupName)
+        QgsLegendRenderer.setNodeLegendStyle(group, QgsLegendStyle.Hidden)
 
         if group is not None:
             project.instance().addMapLayer(layer, False)
@@ -125,6 +131,7 @@ class LayerService:
 
         else:
             group = QgsLayerTreeGroup(groupName)
+            QgsLegendRenderer.setNodeLegendStyle(group, QgsLegendStyle.Hidden)
             root.addChildNode(group)
             project.instance().addMapLayer(layer, False)
             group.addLayer(layer)
