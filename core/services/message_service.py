@@ -23,12 +23,13 @@
 """
 from qgis.PyQt.QtCore import QCoreApplication, Qt
 from qgis.PyQt.QtWidgets import QMessageBox, QFileDialog, QProgressDialog
-from qgis.core import QgsProcessingFeedback
+from qgis.core import Qgis, QgsProcessingFeedback, QgsMessageLog
 
 
 class MessageService:
-    def __init__(self):
-        pass
+    def __init__(self, iface=None):
+        self.iface = iface
+        self.pluginName = self._tr('Lallemand Plant Care')
 
     @staticmethod
     def _tr(string):
@@ -49,9 +50,30 @@ class MessageService:
     def informationMessage(title, message):
         return QMessageBox.information(None, title, message, QMessageBox.Ok)
 
+    def informationMessageBar(self, title, message):
+        self.iface.messageBar().pushMessage(
+            self._tr(title), self._tr(message), level=Qgis.Info, duration=5)
+
     @staticmethod
     def criticalMessage(title, message):
         return QMessageBox.critical(None, title, message, QMessageBox.Ok)
+
+    def criticalMessageBar(self, title, message):
+        self.iface.messageBar().pushMessage(
+            self._tr(title), self._tr(message), level=Qgis.Critical, duration=5)
+
+    def logMessage(self, message, level=None):
+        if level == 0:
+            QgsMessageLog.logMessage(self._tr(message),  self.pluginName, level=Qgis.Info)
+
+        elif level == 1:
+            QgsMessageLog.logMessage(self._tr(message),  self.pluginName, level=Qgis.Warning)
+
+        elif level == 2:
+            QgsMessageLog.logMessage(self._tr(message),  self.pluginName, level=Qgis.Critical)
+
+        elif level == 3:
+            QgsMessageLog.logMessage(self._tr(message),  self.pluginName, level=Qgis.Success)
 
     @staticmethod
     def _setIconType(iconType):
@@ -122,10 +144,11 @@ class MessageService:
 
 class UserFeedback(QgsProcessingFeedback):
 
-    def __init__(self, parent=None):
+    def __init__(self, message=None, title=None, parent=None):
         super(UserFeedback, self).__init__()
-        self.progressBar = QProgressDialog("Processing...", "Cancel", 0, 100, parent)
+        self.progressBar = QProgressDialog(message, "Cancel", 0, 100, parent)
         self.progressBar.setWindowModality(Qt.WindowModal)
+        self.progressBar.setWindowTitle(title)
         self.progressBar.show()
 
     def setProgress(self, percent):
