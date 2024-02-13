@@ -22,8 +22,8 @@
  ***************************************************************************/
 """
 
-from qgis.PyQt.QtCore import pyqtSlot
-from qgis.PyQt.QtWidgets import QWidget
+from qgis.PyQt.QtCore import Qt, pyqtSlot
+from qgis.PyQt.QtWidgets import QWidget, QToolButton, QMenu, QAction
 from qgis.core import QgsMapLayer
 
 from .filter.filtering_dlg import FilteringPoints
@@ -49,6 +49,7 @@ class ToolbarManager(QWidget, Ui_Form):
         self.setupUi(self)
         self.iface = iface
         self.toolbar = toolbar
+        self.actions = []
         self.layerService = LayerService()
         self.splitter.hide()
         self.createTrialPushButton.clicked.connect(self.createTrialProject)
@@ -64,6 +65,17 @@ class ToolbarManager(QWidget, Ui_Form):
         self.mapsPushButton.clicked.connect(self.composer)
         self.exportMapPushButton.clicked.connect(self.exportMaps)
 
+    def createToolButton(self, parent, text):
+        """
+        Creates a tool button (pop up menu)
+        """
+        button = QToolButton(parent)
+        button.setObjectName(text)
+        button.setToolButtonStyle(Qt.ToolButtonIconOnly)
+        button.setPopupMode(QToolButton.MenuButtonPopup)
+        parent.addWidget(button)
+        self.actions.append(button)
+        return button
 
     @staticmethod
     def initGui():
