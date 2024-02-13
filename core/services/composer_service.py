@@ -64,14 +64,14 @@ from ..tools.algorithm_runner import AlgorithmRunner
 
 class ComposerService:
 
-    def __init__(self, project, extent):
+    def __init__(self, project):
         self.project = project
-        self.extent = extent
-        self.crs = self.extent.crs()
+        self.extent = ''
+        self.crs = ''
         self.fontName = 'Times new Roman'
+        self.filePath = self.project.homePath()
         self.layerService = LayerService()
         self._hideGroupsOnLegend(project)
-        self.layout = self.createLayout()
 
     @staticmethod
     def _setLayoutPageSize(layout, width, height):
@@ -179,19 +179,15 @@ class ComposerService:
         template.setContent(open(layoutPath).read())
         layout.loadFromTemplate(template, QgsReadWriteContext())
 
-    @staticmethod
-    def createLayoutExporter(layout, fileName, projectPath):
-        exporter = QgsLayoutExporter(layout)
-        exportedMapPath = f"{projectPath}/05_Results/03_Maps/{fileName}.png"
-        exporter.exportToImage(exportedMapPath, QgsLayoutExporter.ImageExportSettings())
-
     def _setItemMapScale(self, itemMap):
         buffer = 75
         extent = self.extent.extent().buffered(buffer)
         itemMap.setExtent(extent)
         itemMap.zoomToExtent(extent)
 
-    def createLayout(self):
+    def createLayout(self, extent):
+        self.extent = extent
+        self.crs = self.extent.crs()
         layout = QgsPrintLayout(self.project)
         layout.initializeDefaults()
         self._setLayoutPageSize(layout, 200, 140)
@@ -307,3 +303,25 @@ class ComposerService:
         self.updateItemLegend(itemLegend, itemMap, 'Yield (kg)', layer, contour)
 
         self.updateCrsLabelGroup(layout, layer)
+
+    @staticmethod
+    def overrideExportSettings(layout):
+        exportSettings = QgsLayoutExporter.ImageExportSettings()
+        exportSettings.flags = layout.renderContext().flags()
+        exportSettings.dpi = 300
+        if layout.customProperty('exportWorldFile') in ['true', True]:
+            exportSettings.generateWorldFile = True
+
+        if layout.customProperty('imageCropToContents') in ['true', True]:
+            exportSettings.cropToContents = True
+
+        return exportSettings
+
+    def createLayoutExporter(self, layout, fileName):
+        exportSettings = self.overrideExportSettings(layout)
+        exporter = QgsLayoutExporter(layout)
+        exporter.layout().refresh()
+        exportedMapPath = f"{self.filePath}/05_Results/03_Maps/{fileName}.png"
+        result = exporter.exportToImage(exportedMapPath, exportSettings)
+
+        return result == QgsLayoutExporter.Success
