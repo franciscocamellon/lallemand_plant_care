@@ -55,3 +55,17 @@ class PlotterService:
         if exportPng:
             plt.savefig(path)
         plt.close()
+
+    def yieldFrequencyHistogram(self, values, labels, exportPng=False, path=None):
+        colors = ['#bfbcbc', '#ffff00', '#55ff00', '#267300']
+        plt.figure()
+        plt.hist(values, bins=12, histtype='bar', color=colors, edgecolor='black', label=labels, rwidth=1)
+        plt.xlabel('Yield (kg)')
+        plt.ylabel('Frequency')
+        plt.title('Yield Gain Histogram')
+        plt.legend(title="")
+        plt.tight_layout()
+
+        if exportPng:
+            plt.savefig(path)
+        plt.close()

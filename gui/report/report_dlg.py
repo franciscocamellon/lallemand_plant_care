@@ -59,7 +59,7 @@ class StatisticsReport(QtWidgets.QDialog, Ui_Dialog):
     def setReportUI(self):
         t1Surface = self.layerService.filterByLayerName(list(self.layers.values()), ['T1_Final_Surface_Points'])
         t2Surface = self.layerService.filterByLayerName(list(self.layers.values()), ['T2_Final_Surface_Points'])
-        gainSurface = self.layerService.filterByLayerName(list(self.layers.values()), ['Yield_Gain_Points'])
+        gainSurface = self.layerService.filterByLayerName(list(self.layers.values()), ['Gain_Points'])
 
         self.gainSurfacePointsComboBox.setFilters(QgsMapLayerProxyModel.PointLayer)
         self.t1SurfacePointsComboBox.setFilters(QgsMapLayerProxyModel.PointLayer)

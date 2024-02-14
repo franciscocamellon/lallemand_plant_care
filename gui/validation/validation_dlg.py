@@ -172,7 +172,7 @@ class SamplingValidation(QtWidgets.QDialog, Ui_Dialog):
         feedback.close()
 
     def runErrorCompensation(self):
-        # self.surfacePointsCheckBox
+
         t1FilePath = f"{self.filePath}/03_Error_Compensation/T1_Error_Compensation/T1_Final_Surface.tiff"
         t2FilePath = f"{self.filePath}/03_Error_Compensation/T2_Error_Compensation/T2_Final_Surface.tiff"
         t1Expression = f'"{self.t1RasterComboBox.currentLayer().name()}@1" + "{self.t1errorRasterComboBox.currentLayer().name()}@1"'
@@ -206,9 +206,13 @@ class SamplingValidation(QtWidgets.QDialog, Ui_Dialog):
         feedback = UserFeedback()
         gainSurface = AlgorithmRunner().runRasterCalculator(parameter, context=self.context, feedback=feedback)
         self.layerService.addMapLayer(gainSurface, QGIS_TOC_GROUPS[6])
+
         if self.yieldGainPointsCheckBox.isChecked():
             pointsParameters = self.getYieldPointsParameters(gainSurface, 'yield',
-                                                             f'{self.filePath}/04_Gain_Surface/Yield_Gain_Points.shp')
+                                                             f'{self.filePath}/04_Gain_Surface/Gain_Points.shp')
             gainPoints = AlgorithmRunner().runPixelsToPoints(pointsParameters, context=self.context, feedback=feedback)
+            yieldGainHistogramPath = f"{self.filePath}/05_Results/Yield_Gain_Histogram.png"
+            # self.layerService.yieldGainFrequencyHistogram(gainPoints, yieldGainHistogramPath)
             self.layerService.addMapLayer(gainPoints, QGIS_TOC_GROUPS[6])
+
         feedback.close()

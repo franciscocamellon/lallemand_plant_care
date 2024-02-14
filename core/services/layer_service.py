@@ -216,6 +216,31 @@ class LayerService:
         histogramValues = [feature[field] for feature in layer.getFeatures()]
         self.plotterService.createFrequencyHistogram(histogramValues, data, layer.name(), exportPng=True, path=path)
 
+    def getFeaturesByExpression(self, layer, expression):
+        expr = QgsExpression(expression)
+        request = QgsFeatureRequest(expr)
+        features = layer.getFeatures(request)
+        return [feature['yield'] for feature in features]
+
+    def yieldGainFrequencyHistogram(self, layer, path):
+
+        totalFeatures = [feature['yield'] for feature in layer.getFeatures()]
+        firstInterval = self.getFeaturesByExpression(layer, '"yield" < 0')
+        print(firstInterval)
+        secondInterval = self.getFeaturesByExpression(layer, '0 <= "yield" AND "yield" < 0.5')
+        thirdInterval = self.getFeaturesByExpression(layer, '0.5 <= "yield" AND "yield" < 1')
+        fourthInterval = self.getFeaturesByExpression(layer, '"yield" >= 1')
+        print(secondInterval)
+        print(thirdInterval)
+        print(fourthInterval)
+
+        total = len(totalFeatures)
+        values = [firstInterval, secondInterval, thirdInterval, fourthInterval]
+        percentages = [f"{(len(interval) / total) * 100:.2f}%" for interval in values]
+        print(percentages)
+
+        # self.plotterService.yieldFrequencyHistogram(values, percentages, exportPng=True, path=path)
+
     def _convertToSimpleGeometry(self, layer):
         convertedLayerType = self._identifyWkbType(layer)
         convertedLayer = QgsVectorLayer(f"{convertedLayerType}?crs={layer.crs().authid()}", layer.name(), "memory")
