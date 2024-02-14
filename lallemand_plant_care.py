@@ -72,8 +72,6 @@ class LallemandPlantCare:
         self.toolbar = None
         self.toolbar_widget = None
         self.optionsFactory = None
-        self.gui_manager = None
-        self.main_widget = None
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
