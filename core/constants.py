@@ -69,6 +69,7 @@ FROM
 JOIN
     domains.yes_or_not yn ON gt.field_irrigation = yn.code
 """
+FETCH_ONE_TRIAL = "SELECT * FROM geostatistics.geostatistic_trial WHERE id = '{}';"
 
 INSERT_CROP_SQL = "INSERT INTO geostatistics.crop_trial (crop_name, sowing_date, harvest_date, variety, inter_ro_cm, " \
                   "create_date) VALUES (%s, %s, %s, %s, %s, %s);"
