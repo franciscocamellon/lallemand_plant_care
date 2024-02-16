@@ -212,7 +212,7 @@ class SamplingValidation(QtWidgets.QDialog, Ui_Dialog):
                                                              f'{self.filePath}/04_Gain_Surface/Gain_Points.shp')
             gainPoints = AlgorithmRunner().runPixelsToPoints(pointsParameters, context=self.context, feedback=feedback)
             yieldGainHistogramPath = f"{self.filePath}/05_Results/Yield_Gain_Histogram.png"
-            # self.layerService.yieldGainFrequencyHistogram(gainPoints, yieldGainHistogramPath)
+            self.layerService.yieldGainFrequencyHistogram(gainPoints, yieldGainHistogramPath)
             self.layerService.addMapLayer(gainPoints, QGIS_TOC_GROUPS[6])
 
         feedback.close()
