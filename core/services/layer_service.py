@@ -105,6 +105,12 @@ class LayerService:
         return os.path.join(parentDirectory, 'resources', 'report')
 
     @staticmethod
+    def getPresentationPath():
+        currentDirectory = os.path.dirname(__file__)
+        parentDirectory = os.path.join(currentDirectory, '..')
+        return os.path.join(parentDirectory, 'resources', 'presentation')
+
+    @staticmethod
     def _getGeometryFromWkbType(wkbType):
         return QgsWkbTypes.displayString(wkbType)
 
@@ -123,7 +129,6 @@ class LayerService:
         project = QgsProject.instance()
         root = project.instance().layerTreeRoot()
         group = root.findGroup(groupName)
-        QgsLegendRenderer.setNodeLegendStyle(group, QgsLegendStyle.Hidden)
 
         if group is not None:
             project.instance().addMapLayer(layer, False)
@@ -131,7 +136,6 @@ class LayerService:
 
         else:
             group = QgsLayerTreeGroup(groupName)
-            QgsLegendRenderer.setNodeLegendStyle(group, QgsLegendStyle.Hidden)
             root.addChildNode(group)
             project.instance().addMapLayer(layer, False)
             group.addLayer(layer)
@@ -201,45 +205,51 @@ class LayerService:
     def _createQgsField(fieldName, fieldType):
         return QgsField(fieldName, fieldType)
 
-    @contextmanager
-    def safe_file_operations(self, file_path, mode='r'):
-        """Context manager for safe file operations."""
-        file = None
-        try:
-            file = open(file_path, mode)
-            yield file
-        finally:
-            if file:
-                file.close()
+    # @contextmanager
+    # def safe_file_operations(self, file_path, mode='r'):
+    #     """Context manager for safe file operations."""
+    #     file = None
+    #     try:
+    #         file = open(file_path, mode)
+    #         yield file
+    #     finally:
+    #         if file:
+    #             file.close()
+
+    @staticmethod
+    def getValuesByExpression(layer, expression, field):
+        expr = QgsExpression(expression)
+        request = QgsFeatureRequest(expr)
+        features = layer.getFeatures(request)
+        return [feature[field] for feature in features]
 
     def populateFrequencyHistogram(self, layer, field, data, path):
         histogramValues = [feature[field] for feature in layer.getFeatures()]
         self.plotterService.createFrequencyHistogram(histogramValues, data, layer.name(), exportPng=True, path=path)
 
-    def getFeaturesByExpression(self, layer, expression):
-        expr = QgsExpression(expression)
-        request = QgsFeatureRequest(expr)
-        features = layer.getFeatures(request)
-        return [feature['yield'] for feature in features]
+    def filterFeaturesByIntervals(self, layer):
+        totalFeatures = [feature['yield'] for feature in layer.getFeatures()]
+        firstInterval = self.getValuesByExpression(layer, '"yield" < 0', 'yield')
+        secondInterval = self.getValuesByExpression(layer, '0 <= "yield" AND "yield" < 0.5', 'yield')
+        thirdInterval = self.getValuesByExpression(layer, '0.5 <= "yield" AND "yield" < 1', 'yield')
+        fourthInterval = self.getValuesByExpression(layer, '"yield" >= 1', 'yield')
+        total = len(totalFeatures)
+        values = [firstInterval, secondInterval, thirdInterval, fourthInterval]
+        return total, values
+
+    @staticmethod
+    def getPercentualFromIntervals(total, listOfIntervals, string=False):
+        if string:
+            return [f'{(len(interval) / total) * 100:.2f}%' for interval in listOfIntervals]
+        return [(len(interval) / total) * 100 for interval in listOfIntervals]
 
     def yieldGainFrequencyHistogram(self, layer, path):
 
-        totalFeatures = [feature['yield'] for feature in layer.getFeatures()]
-        firstInterval = self.getFeaturesByExpression(layer, '"yield" < 0')
-        print(firstInterval)
-        secondInterval = self.getFeaturesByExpression(layer, '0 <= "yield" AND "yield" < 0.5')
-        thirdInterval = self.getFeaturesByExpression(layer, '0.5 <= "yield" AND "yield" < 1')
-        fourthInterval = self.getFeaturesByExpression(layer, '"yield" >= 1')
-        print(secondInterval)
-        print(thirdInterval)
-        print(fourthInterval)
+        total, values = self.filterFeaturesByIntervals(layer)
 
-        total = len(totalFeatures)
-        values = [firstInterval, secondInterval, thirdInterval, fourthInterval]
-        percentages = [f"{(len(interval) / total) * 100:.2f}%" for interval in values]
-        print(percentages)
-
-        # self.plotterService.yieldFrequencyHistogram(values, percentages, exportPng=True, path=path)
+        if total != 0:
+            percentages = self.getPercentualFromIntervals(total, values, True)
+            self.plotterService.yieldFrequencyHistogram(values, percentages, exportPng=True, path=path)
 
     def _convertToSimpleGeometry(self, layer):
         convertedLayerType = self._identifyWkbType(layer)
@@ -512,10 +522,8 @@ class LayerService:
         return feature
 
     def createLayerSymbology(self, layer, fieldName):
-        print(fieldName)
         minValue = layer.minimumValue(layer.fields().indexOf(fieldName))
         maxValue = layer.maximumValue(layer.fields().indexOf(fieldName))
-        print(maxValue, minValue)
 
         step = (maxValue - minValue) / 4
         adjustedIntervals = [round((maxValue - i * step), 1) for i in range(5)]
@@ -524,7 +532,7 @@ class LayerService:
 
         ranges = []
         for i in range(4):
-            symbol = QgsMarkerSymbol.createSimple({'size': '2'})
+            symbol = QgsMarkerSymbol.createSimple({'size': '1.5'})
             symbol.setColor(QColor(colors[i]))
 
             if i == 0:
