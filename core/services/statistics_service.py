@@ -22,7 +22,8 @@
  ***************************************************************************/
 """
 import os.path
-
+import re
+from scipy.stats import f_oneway
 import pandas as pd
 import numpy as np
 from docx import Document
@@ -65,6 +66,26 @@ class StatisticsService:
         self.surfaceGainData = GAIN_SURFACE_DATA
         self.statisticsInterval = STATISTICS_INTERVAL
         self.layerService = LayerService()
+        self.messageService = MessageService()
+
+    @staticmethod
+    def layerToDataFrame(layer, field):
+        listOfValues = [feature[field] for feature in layer.getFeatures()]
+        return pd.DataFrame({field: listOfValues})
+
+    def calculateAnovaTest(self, field, firstLayer, secondLayer):
+        firstDataFrame = self.layerToDataFrame(firstLayer, field)
+        secondDataFrame = self.layerToDataFrame(secondLayer, field)
+        fValue, pValue = f_oneway(firstDataFrame, secondDataFrame)
+        return fValue.item(), pValue.item()
+
+    def calculateMean(self, layer, field):
+        dataFrame = self.layerToDataFrame(layer, field)
+        return dataFrame.mean().item()
+
+    def calculateStdDev(self, layer, field):
+        dataFrame = self.layerToDataFrame(layer, field)
+        return dataFrame.std().item()
 
     def runStatistics(self, layer):
 
@@ -102,9 +123,12 @@ class StatisticsService:
         # Iterate through the intervals and calculate required values
         for choice in choices:
             self.statisticsInterval['SQ_AREA'] = df[df['interval'] == choice]['area'].sum()
-            self.statisticsInterval['PERC_AREA'] = (self.statisticsInterval['SQ_AREA'] / self.surfaceGainData['TOTAL_AREA']) * 100
+            self.statisticsInterval['PERC_AREA'] = (self.statisticsInterval['SQ_AREA'] / self.surfaceGainData[
+                'TOTAL_AREA']) * 100
             self.statisticsInterval['YIELD_SUM'] = df[df['interval'] == choice]['yield'].sum()
-            self.statisticsInterval['YIELD_BY_PERC_AREA'] = self.statisticsInterval['YIELD_SUM'] / self.statisticsInterval['PERC_AREA'] if self.statisticsInterval['PERC_AREA'] != 0 else 0
+            self.statisticsInterval['YIELD_BY_PERC_AREA'] = self.statisticsInterval['YIELD_SUM'] / \
+                                                            self.statisticsInterval['PERC_AREA'] if \
+                self.statisticsInterval['PERC_AREA'] != 0 else 0
 
             results[choice] = {
                 'Total Area Sum': self.statisticsInterval['SQ_AREA'],
@@ -114,43 +138,3 @@ class StatisticsService:
             }
         print(results)
         return results
-
-        # # Load the spreadsheet to be updated
-        # spreadsheet_path = '/mnt/data/Tables_Statistics.xlsx'
-        # spreadsheet = pd.read_excel(spreadsheet_path)
-        #
-        # # Corrected mapping between interval names and class names in the spreadsheet
-        # interval_to_class_corrected = {
-        #     'yield<0': '1 (<0)',
-        #     '0<=yield<0.5': '2 (0 - 0.5)',
-        #     '0.5<=yield<1': '3 (0.5 - 1.0)',
-        #     'yield>=1': '4  (>1.0)'  # Corrected class name
-        # }
-        #
-        # # Update each row with the new results
-        # for interval, res in results.items():
-        #     class_name = interval_to_class_corrected[interval]
-        #     row_index = spreadsheet[spreadsheet.iloc[:, 2] == class_name].index[0]
-        #     spreadsheet.at[row_index, 'Area (m²)'] = res['Total Area Sum']
-        #     spreadsheet.at[row_index, 'Area (%)'] = res['Area Percent']
-        #     spreadsheet.at[row_index, 'Total (ton)'] = res['Yield Sum']
-        #     spreadsheet.at[row_index, 'total/area'] = res['Yield per Area Percent']
-        #
-        # # Save the updated spreadsheet
-        # updated_spreadsheet_path = '/mnt/data/Updated_Tables_Statistics.xlsx'
-        # spreadsheet.to_excel(updated_spreadsheet_path, index=False)
-
-    def replacePlaceholder(self, layer, filePath):
-        result = self.runStatistics(layer)
-        doc = os.path.join(self.layerService.getReportPath(), 'report_template.docx')
-        reportDocument = Document(doc)
-        for paragraph in reportDocument.paragraphs:
-            if '{TOTAL_AREA_SUM}' in paragraph.text:
-                inline = paragraph.runs
-                for i in range(len(inline)):
-                    if '{TOTAL_AREA_SUM}' in inline[i].text:
-                        text = inline[i].text.replace('{TOTAL_AREA_SUM}', str(result['yield<0']['Total Area Sum']))
-                        inline[i].text = text
-        output = os.path.join(filePath, '05_Results', 'output_report.docx')
-        print(output)
-        reportDocument.save(output)

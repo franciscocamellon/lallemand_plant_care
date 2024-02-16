@@ -23,6 +23,7 @@
 """
 import os
 import datetime
+import re
 import shutil
 
 from .message_service import MessageService
@@ -32,10 +33,17 @@ from ..constants import DIRECTORY_STRUCTURE
 class SystemService:
 
     def __init__(self):
-        """
-        Constructor for the SystemService class.
-        """
         self.messageService = MessageService()
+
+    @staticmethod
+    def filterByFileName(directoryPath, filterString):
+        fileList = os.listdir(directoryPath)
+        regexPattern = '|'.join(map(re.escape, filterString))
+        pattern = re.compile(regexPattern)
+
+        for file in fileList:
+            if pattern.search(file):
+                return os.path.join(directoryPath, file)
 
     def createDirectoryStructure(self, basePath):
 
@@ -81,7 +89,7 @@ class SystemService:
             return f'{mainDirectory}/'
 
     @staticmethod
-    def copyFile(source, target):
+    def _copyFile(source, target):
         shutil.copyfile(source, target)
 
     def copyVariogram(self, sourcePath, targetPath):
@@ -92,7 +100,7 @@ class SystemService:
             if "0_Variograma" in resultFile:
                 oldFilePath = os.path.join(sourcePath, resultFile)
                 newFilePath = os.path.join(targetPath, resultFile)
-                self.copyFile(oldFilePath, newFilePath)
+                self._copyFile(oldFilePath, newFilePath)
 
     def fileExist(self, path, task=False):
         if os.path.isfile(path):
