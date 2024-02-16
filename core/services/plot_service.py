@@ -64,7 +64,6 @@ class PlotterService:
         plt.ylabel('Frequency')
         plt.title('Yield Gain Histogram')
         plt.legend(title="")
-        plt.tight_layout()
 
         if exportPng:
             plt.savefig(path)
