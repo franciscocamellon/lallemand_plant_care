@@ -87,8 +87,38 @@ class StatisticsService:
         dataFrame = self.layerToDataFrame(layer, field)
         return dataFrame.std().item()
 
-    def runStatistics(self, layer):
+    def calculateMode(self, layer, field):
+        dataFrame = self.layerToDataFrame(layer, field)
+        modeResult = dataFrame[field].mode()
 
+        if not modeResult.empty:
+            return modeResult.iloc[0]
+        else:
+            return None
+
+    def calculateSum(self, layer, field):
+        dataFrame = self.layerToDataFrame(layer, field)
+        return dataFrame.sum().item()
+
+    def calculateMedian(self, layer, field):
+        dataFrame = self.layerToDataFrame(layer, field)
+        return dataFrame.median().item()
+
+    def getGainStatistics(self, layer, field):
+        return [self.calculateSum(layer, field),
+                self.calculateMean(layer, field),
+                self.calculateMode(layer, field),
+                self.calculateMedian(layer, field),
+                self.calculateStdDev(layer, field)]
+
+    def getAnovaStatistics(self, field, firstLayer, secondLayer):
+        mean = [self.calculateMean(firstLayer, field),
+                self.calculateMean(secondLayer, field)]
+        stdDev = [self.calculateStdDev(firstLayer, field),
+                  self.calculateStdDev(secondLayer, field)]
+        return mean, stdDev
+
+    def runStatistics(self, layer):
         # Extract the data into a list
         T1 = [feature['yield'] for feature in layer.getFeatures()]
 

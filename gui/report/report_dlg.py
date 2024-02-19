@@ -31,6 +31,7 @@ from qgis.PyQt import QtWidgets
 from qgis.PyQt.Qt import QVariant
 from qgis.core import QgsApplication, QgsFieldProxyModel, QgsMapLayerProxyModel, QgsTask, QgsProcessingContext
 
+from ...core.services.plot_service import PlotterService
 from ...core.tasks.report_task import ReportTask
 from ...core.services.report_service import ReportService
 from ...core.services.statistics_service import StatisticsService
@@ -61,13 +62,14 @@ class StatisticsReport(QtWidgets.QDialog, Ui_Dialog):
         self.statisticsService = StatisticsService()
         self.reportService = ReportService()
         self.systemService = SystemService()
+        self.plotService = PlotterService()
         self.task: Optional[QgsTask] = None
         self.settings = OptionsSettingsPage().getKrigingSettings()
         self.layers = self.project.instance().mapLayers()
         self.setReportUI()
         self.loadTrialData()
-        # self.reportPushButton.clicked.connect(self.runReport)
-        self.reportPushButton.clicked.connect(self.runPresentation)
+        self.presPushButton.clicked.connect(self.runPresentation)
+        self.reportPushButton.clicked.connect(self.runReport)
 
     def setReportUI(self):
         yieldLayer = self.layerService.filterByLayerName(list(self.layers.values()),
@@ -194,9 +196,9 @@ class StatisticsReport(QtWidgets.QDialog, Ui_Dialog):
                 11: self.systemService.filterByFileName(mapsPath, ['02_T1_Measured_yield']),
                 12: self.systemService.filterByFileName(mapsPath, ['03_T2_Measured_yield'])},
             3: {
-                10: self.systemService.filterByFileName(histogramPath, ['T1_T2_total']),
-                11: self.systemService.filterByFileName(histogramPath, ['T1_total']),
-                12: self.systemService.filterByFileName(histogramPath, ['T2_total'])},
+                10: self.systemService.filterByFileName(histogramPath, ['Yield_Map_V']),
+                11: self.systemService.filterByFileName(histogramPath, ['T1_total_V']),
+                12: self.systemService.filterByFileName(histogramPath, ['T2_total_V'])},
 
             5: {
                 10: self.systemService.filterByFileName(mapsPath, ['06_Model_T1_T2']),
@@ -208,25 +210,46 @@ class StatisticsReport(QtWidgets.QDialog, Ui_Dialog):
             6: {
                 10: self.systemService.filterByFileName(mapsPath, ['04_T1_Sample_for_model_generation']),
                 11: self.systemService.filterByFileName(mapsPath, ['07_Model_T1']),
-                12: self.systemService.filterByFileName(histogramPath, ['t180stats']),
-                13: self.systemService.filterByFileName(histogramPath, ['T1_80_perc']),
-                14: self.systemService.filterByFileName(variogramPath, ['0_Variograma_T1_80_perc_'])},
+                12: self.systemService.filterByFileName(variogramPath, ['0_Variograma_T1_80_perc_']),
+                13: self.systemService.filterByFileName(histogramPath, ['T1_80_perc_H'])},
             7: {
                 10: self.systemService.filterByFileName(mapsPath, ['05_T2_Sample_for_model_generation']),
                 11: self.systemService.filterByFileName(mapsPath, ['08_Model_T2']),
-                12: self.systemService.filterByFileName(histogramPath, ['t280stats']),
-                13: self.systemService.filterByFileName(histogramPath, ['T2_80_perc']),
-                14: self.systemService.filterByFileName(variogramPath, ['0_Variograma_T2_80_perc_'])},
+                12: self.systemService.filterByFileName(variogramPath, ['0_Variograma_T2_80_perc_']),
+                13: self.systemService.filterByFileName(histogramPath, ['T2_80_perc_H'])},
             8: {
-                10: self.systemService.filterByFileName(rootPath, ['11_Yield_gain_using_T2']),
+                10: self.systemService.filterByFileName(mapsPath, ['11_Yield_gain_using_T2']),
                 11: self.systemService.filterByFileName(rootPath, ['Yield_Gain_Histogram']),
-                12: self.systemService.filterByFileName(rootPath, ['gain_stats']),
-                13: self.systemService.filterByFileName(rootPath, ['anova'])}
+                12: self.systemService.filterByFileName(rootPath, ['Gain_Statistics_Table'])}
         }
 
         return presentationData
 
     def runPresentation(self):
-        print(self.getPresentationParameters())
+        rootPath = f"{self.filePath}/05_Results/"
+
+        pValue, anovaStats = self.getAnovaStatistics()
+        gainStats = self.getGainStatistics()
+        self.plotService.createGainStatisticsTable(pValue, gainStats, anovaStats, True, rootPath)
         self.reportService.createPresentation(self.getPresentationParameters(), self.filePath)
         # self.reportService.iterate_over_slides()
+
+    def getGainStatistics(self):
+        gainStatsList = list()
+        gainStats = self.statisticsService.getGainStatistics(self.gainPointsLayerComboBox.currentLayer(), 'yield')
+        for statistic in gainStats:
+            gainStatsList.append([f'{statistic:.2f}'])
+        return gainStatsList
+
+    def getAnovaStatistics(self):
+        anovaStatsList = list()
+        t1SurfaceLayer = self.t1SurfacePointsComboBox.currentLayer()
+        t2SurfaceLayer = self.t2SurfacePointsComboBox.currentLayer()
+        fValue, pValue = self.statisticsService.calculateAnovaTest('yield', t1SurfaceLayer, t2SurfaceLayer)
+        anovaStats = self.statisticsService.getAnovaStatistics('yield', t1SurfaceLayer, t2SurfaceLayer)
+
+        for statisticList in anovaStats:
+            formattedStatisticList = [f'{statistic:.2f}' for statistic in statisticList]
+            anovaStatsList.append(formattedStatisticList)
+
+        return f'{pValue:.2f}', anovaStatsList

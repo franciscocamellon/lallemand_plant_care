@@ -226,6 +226,7 @@ class LayerService:
     def populateFrequencyHistogram(self, layer, field, data, path):
         histogramValues = [feature[field] for feature in layer.getFeatures()]
         self.plotterService.createFrequencyHistogram(histogramValues, data, layer.name(), exportPng=True, path=path)
+        self.plotterService.createVFrequencyHistogram(histogramValues, data, layer.name(), exportPng=True, path=path)
 
     def filterFeaturesByIntervals(self, layer):
         totalFeatures = [feature['yield'] for feature in layer.getFeatures()]

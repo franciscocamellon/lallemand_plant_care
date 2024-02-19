@@ -43,6 +43,7 @@ class SystemService:
 
         for file in fileList:
             if pattern.search(file):
+                print(file, pattern.search(file))
                 return os.path.join(directoryPath, file)
 
     def createDirectoryStructure(self, basePath):
