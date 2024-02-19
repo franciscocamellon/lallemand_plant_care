@@ -67,7 +67,7 @@ class SamplingTask(QgsTask):
             for treatment in self.treatments[0]:
                 totalLayerName = f'{treatment}_total'
                 totalOutputPath = f"{self.filePath}/00_Data/02_Sampling/{totalLayerName}.shp"
-                histogramTotalPath = f"{self.filePath}/05_Results/01_Histograms/{totalLayerName}.png"
+                histogramTotalPath = f"{self.filePath}/05_Results/01_Histograms/"
 
                 if not self.systemService.fileExist(totalOutputPath, task=True):
                     selectedFeatures = self.layerService.getFeaturesByRequest(layer, f"\"Traitement\"='{treatment}'")
@@ -90,7 +90,7 @@ class SamplingTask(QgsTask):
                         if percent == 80:
                             percentLayerName = f'{treatment}_{percent}_perc'
                             percentLayerPath = f"{self.filePath}/00_Data/02_Sampling/{percentLayerName}.shp"
-                            histogramPercentPath = f"{self.filePath}/05_Results/01_Histograms/{percentLayerName}.png"
+                            histogramPercentPath = f"{self.filePath}/05_Results/01_Histograms/"
 
                             if not self.systemService.fileExist(percentLayerPath, task=True):
 
@@ -106,7 +106,8 @@ class SamplingTask(QgsTask):
                                 self.layerService.applySymbology(loadedLayer, self.yieldField)
 
                                 staPercentTable = self.getHistogramParameters(percentFeaturesLayer, self.yieldField)
-                                self.layerService.populateFrequencyHistogram(percentFeaturesLayer, self.yieldField, staPercentTable,
+                                self.layerService.populateFrequencyHistogram(percentFeaturesLayer, self.yieldField,
+                                                                             staPercentTable,
                                                                              histogramPercentPath)
                             else:
                                 raise FileExistsException(f'Sampling file {percentLayerName} already exists.')
@@ -140,8 +141,17 @@ class SamplingTask(QgsTask):
             return False
 
     def getHistogramParameters(self, layer, field):
-        statistics = self.getLayerStatistics(layer, field)
-        return [[statistics['COUNT']], [statistics['MIN']], [statistics['MAX']], [statistics['SUM']], [statistics['MEAN']], [statistics['STD_DEV']], [statistics['CV']]]
+        statisticFields = ['COUNT', 'MIN', 'MAX', 'SUM', 'MEAN', 'STD_DEV', 'CV']
+        statisticValues = self.getLayerStatistics(layer, field)
+        tableData = list()
+
+        for statistic in statisticFields:
+            if statistic == 'COUNT':
+                tableData.append([f'{float(statisticValues[statistic]):.0f}'])
+            else:
+                tableData.append([f'{float(statisticValues[statistic]):.2f}'])
+
+        return tableData
 
     @staticmethod
     def getLayerStatistics(layer, field):
