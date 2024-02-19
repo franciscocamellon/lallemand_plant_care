@@ -90,7 +90,7 @@ class FilterTask(QgsTask):
                     reprojectedLoadedLayer = self.layerService.loadShapeFile(QGIS_TOC_GROUPS[2], outputReprojectLayer)
                     self.layerService.applySymbology(reprojectedLoadedLayer, self.yieldField)
 
-                    yieldHistogramPath = f"{self.filePath}/05_Results/01_Histograms/T1_T2_total.png"
+                    yieldHistogramPath = f"{self.filePath}/05_Results/01_Histograms/"
 
                     yieldStatisticsTable = self.getHistogramParameters(self.yieldMapVector, self.yieldField)
                     self.layerService.populateFrequencyHistogram(self.yieldMapVector, self.yieldField, yieldStatisticsTable,
@@ -105,9 +105,17 @@ class FilterTask(QgsTask):
             return False
 
     def getHistogramParameters(self, layer, field):
-        statistics = self.getLayerStatistics(layer, field)
-        return [[statistics['COUNT']], [statistics['MIN']], [statistics['MAX']], [statistics['SUM']], [statistics['MEAN']], [statistics['STD_DEV']], [statistics['CV']]]
+        statisticFields = ['COUNT', 'MIN', 'MAX', 'SUM', 'MEAN', 'STD_DEV', 'CV']
+        statisticValues = self.getLayerStatistics(layer, field)
+        tableData = list()
 
+        for statistic in statisticFields:
+            if statistic == 'COUNT':
+                tableData.append([f'{float(statisticValues[statistic]):.0f}'])
+            else:
+                tableData.append([f'{float(statisticValues[statistic]):.2f}'])
+
+        return tableData
     @staticmethod
     def getLayerStatistics(layer, field):
         return AlgorithmRunner().runBasicStatisticsForFields(layer, field)
