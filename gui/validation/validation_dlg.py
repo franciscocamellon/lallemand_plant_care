@@ -205,6 +205,7 @@ class SamplingValidation(QtWidgets.QDialog, Ui_Dialog):
                                                        gainSurfacePath)
         feedback = UserFeedback()
         gainSurface = AlgorithmRunner().runRasterCalculator(parameter, context=self.context, feedback=feedback)
+        self.layerService.applySymbology(gainSurface, '', raster=True)
         self.layerService.addMapLayer(gainSurface, QGIS_TOC_GROUPS[6])
 
         if self.yieldGainPointsCheckBox.isChecked():
