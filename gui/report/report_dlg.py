@@ -21,30 +21,22 @@
  *                                                                         *
  ***************************************************************************/
 """
-import math
-import os
-import re
 from typing import Optional
 
-from qgis.utils import plugins
 from qgis.PyQt import QtWidgets
-from qgis.PyQt.Qt import QVariant
-from qgis.core import QgsApplication, QgsFieldProxyModel, QgsMapLayerProxyModel, QgsTask, QgsProcessingContext
+from qgis.core import QgsApplication, QgsMapLayerProxyModel, QgsTask
 
-from ...core.services.plot_service import PlotterService
-from ...core.tasks.report_task import ReportTask
-from ...core.services.report_service import ReportService
-from ...core.services.statistics_service import StatisticsService
-from ...core.constants import VALIDATION_FIELDS, QGIS_TOC_GROUPS, FETCH_ALL_TRIAL, FETCH_ONE_TRIAL, FETCH_ONE_TEAM, \
-    FETCH_ONE_FARMER, FETCH_ONE_CROP
-from ...core.services.system_service import SystemService
-from ...core.tools.algorithm_runner import AlgorithmRunner
-from ...core.services.message_service import MessageService, UserFeedback
 from .report_dlg_base import Ui_Dialog
 from ..settings.options_settings_dlg import OptionsSettingsPage
-from ...core.services.layer_service import LayerService
-from ...core.services.widget_service import WidgetService
+from ...core.constants import FETCH_ALL_TRIAL, FETCH_ONE_TRIAL, FETCH_ONE_FARMER, FETCH_ONE_CROP
 from ...core.factories.postgres_factory import PostgresFactory
+from ...core.services.layer_service import LayerService
+from ...core.services.message_service import MessageService, UserFeedback
+from ...core.services.plot_service import PlotterService
+from ...core.services.report_service import ReportService
+from ...core.services.statistics_service import StatisticsService
+from ...core.services.system_service import SystemService
+from ...core.tasks.report_task import ReportTask
 
 
 class StatisticsReport(QtWidgets.QDialog, Ui_Dialog):
@@ -69,7 +61,8 @@ class StatisticsReport(QtWidgets.QDialog, Ui_Dialog):
         self.setReportUI()
         self.loadTrialData()
         self.presPushButton.clicked.connect(self.runPresentation)
-        self.reportPushButton.clicked.connect(self.runReport)
+        # self.reportPushButton.clicked.connect(self.runReport)
+        self.reportPushButton.clicked.connect(self.runReportTask)
 
     def setReportUI(self):
         yieldLayer = self.layerService.filterByLayerName(list(self.layers.values()),
@@ -128,6 +121,9 @@ class StatisticsReport(QtWidgets.QDialog, Ui_Dialog):
         t1StdDev = self.statisticsService.calculateStdDev(t1SurfaceLayer, 'yield')
         t2StdDev = self.statisticsService.calculateStdDev(t2SurfaceLayer, 'yield')
 
+        mapsPath = f"{self.filePath}/05_Results/03_Maps/"
+        rootPath = f"{self.filePath}/05_Results/"
+
         reportData = {
 
             '{FIELD_NAME}': trialResult[0]['field_name'],
@@ -158,19 +154,19 @@ class StatisticsReport(QtWidgets.QDialog, Ui_Dialog):
         }
 
         imageData = {
-            '{REPORT_YIELD_POINTS}': 'D:/_projetos/lallemand/fourth_sprint/05_Results/12_Report_yield_points.png',
-            '{REPORT_YIELD_MODELS}': 'D:/_projetos/lallemand/fourth_sprint/05_Results/13_Report_yield_models.png',
-            '{YIELD_GAIN_HISTOGRAM}': 'D:/_projetos/lallemand/fourth_sprint/05_Results/Yield_Gain_Histogram.png',
+            '{T1_T2_POINTS}': [self.systemService.filterByFileName(mapsPath, ['01_Points_with_measured_yield_values']), 4.32],
+            '{T1_POINTS}': [self.systemService.filterByFileName(mapsPath, ['02_T1_Measured_yield']), 3.13],
+            '{T2_POINTS}': [self.systemService.filterByFileName(mapsPath, ['03_T2_Measured_yield']), 3.13],
+            '{T1_T2_MODEL}': [self.systemService.filterByFileName(mapsPath, ['06_Model_T1_T2']), 4.32],
+            '{T1_MODEL}': [self.systemService.filterByFileName(mapsPath, ['07_Model_T1']), 3.13],
+            '{T2_MODEL}': [self.systemService.filterByFileName(mapsPath, ['08_Model_T2']), 3.13],
+            '{YIELD_GAIN_HISTOGRAM}': [self.systemService.filterByFileName(rootPath, ['Yield_Gain_Histogram']), 5.1]
         }
 
         return reportData, tableData, imageData
 
     def runReportTask(self):
-        reportData, tableData, imageData = self.getReportParameters()
-        self.task = ReportTask(reportData, tableData, imageData, self.project)
-
-        QgsApplication.taskManager().addTask(self.task)
-        self.close()
+        self.statisticsService.runStatistics(self.gainPointsLayerComboBox.currentLayer())
 
     def runReport(self):
         self.feedback = UserFeedback(message='Creating report...', title='Trial Report')
