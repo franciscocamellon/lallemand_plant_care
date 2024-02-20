@@ -22,44 +22,27 @@
  ***************************************************************************/
 """
 import os
-import random
 import re
 from collections import OrderedDict
-from contextlib import contextmanager
 
+from qgis.PyQt.QtCore import Qt, QRectF
+from qgis.PyQt.QtGui import QColor, QFont
+from qgis.PyQt.QtXml import QDomDocument
 from qgis.core import (
-    QgsProject,
-    QgsVectorLayer,
-    QgsRasterLayer,
-    QgsLayerTree,
     QgsPrintLayout,
     QgsLayoutPoint,
-    QgsLayoutItem,
-    QgsLayoutItemLabel,
-    QgsLayoutItemMap,
     QgsLayoutItemMapGrid,
-    QgsLayoutItemScaleBar,
-    QgsLayoutItemLegend,
     QgsLegendRenderer,
     QgsLegendStyle,
     QgsUnitTypes,
     QgsLayoutSize,
     QgsLayoutMeasurement,
     QgsLayoutExporter,
-    QgsTextFormat, QgsFontUtils, QgsMapLayerLegendUtils, QgsReadWriteContext
+    QgsReadWriteContext
 )
-from qgis.PyQt.QtXml import QDomDocument
-from qgis.PyQt.QtWidgets import QMessageBox, QFileDialog
-from qgis.PyQt.QtCore import Qt, QRectF
-from qgis.PyQt.QtGui import QColor, QFont
 
 from .layer_service import LayerService
-from .plot_service import PlotterService
-from ...gui.settings.options_settings_dlg import OptionsSettingsPage
-from .message_service import MessageService
-from .system_service import SystemService
-from ..constants import VALIDATION_FIELDS, REFERENCE_POINTS, COMPOSER_LAYOUTS, QGIS_TOC_GROUPS
-from ..tools.algorithm_runner import AlgorithmRunner
+from ..constants import REFERENCE_POINTS, COMPOSER_LAYOUTS, QGIS_TOC_GROUPS
 
 
 class ComposerService:
