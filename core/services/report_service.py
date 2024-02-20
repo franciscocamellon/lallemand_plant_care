@@ -23,20 +23,13 @@
 """
 import os.path
 import re
-from scipy.stats import f_oneway
-import pandas as pd
-import numpy as np
+
 from docx import Document
 from docx.shared import Inches
 from pptx import Presentation
 
-from .plot_service import PlotterService
-from ...gui.settings.options_settings_dlg import OptionsSettingsPage
-from .message_service import MessageService
-from .system_service import SystemService
 from .layer_service import LayerService
-from ..constants import VALIDATION_FIELDS, GAIN_SURFACE_DATA, STATISTICS_INTERVALS, STATISTICS_INTERVAL
-from ..tools.algorithm_runner import AlgorithmRunner
+from .message_service import MessageService
 
 
 class ReportService:
@@ -89,16 +82,9 @@ class ReportService:
                 run.text = run_text[end:]
                 end -= run_len
 
-        # --- optionally get rid of any "spanned" runs that are now empty. This
-        # --- could potentially delete things like inline pictures, so use your judgement.
-        # for run in paragraph.runs:
-        #     if run.text == "":
-        #         r = run._r
-        #         r.getparent().remove(r)
-
         return paragraph
 
-    def add_image_in_place_of_placeholder(self, document, imageData, feedback, width=None):
+    def addImageInParagraph(self, document, imageData, feedback):
         totalData = len(imageData)
         progressPerFeature = 100.0 / totalData if totalData else 0
 
@@ -110,9 +96,29 @@ class ReportService:
             for index, paragraph in enumerate(document.paragraphs):
                 if placeholder in paragraph.text:
                     run = paragraph.add_run()
-                    run.add_picture(value, width=Inches(width) if width else None)
+                    run.add_picture(value[0], width=Inches(value[1]))
                     self.paragraphReplaceText(paragraph, regex, '')
                     feedback.setProgress(int(index * progressPerFeature))
+        feedback.setProgress(100)
+
+    def addImageInTable(self, document, imageData, feedback):
+        totalData = len(imageData)
+        progressPerFeature = 100.0 / totalData if totalData else 0
+
+        for placeholder, value in imageData.items():
+            if feedback.isCanceled():
+                self.messageService.criticalMessageBar('Exporting maps', 'operation aborted by the user!')
+                break
+            regex = re.compile(placeholder)
+            for index, table in enumerate(document.tables):
+                for row in table.rows:
+                    for cell in row.cells:
+                        for cellIndex, paragraph in enumerate(cell.paragraphs):
+                            if placeholder in paragraph.text:
+                                run = paragraph.add_run()
+                                run.add_picture(value[0], width=Inches(value[1]))
+                                self.paragraphReplaceText(paragraph, regex, '')
+                                feedback.setProgress(int(index * progressPerFeature))
         feedback.setProgress(100)
 
     def fillPlaceholdersOnParagraphs(self, document, trialData, feedback):
@@ -143,7 +149,6 @@ class ReportService:
                 for row in table.rows:
                     for cell in row.cells:
                         for cellIndex, paragraph in enumerate(cell.paragraphs):
-                            print(paragraph.text)
                             self.paragraphReplaceText(paragraph, cellRegex, value)
                             feedback.setProgress(int(cellIndex * progressPerFeature))
         feedback.setProgress(100)
@@ -154,7 +159,8 @@ class ReportService:
 
         self.fillPlaceholdersOnParagraphs(reportDocument, paragraphData, feedback)
         self.fillPlaceholdersOnTable(reportDocument, tableData, feedback)
-        self.add_image_in_place_of_placeholder(reportDocument, imageData, feedback, width=6.27)
+        self.addImageInParagraph(reportDocument, imageData, feedback)
+        self.addImageInTable(reportDocument, imageData, feedback)
 
         output = os.path.join(filePath, '05_Results', 'output_report.docx')
         reportDocument.save(output)
@@ -166,9 +172,6 @@ class ReportService:
 
             for dataIndex, data in presentationData.items():
                 if slideIndex == dataIndex:
-                    # print(f"Slide {slideIndex}")
-                    # print(f"Data {dataIndex}")
-                    # for placeholder in slide.placeholders:
                     for placeholderIndex, placeholderData in data.items():
                         if placeholderIndex == 1:
                             continue
@@ -178,23 +181,3 @@ class ReportService:
                         picture = placeholder.insert_picture(placeholderData)
         output = os.path.join(filePath, '05_Results', 'output_presentation.pptx')
         reportPresentation.save(output)
-
-
-    def iterate_over_slides(self):
-        doc = os.path.join(self.layerService.getPresentationPath(), 'presentation_template.pptx')
-        presentation = Presentation(doc)
-        for i, slide in enumerate(presentation.slides):
-            print(f"Slide {i + 1}")
-
-            # Access slide properties and elements
-            for shape in slide.shapes:
-                print(f"  Shape: {shape.name}")
-
-            # Access specific elements (e.g., title, text boxes)
-            if slide.shapes.title:
-                print(f"  Title: {slide.shapes.title.text}")
-
-            for placeholder in slide.placeholders:
-                if placeholder.has_text_frame:
-                    print(f"  Placeholder {placeholder.placeholder_format.idx}: {placeholder.text}")
-
