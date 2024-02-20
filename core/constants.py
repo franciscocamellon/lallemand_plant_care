@@ -17,7 +17,8 @@ DEFAULT_SETTINGS = {
     'SERVER': ['BD_GEOSTAT_LPC', 'localhost', 5432, 'postgres', 'postgres'],
     'TREATMENT': ['T1', 'T2', 10.0, 0.0, 1.0],
     'KRIGING': ['VRYIELDMAS;VRYIELD', 1.5, 1.5],
-    'HISTOGRAM': [30, '#636efa', '#000000']
+    'HISTOGRAM': [30, '#636efa', '#000000'],
+    'SYMBOLOGY': [4, '#bfbcbc', '#ffff00', '#55ff00', '#267300']
 }
 
 STATISTICS_INTERVAL = {'DATA': [], 'YIELD_SUM': float, 'SQ_AREA': float, 'PERC_AREA': float,
@@ -127,5 +128,6 @@ COMPOSER_LAYOUTS = {
     '1_Krig_T2_total_': '08_Model_T2.qpt',
     '1_Krig_T1_80_perc_': '09_Model_T1_80perc.qpt',
     '1_Krig_T2_80_perc_': '10_Model_T2_80perc.qpt',
-    'Yield_Gain': '11_Yield_gain_using_T2.qpt',
+    'Yield_Gain': '11_Yield_gain_using_T2.qpt'
+
 }
