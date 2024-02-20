@@ -120,14 +120,14 @@ class StatisticsService:
 
     def runStatistics(self, layer):
         # Extract the data into a list
-        T1 = [feature['yield'] for feature in layer.getFeatures()]
+        valuesList = [feature['yield'] for feature in layer.getFeatures()]
 
         # Area calculation
         area = (self.krigingSettings[1][0]) * self.krigingSettings[1][1]
-        sq_area = [area for value in T1]
+        sq_area = [area for value in valuesList]
 
         # Create DataFrame with 'yield' and 'area'
-        df = pd.DataFrame({'yield': T1, 'area': sq_area})
+        df = pd.DataFrame({'yield': valuesList, 'area': sq_area})
 
         # Define conditions for categorizing the data
         conditions = [
@@ -153,12 +153,9 @@ class StatisticsService:
         # Iterate through the intervals and calculate required values
         for choice in choices:
             self.statisticsInterval['SQ_AREA'] = df[df['interval'] == choice]['area'].sum()
-            self.statisticsInterval['PERC_AREA'] = (self.statisticsInterval['SQ_AREA'] / self.surfaceGainData[
-                'TOTAL_AREA']) * 100
+            self.statisticsInterval['PERC_AREA'] = (self.statisticsInterval['SQ_AREA'] / self.surfaceGainData['TOTAL_AREA']) * 100
             self.statisticsInterval['YIELD_SUM'] = df[df['interval'] == choice]['yield'].sum()
-            self.statisticsInterval['YIELD_BY_PERC_AREA'] = self.statisticsInterval['YIELD_SUM'] / \
-                                                            self.statisticsInterval['PERC_AREA'] if \
-                self.statisticsInterval['PERC_AREA'] != 0 else 0
+            self.statisticsInterval['YIELD_BY_PERC_AREA'] = self.statisticsInterval['YIELD_SUM'] / self.statisticsInterval['PERC_AREA'] if self.statisticsInterval['PERC_AREA'] != 0 else 0
 
             results[choice] = {
                 'Total Area Sum': self.statisticsInterval['SQ_AREA'],
@@ -166,5 +163,8 @@ class StatisticsService:
                 'Yield Sum': self.statisticsInterval['YIELD_SUM'],
                 'Yield per Area Percent': self.statisticsInterval['YIELD_BY_PERC_AREA']
             }
+            # 'intervalStrings':'',
+            # 'interval_area_percentage'
+            # 'interval_total'
         print(results)
         return results

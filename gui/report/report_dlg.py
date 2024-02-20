@@ -21,9 +21,11 @@
  *                                                                         *
  ***************************************************************************/
 """
+import time
 from typing import Optional
 
-from qgis.PyQt import QtWidgets
+from qgis.PyQt import QtCore, QtWidgets
+from qgis.PyQt.QtWidgets import QMessageBox, QProgressDialog
 from qgis.core import QgsApplication, QgsMapLayerProxyModel, QgsTask
 
 from .report_dlg_base import Ui_Dialog
@@ -61,8 +63,8 @@ class StatisticsReport(QtWidgets.QDialog, Ui_Dialog):
         self.setReportUI()
         self.loadTrialData()
         self.presPushButton.clicked.connect(self.runPresentation)
-        # self.reportPushButton.clicked.connect(self.runReport)
-        self.reportPushButton.clicked.connect(self.runReportTask)
+        self.reportPushButton.clicked.connect(self.runReport)
+        # self.reportPushButton.clicked.connect(self.runReportTask)
 
     def setReportUI(self):
         yieldLayer = self.layerService.filterByLayerName(list(self.layers.values()),
@@ -222,13 +224,24 @@ class StatisticsReport(QtWidgets.QDialog, Ui_Dialog):
         return presentationData
 
     def runPresentation(self):
+        maximum = 5
+        progress = UserFeedback(message='Creating report...', title='Statistics report')
+        # progress = QProgressDialog('Gerando apresentação.' + '...', 'Cancelar', 1, maximum, self)
+        progress.show()
+        time.sleep(0.1)
+        self.close()
         rootPath = f"{self.filePath}/05_Results/"
-
+        progress.setProgress(1)
         pValue, anovaStats = self.getAnovaStatistics()
+        progress.setProgress(2)
         gainStats = self.getGainStatistics()
+        progress.setProgress(3)
         self.plotService.createGainStatisticsTable(pValue, gainStats, anovaStats, True, rootPath)
+        progress.setProgress(4)
         self.reportService.createPresentation(self.getPresentationParameters(), self.filePath)
+        progress.setProgress(5)
         # self.reportService.iterate_over_slides()
+        progress.close()
 
     def getGainStatistics(self):
         gainStatsList = list()

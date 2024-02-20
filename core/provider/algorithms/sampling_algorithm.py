@@ -27,17 +27,19 @@ from qgis.core import (QgsProcessing,
                        QgsFeatureSink,
                        QgsProcessingException,
                        QgsProcessingAlgorithm,
-QgsProcessingParameterVectorLayer,
-QgsProcessingParameterBoolean,
-QgsProcessingParameterField,
+                       QgsProcessingParameterVectorLayer,
+                       QgsProcessingParameterBoolean,
+                       QgsProcessingParameterField,
                        QgsProcessingParameterFeatureSource,
-                       QgsProcessingParameterFeatureSink)
+                       QgsProcessingParameterFeatureSink,
+                       QgsProcessingParameterFile)
 from qgis import processing
 
+from ...constants import QGIS_TOC_GROUPS
 from ...services.layer_service import LayerService
 from ...services.system_service import SystemService
+from ...tools.algorithm_runner import AlgorithmRunner
 from ....gui.settings.options_settings_dlg import OptionsSettingsPage
-
 
 
 class SamplingProcessingAlgorithm(QgsProcessingAlgorithm):
@@ -60,7 +62,7 @@ class SamplingProcessingAlgorithm(QgsProcessingAlgorithm):
 
     INPUT = 'INPUT'
     INPUT_FIELD = 'INPUT_FIELD'
-    SELECTED = 'SELECTED'
+    FOLDER_PATH = 'FOLDER_PATH'
     OUTPUT = 'OUTPUT'
 
     def initAlgorithm(self, config=None):
@@ -81,18 +83,19 @@ class SamplingProcessingAlgorithm(QgsProcessingAlgorithm):
         )
 
         self.addParameter(
-            QgsProcessingParameterBoolean(
-                self.SELECTED, self.tr("Process only selected features")
-            )
-        )
-
-        self.addParameter(
             QgsProcessingParameterField(
                 self.INPUT_FIELD,
                 self.tr('Field for variable of interest'),
                 parentLayerParameterName=self.INPUT,
                 type=QgsProcessingParameterField.Any,
                 optional=False
+            )
+        )
+        self.addParameter(
+            QgsProcessingParameterFile(
+                self.FOLDER_PATH,
+                self.tr('Directory path'),
+                behavior=QgsProcessingParameterFile.Folder
             )
         )
 
@@ -114,13 +117,9 @@ class SamplingProcessingAlgorithm(QgsProcessingAlgorithm):
         self.systemService = SystemService()
         self.treatments = OptionsSettingsPage().getTreatmentPolygonsSettings()
 
-        totalLayerName = f'{treatment}_total'
-        totalOutputPath = f"{self.filePath}/00_Data/02_Sampling/{totalLayerName}.shp"
-        histogramTotalPath = f"{self.filePath}/05_Results/01_Histograms/"
-
         inputLayer = self.parameterAsVectorLayer(parameters, self.INPUT, context)
         layerAttribute = self.parameterAsString(parameters, self.INPUT_FIELD, context)
-        selectedOnly = self.parameterAsBool(parameters, self.SELECTED, context)
+        filePath = self.parameterAsFile(parameters, self.FOLDER_PATH, context)
 
         # If source was not found, throw an exception to indicate that the algorithm
         # encountered a fatal error. The exception text can be any string, but in this
@@ -141,36 +140,115 @@ class SamplingProcessingAlgorithm(QgsProcessingAlgorithm):
         # Send some information to the user
         feedback.pushInfo('CRS is {}'.format(inputLayer.sourceCrs().authid()))
 
-        # If sink was not created, throw an exception to indicate that the algorithm
-        # encountered a fatal error. The exception text can be any string, but in this
-        # case we use the pre-built invalidSinkError method to return a standard
-        # helper text for when a sink cannot be evaluated
-        if sink is None:
-            raise QgsProcessingException(self.invalidSinkError(parameters, self.OUTPUT))
-
         # Compute the number of steps to display within the progress bar and
         # get features from source
         total = 100.0 / inputLayer.featureCount() if inputLayer.featureCount() else 0
-        features = inputLayer.getFeatures()
+        # features = inputLayer.getFeatures()
+        #
+        # for current, feature in enumerate(features):
+        #     # Stop the algorithm if cancel button has been clicked
+        #     if feedback.isCanceled():
+        #         break
+        #
+        #     # Add a feature in the sink
+        #     sink.addFeature(feature, QgsFeatureSink.FastInsert)
+        #
+        #     # Update the progress bar
+        #     feedback.setProgress(int(current * total))
 
-        for current, feature in enumerate(features):
-            # Stop the algorithm if cancel button has been clicked
+        for treatment in self.treatments[0]:
+
             if feedback.isCanceled():
                 break
 
-            # Add a feature in the sink
-            sink.addFeature(feature, QgsFeatureSink.FastInsert)
+            totalLayerName = f'{treatment}_total'
+            totalOutputPath = f"{filePath}/00_Data/02_Sampling/{totalLayerName}.shp"
+            histogramTotalPath = f"{filePath}/05_Results/01_Histograms/"
 
-            # Update the progress bar
-            feedback.setProgress(int(current * total))
+            selectedFeatures = self.layerService.getFeaturesByRequest(inputLayer, f"\"Traitement\"='{treatment}'")
+            for current, feature in enumerate(selectedFeatures):
+                # Stop the algorithm if cancel button has been clicked
+                if feedback.isCanceled():
+                    break
 
-        for treatment in self.treatments[0]:
-            break
+                # Add a feature in the sink
+                sink.addFeature(feature, QgsFeatureSink.FastInsert)
 
+                # Update the progress bar
+                feedback.setProgress(int(current * total))
+            # selectedFeaturesLayer = self.layerService.createMemoryVectorLayer(inputLayer.wkbType(), totalLayerName,
+            #                                                                   inputLayer.crs().authid(),
+            #                                                                   fields=inputLayer.fields(),
+            #                                                                   features=selectedFeatures)
+            # self.layerService.saveVectorLayer(selectedFeaturesLayer, totalOutputPath)
+            # loadedLayer = self.layerService.loadShapeFile(QGIS_TOC_GROUPS[2], totalOutputPath)
+            # self.layerService.applySymbology(loadedLayer, layerAttribute)
+
+            # staTotalTable = self.getHistogramParameters(selectedFeaturesLayer, layerAttribute)
+            # self.layerService.populateFrequencyHistogram(selectedFeaturesLayer, layerAttribute, staTotalTable,
+            #                                              histogramTotalPath)
+            #
+            # for percent in [80, 20]:
+            #
+            #     percentFeatures = self.layerService.getPercentualFeaturesById(selectedFeaturesLayer, percent)
+            #
+            #     if percent == 80:
+            #         percentLayerName = f'{treatment}_{percent}_perc'
+            #         percentLayerPath = f"{filePath}/00_Data/02_Sampling/{percentLayerName}.shp"
+            #         histogramPercentPath = f"{filePath}/05_Results/01_Histograms/"
+            #
+            #         percentFeaturesLayer = self.layerService.createMemoryVectorLayer(
+            #             selectedFeaturesLayer.wkbType(),
+            #             percentLayerName,
+            #             selectedFeaturesLayer.crs().authid(),
+            #             fields=selectedFeaturesLayer.fields(),
+            #             features=percentFeatures)
+            #
+            #         self.layerService.saveVectorLayer(percentFeaturesLayer, percentLayerPath)
+                    # loadedLayer = self.layerService.loadShapeFile(QGIS_TOC_GROUPS[2], percentLayerPath)
+                    # self.layerService.applySymbology(loadedLayer, layerAttribute)
+
+                    # staPercentTable = self.getHistogramParameters(percentFeaturesLayer, layerAttribute)
+                    # self.layerService.populateFrequencyHistogram(percentFeaturesLayer, layerAttribute,
+                    #                                              staPercentTable,
+                    #                                              histogramPercentPath)
+
+                # elif percent == 20:
+                #     validationLayerName = f'{treatment}_validation'
+                #     validationLayerPath = f"{filePath}/02_Validation/{validationLayerName}.shp"
+                #
+                #     if not self.systemService.fileExist(validationLayerPath, task=True):
+                #         percentFeaturesLayer = self.layerService.createMemoryVectorLayer(
+                #             selectedFeaturesLayer.wkbType(),
+                #             validationLayerName,
+                #             selectedFeaturesLayer.crs().authid(),
+                #             fields=selectedFeaturesLayer.fields(),
+                #             features=percentFeatures)
+                #         validationLayer = self.layerService.createValidationVectorLayer(percentFeaturesLayer)
+                #
+                #         self.layerService.saveVectorLayer(validationLayer, validationLayerPath)
+                        # self.layerService.loadShapeFile(QGIS_TOC_GROUPS[4], validationLayerPath)
+
+        # return {self.OUTPUT: None}
 
         return {self.OUTPUT: dest_id}
 
+    def getHistogramParameters(self, layer, field):
+        statisticFields = ['COUNT', 'MIN', 'MAX', 'SUM', 'MEAN', 'STD_DEV', 'CV']
+        statisticValues = self.getLayerStatistics(layer, field)
+        tableData = list()
 
+        for statistic in statisticFields:
+            if statistic == 'COUNT':
+                tableData.append([f'{float(statisticValues[statistic]):.0f}'])
+            else:
+                tableData.append([f'{float(statisticValues[statistic]):.2f}'])
+
+        return tableData
+
+    @staticmethod
+    def getLayerStatistics(layer, field):
+        return AlgorithmRunner().runBasicStatisticsForFields(layer, field)
 
     def name(self):
         """
@@ -180,21 +258,21 @@ class SamplingProcessingAlgorithm(QgsProcessingAlgorithm):
         lowercase alphanumeric characters only and no spaces or other
         formatting characters.
         """
-        return 'myscript'
+        return 'sampling'
 
     def displayName(self):
         """
         Returns the translated algorithm name, which should be used for any
         user-visible display of the algorithm name.
         """
-        return self.tr('My Script')
+        return self.tr('Sampling')
 
     def group(self):
         """
         Returns the name of the group this algorithm belongs to. This string
         should be localised.
         """
-        return self.tr('Example scripts')
+        return self.tr('Filter scripts')
 
     def groupId(self):
         """
@@ -204,7 +282,7 @@ class SamplingProcessingAlgorithm(QgsProcessingAlgorithm):
         contain lowercase alphanumeric characters only and no spaces or other
         formatting characters.
         """
-        return 'examplescripts'
+        return 'filterscripts'
 
     def shortHelpString(self):
         """

@@ -64,16 +64,16 @@ class MessageService:
 
     def logMessage(self, message, level=None):
         if level == 0:
-            QgsMessageLog.logMessage(self._tr(message),  self.pluginName, level=Qgis.Info)
+            QgsMessageLog.logMessage(self._tr(message), self.pluginName, level=Qgis.Info)
 
         elif level == 1:
-            QgsMessageLog.logMessage(self._tr(message),  self.pluginName, level=Qgis.Warning)
+            QgsMessageLog.logMessage(self._tr(message), self.pluginName, level=Qgis.Warning)
 
         elif level == 2:
-            QgsMessageLog.logMessage(self._tr(message),  self.pluginName, level=Qgis.Critical)
+            QgsMessageLog.logMessage(self._tr(message), self.pluginName, level=Qgis.Critical)
 
         elif level == 3:
-            QgsMessageLog.logMessage(self._tr(message),  self.pluginName, level=Qgis.Success)
+            QgsMessageLog.logMessage(self._tr(message), self.pluginName, level=Qgis.Success)
 
     @staticmethod
     def _setIconType(iconType):
@@ -142,17 +142,23 @@ class MessageService:
         return fileDialog
 
 
-class UserFeedback(QgsProcessingFeedback):
+class UserFeedback:
 
     def __init__(self, message=None, title=None, parent=None):
         super(UserFeedback, self).__init__()
-        self.progressBar = QProgressDialog(message, "Cancel", 0, 100, parent)
+        self.title = title
+        self.message = message
+        self.progressBar = QProgressDialog(self.message, "Cancel", 0, 5, parent)
         self.progressBar.setWindowModality(Qt.WindowModal)
-        self.progressBar.setWindowTitle(title)
-        self.progressBar.show()
+
+    def setTitle(self):
+        self.progressBar.setWindowTitle(self.title)
 
     def setProgress(self, percent):
         self.progressBar.setValue(percent)
+
+    def show(self):
+        self.progressBar.show()
 
     # def pushInfo(self, info):
     #     self.progressBar.setLabelText(info)

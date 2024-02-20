@@ -36,7 +36,6 @@ from qgis.core import (
     QgsGeometry,
     QgsPointXY,
     QgsLayerTreeGroup,
-    QgsLayerTreeLayer,
     QgsCoordinateTransform,
     QgsVectorFileWriter,
     QgsCoordinateTransformContext,
@@ -44,20 +43,23 @@ from qgis.core import (
     QgsFeatureRequest,
     QgsExpression,
     QgsGraduatedSymbolRenderer,
+    QgsColorRampShader,
+    QgsRasterShader,
+    QgsColorRampLegendNodeSettings,
+    QgsSingleBandPseudoColorRenderer,
+    QgsSimpleMarkerSymbolLayer,
+    QgsRasterBandStats,
     QgsRendererRange,
-    QgsMarkerSymbol, QgsLegendRenderer,
-    QgsLegendStyle,
-)
-from qgis.PyQt.QtWidgets import QMessageBox, QFileDialog
+    QgsMarkerSymbol, QgsSymbol)
 from qgis.PyQt.Qt import QVariant
 from qgis.PyQt.QtGui import QColor
+from qgis.PyQt.QtCore import Qt
 
 from .plot_service import PlotterService
 from ...gui.settings.options_settings_dlg import OptionsSettingsPage
 from .message_service import MessageService
 from .system_service import SystemService
 from ..constants import VALIDATION_FIELDS
-from ..tools.algorithm_runner import AlgorithmRunner
 
 
 class LayerService:
@@ -70,6 +72,7 @@ class LayerService:
         self.plotterService = PlotterService()
         self.settings = OptionsSettingsPage()
         self.krigingSettings = self.settings.getKrigingSettings()
+        self.symbologySettings = self.settings.getSymbologySettings()
 
     @staticmethod
     def _identifyWkbType(layer):
@@ -205,17 +208,6 @@ class LayerService:
     def _createQgsField(fieldName, fieldType):
         return QgsField(fieldName, fieldType)
 
-    # @contextmanager
-    # def safe_file_operations(self, file_path, mode='r'):
-    #     """Context manager for safe file operations."""
-    #     file = None
-    #     try:
-    #         file = open(file_path, mode)
-    #         yield file
-    #     finally:
-    #         if file:
-    #             file.close()
-
     @staticmethod
     def getValuesByExpression(layer, expression, field):
         expr = QgsExpression(expression)
@@ -322,6 +314,7 @@ class LayerService:
                     return self.project
             else:
                 self.messageService.warningMessage("Project Save", "Project not saved.")
+                self.messageService.logMessage(f'Checking for saved project: Project not saved. FAILED', 2)
                 return None
 
     def loadShapeFile(self, groupName, file_path):
@@ -350,6 +343,7 @@ class LayerService:
         except Exception as load_file_exception:
             errorMessage = f'Error loading shape file: {str(load_file_exception)}'
             self.messageService.messageBox('Loading file', errorMessage, 5, 1)
+            self.messageService.logMessage(f'Loading shapefile: {errorMessage}: FAILED', 2)
 
     def createMemoryVectorLayer(self, wkbType, layerName, crs, fields=None, features=None):
         geometry = self._getGeometryFromWkbType(wkbType)
@@ -368,6 +362,7 @@ class LayerService:
                 layer.updateExtents()
 
             if not layer.isValid():
+                self.messageService.logMessage(f'Creating memory layer: Layer is not valid!: FAILED', 2)
                 raise Exception('Layer is not valid.')
 
             return layer
@@ -375,6 +370,7 @@ class LayerService:
         except Exception as createLayerException:
             errorMessage = f'Error creating layer {layerName} -> {str(createLayerException)}'
             self.messageService.messageBox('Loading file', errorMessage, 5, 1)
+            self.messageService.logMessage(f'Creating memory layer: {errorMessage}: FAILED', 2)
             return None
 
     def createVectorLayer(self, layerName, filePath, useDefaultCrs=True):
@@ -398,6 +394,7 @@ class LayerService:
         except Exception as createLayerException:
             errorMessage = f'Error creating layer {layerName} -> {str(createLayerException)}'
             self.messageService.messageBox('Loading file', errorMessage, 5, 1)
+            self.messageService.logMessage(f'Creating vector layer: {errorMessage}: FAILED', 2)
             return None
 
     def convertFeatureCrs(self, layer, target_crs, feedback=None):
@@ -431,12 +428,13 @@ class LayerService:
         except Exception as e:
             errorMessage = f'Error converting layer CRS: {str(e)}'
             self.messageService.messageBox('Loading file', errorMessage, 5, 1)
+            self.messageService.logMessage(f'Converting feature CRS: {errorMessage}: FAILED', 2)
             return False
 
-    def createLayerTreeGroup(self, qgs_project, group_name):
+    def createLayerTreeGroup(self, project, group_name):
 
         try:
-            root = qgs_project.instance().layerTreeRoot()
+            root = project.instance().layerTreeRoot()
             group = QgsLayerTreeGroup(group_name)
             root.addChildNode(group)
             return root
@@ -444,6 +442,7 @@ class LayerService:
         except Exception as group_exception:
             errorMessage = f'Error creating layer tree group: {str(group_exception)}'
             self.messageService.messageBox('Loading file', errorMessage, 5, 1)
+            self.messageService.logMessage(f'Creating layer group: {errorMessage}: FAILED', 2)
             return None
 
     def getSuggestedCrs(self, layer):
@@ -452,7 +451,7 @@ class LayerService:
         zoneFile = self.createVectorLayer('world_zones', worldZoneFileDirectory)
 
         if not layer.isValid():
-            print('Layer not valid!')
+            self.messageService.logMessage(f'getSuggestedCrs: Layer not valid!: FAILED', 2)
         else:
 
             layer_extent = layer.extent()
@@ -465,7 +464,8 @@ class LayerService:
                 if polygon_geometry.contains(centroid):
                     return feature.attributes()
             else:
-                print('Centroid is not within any polygon in world zones layer')
+                errorMsg = 'Centroid is not within any polygon in world zones layer'
+                self.messageService.logMessage(f'getSuggestedCrs: {errorMsg}: FAILED', 2)
 
     def saveVectorLayer(self, layer, outputPath):
         writerOptions = QgsVectorFileWriter.SaveVectorOptions()
@@ -482,13 +482,15 @@ class LayerService:
             )
 
             if error == QgsVectorFileWriter.NoError:
-                # self.messageService.informationMessage('Saving file', f'Layer saved successfully to {outputPath}')
+                self.messageService.logMessage(f'saveVectorLayer: {error}: FAILED', 2)
                 pass
 
-        except Exception as e:
-            self.messageService.criticalMessage('Saving file', f'An error occurred: {str(e)}')
+        except Exception as layerException:
+            self.messageService.criticalMessage('Saving file', f'An error occurred: {str(layerException)}')
+            self.messageService.logMessage(f'saveVectorLayer: {str(layerException)}: FAILED', 2)
 
-    def getLoadedVectorLayers(self, layers, geographic=False):
+    @staticmethod
+    def getLoadedVectorLayers(layers, geographic=False):
         vectorLayers = []
         for layer in layers:
             if geographic:
@@ -499,7 +501,8 @@ class LayerService:
                     vectorLayers.append(layer)
         return vectorLayers
 
-    def getLoadedRasterLayers(self, layers):
+    @staticmethod
+    def getLoadedRasterLayers(layers):
         return [layer for layer in layers if isinstance(layer, QgsRasterLayer)]
 
     @staticmethod
@@ -533,8 +536,10 @@ class LayerService:
 
         ranges = []
         for i in range(4):
-            symbol = QgsMarkerSymbol.createSimple({'size': '1.5'})
+            symbol = QgsSymbol.defaultSymbol(layer.geometryType())
             symbol.setColor(QColor(colors[i]))
+            symbol.symbolLayer(0).setStrokeStyle(Qt.PenStyle(Qt.NoPen))
+            symbol.symbolLayer(0).setSize(1.5)
 
             if i == 0:
                 label = f"> {adjustedIntervals[i + 1]}"
@@ -551,7 +556,74 @@ class LayerService:
 
         return renderer
 
-    def applySymbology(self, layer, fieldName):
-        renderer = self.createLayerSymbology(layer, fieldName)
+    @staticmethod
+    def calculateClasses(minValue, maxValue, numberClasses):
+        step = (maxValue - minValue) / (numberClasses - 1)
+        classes = [round(minValue + i * step, 10) for i in range(numberClasses)]
+        return classes
+
+    def createRasterRenderer(self, raster):
+
+        provider = raster.dataProvider()
+        minValue, maxValue = self.getMinMaxFromRaster(provider)
+        numberClasses = int(self.symbologySettings[0])
+
+        classes = self.calculateClasses(minValue, maxValue, numberClasses)
+        colors = self.symbologySettings[1]
+        colorList = self.createColorRampItemList(classes, colors)
+
+        legendSettings = self.createRasterLegendSettings()
+        colorRamp = self.createRasterColorRampShader(colorList, legendSettings)
+        rasterShader = self.createRasterShader(colorRamp)
+
+        renderer = self.createRasterRendererType(provider, rasterShader)
+        renderer.setClassificationMax(maxValue)
+        renderer.setClassificationMin(minValue)
+
+        return renderer
+
+    @staticmethod
+    def createColorRampItemList(classes, colors):
+        colorItemList = list()
+        rampItemDict = zip(classes, colors)
+        for value, color in rampItemDict:
+            colorItemList.append(
+                QgsColorRampShader.ColorRampItem(value, QColor(color), f'{value:.1f}'))
+        return colorItemList
+
+    @staticmethod
+    def getMinMaxFromRaster(rasterProvider):
+        rasterStatistics = rasterProvider.bandStatistics(1, QgsRasterBandStats.All)
+        return rasterStatistics.minimumValue, rasterStatistics.maximumValue
+
+    @staticmethod
+    def createRasterRendererType(rasterProvider, rasterShader):
+        return QgsSingleBandPseudoColorRenderer(rasterProvider, 1, rasterShader)
+
+    @staticmethod
+    def createRasterShader(colorRamp):
+        rasterShader = QgsRasterShader()
+        rasterShader.setRasterShaderFunction(colorRamp)
+        return rasterShader
+
+    @staticmethod
+    def createRasterLegendSettings():
+        legendSettings = QgsColorRampLegendNodeSettings()
+        legendSettings.setUseContinuousLegend(False)
+        return legendSettings
+
+    @staticmethod
+    def createRasterColorRampShader(colorList, legendSettings):
+        colorRamp = QgsColorRampShader()
+        colorRamp.setColorRampItemList(colorList)
+        colorRamp.setColorRampType(QgsColorRampShader.Interpolated)
+        colorRamp.setLegendSettings(legendSettings)
+        return colorRamp
+
+    def applySymbology(self, layer, fieldName, raster=False):
+        if raster:
+            renderer = self.createRasterRenderer(layer)
+        else:
+            renderer = self.createLayerSymbology(layer, fieldName)
         layer.setRenderer(renderer)
         layer.triggerRepaint()
