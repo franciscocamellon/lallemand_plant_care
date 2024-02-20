@@ -54,6 +54,7 @@ class OptionsSettingsPage(QgsOptionsPageWidget, Ui_Form):
         self.treatment = DEFAULT_SETTINGS['TREATMENT']
         self.kriging = DEFAULT_SETTINGS['KRIGING']
         self.histogram = DEFAULT_SETTINGS['HISTOGRAM']
+        self.symbology = DEFAULT_SETTINGS['SYMBOLOGY']
         self.loadSettings()
 
     def apply(self):
@@ -64,12 +65,14 @@ class OptionsSettingsPage(QgsOptionsPageWidget, Ui_Form):
         self.saveTreatmentPolygonsSettings()
         self.saveKrigingSettings()
         self.saveHistogramSettings()
+        self.saveSymbologySettings()
 
     def loadSettings(self):
         self.loadServerSettings()
         self.loadTreatmentPolygonsSettings()
         self.loadKrigingSettings()
         self.loadHistogramSettings()
+        self.loadSymbologySettings()
 
     def saveServerSettings(self):
         self.settings.setValue('LPC/database', self.databaseNameLineEdit.text())
@@ -147,4 +150,27 @@ class OptionsSettingsPage(QgsOptionsPageWidget, Ui_Form):
             int(self.settings.value('LPC/histogram_bins')),
             QColor(self.settings.value('LPC/histogram_color')),
             QColor(self.settings.value('LPC/histogram_edge_color'))
+        )
+
+    def saveSymbologySettings(self):
+        self.settings.setValue('LPC/symbology_num_classes', self.classesSpinBox.value())
+        self.settings.setValue('LPC/symbology_first_color', self.firstColorButton.color())
+        self.settings.setValue('LPC/symbology_second_color', self.secondColorButton.color())
+        self.settings.setValue('LPC/symbology_third_color', self.thirdColorButton.color())
+        self.settings.setValue('LPC/symbology_fourth_color', self.fourthColorButton.color())
+
+    def loadSymbologySettings(self):
+        self.classesSpinBox.setValue(int(self.settings.value('LPC/symbology_num_classes', self.symbology[0])))
+        self.firstColorButton.setColor(self.settings.value('LPC/symbology_first_color', QColor(self.symbology[1])))
+        self.secondColorButton.setColor(self.settings.value('LPC/symbology_second_color', QColor(self.symbology[2])))
+        self.thirdColorButton.setColor(self.settings.value('LPC/symbology_third_color', QColor(self.symbology[3])))
+        self.fourthColorButton.setColor(self.settings.value('LPC/symbology_fourth_color', QColor(self.symbology[4])))
+
+    def getSymbologySettings(self):
+        return (
+            self.settings.value('LPC/symbology_num_classes'),
+            [QColor(self.settings.value('LPC/symbology_first_color')),
+             QColor(self.settings.value('LPC/symbology_second_color')),
+             QColor(self.settings.value('LPC/symbology_third_color')),
+             QColor(self.settings.value('LPC/symbology_fourth_color'))]
         )
