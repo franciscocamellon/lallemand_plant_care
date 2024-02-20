@@ -23,15 +23,15 @@
 """
 from typing import Optional
 
-from qgis.utils import plugins
 from qgis.PyQt import QtWidgets
 from qgis.core import QgsFieldProxyModel, QgsMapLayerProxyModel, QgsTask
+from qgis.utils import plugins
 
-from ...core.services.message_service import MessageService
 from .kriging_dlg_base import Ui_Dialog
 from ..settings.options_settings_dlg import OptionsSettingsPage
 from ...core.services.layer_service import LayerService
-from ...core.services.widget_service import WidgetService
+from ...core.services.message_service import MessageService
+from ...core.services.system_service import SystemService
 
 
 class OrdinaryKriging(QtWidgets.QDialog, Ui_Dialog):
@@ -48,9 +48,10 @@ class OrdinaryKriging(QtWidgets.QDialog, Ui_Dialog):
         self.settings = OptionsSettingsPage().getKrigingSettings()
         self.task: Optional[QgsTask] = None
         self.layerService = LayerService()
-        self.boundaryLayerComboBox.setEnabled(False)
+        self.systemService = SystemService()
+        self.filterString = ''
         self.setKrigingGui()
-        self.outlinePolygonCheckBox.stateChanged.connect(self.enableWidget)
+        self.samplingLayerComboBox.layerChanged.connect(self.setFieldName)
         self.interpolatePushButton.clicked.connect(self.runSmartMap)
 
     def smartMapPluginCheck(self):
@@ -61,24 +62,47 @@ class OrdinaryKriging(QtWidgets.QDialog, Ui_Dialog):
         self.smartMap = plugins['Smart_Map']
         return True
 
+    def setFieldName(self):
+        name = self.samplingLayerComboBox.currentLayer().name()
+
+        if name in ['T1_validation', 'T2_validation']:
+            self.filterString = 'error'
+            samplingFields = self.layerService.filterByFieldName(self.samplingLayerComboBox.currentLayer(),
+                                                                 [self.filterString], inverse=False)
+            self.samplingFieldComboBox.setFields(samplingFields)
+
+        else:
+            self.filterString = self.settings[0]
+            samplingFields = self.layerService.filterByFieldName(self.samplingLayerComboBox.currentLayer(),
+                                                                 self.filterString, inverse=False)
+            self.samplingFieldComboBox.setFields(samplingFields)
+
     def setKrigingGui(self):
+
         layers = self.project.instance().mapLayers()
         smartMap = self.smartMapPluginCheck()
+
         if self.samplingLayerComboBox.count() == 0 or not smartMap:
             self.parametersGroupBox.setEnabled(False)
             self.interpolatePushButton.setEnabled(False)
+
         else:
-            boundaryLayer = self.layerService.filterByLayerName(list(layers.values()), ['contour'], kriging=True)
+            boundaryLayer = self.layerService.filterByLayerName(list(layers.values()), ['contour_'])
             samplingLayer = self.layerService.filterByLayerName(list(layers.values()),
-                                                                ['Yield_Map', 'T1_80', 'T2_80', 'total'], kriging=True)
+                                                                ['Yield_Map_', 'T1_80_perc', 'T2_80_perc', 'T1_total',
+                                                                 'T2_total', 'T1_validation', 'T2_validation'],
+                                                                )
 
             self.samplingLayerComboBox.setFilters(QgsMapLayerProxyModel.PointLayer)
             self.samplingLayerComboBox.setExceptedLayerList(samplingLayer)
 
             self.samplingFieldComboBox.setFilters(QgsFieldProxyModel.Numeric)
             self.samplingFieldComboBox.setLayer(self.samplingLayerComboBox.currentLayer())
+
+            self.setFieldName()
             samplingFields = self.layerService.filterByFieldName(self.samplingLayerComboBox.currentLayer(),
-                                                                 self.settings[0])
+                                                                 self.filterString)
+
             self.samplingFieldComboBox.setFields(samplingFields)
 
             self.boundaryLayerComboBox.setFilters(QgsMapLayerProxyModel.PolygonLayer)
@@ -87,29 +111,19 @@ class OrdinaryKriging(QtWidgets.QDialog, Ui_Dialog):
             self.pixelSizeXSpinBox.setValue(float(self.settings[1][0]))
             self.pixelSizeYSpinBox.setValue(float(self.settings[1][1]))
 
-    def enableTasks(self, state):
-        widgets = [self.variogramCheckBox, self.interpolationCheckBox,
-                   self.saveParametersCheckBox]
-        for widget in widgets:
-            widget.setChecked(state)
-
-    def enableWidget(self, state):
-        WidgetService.enableWidget(self.boundaryLayerComboBox, state)
-
     def getParameters(self):
         return {
             'layer': self.samplingLayerComboBox.currentLayer(),
             'field': self.samplingFieldComboBox.currentField(),
             'pixelSizeX': self.pixelSizeXSpinBox.value(),
             'pixelSizeY': self.pixelSizeYSpinBox.value(),
-            'outlinePolygon': self.boundaryLayerComboBox.currentLayer(),
-            'variogram': self.variogramCheckBox.isChecked(),
-            'interpolatedMap': self.interpolationCheckBox.isChecked(),
-            'saveParameters': self.saveParametersCheckBox.isChecked()
+            'outlinePolygon': self.boundaryLayerComboBox.currentLayer()
         }
 
     def getPathByLayer(self, layer):
-        if 'T1_total' in layer.name():
+        if 'T1_T2_total' in layer.name():
+            return f"{self.filePath}/01_Kriging/01_T1_T2_Total"
+        elif 'T1_total' in layer.name():
             return f"{self.filePath}/01_Kriging/02_T1_Total"
         elif 'T1_80' in layer.name():
             return f"{self.filePath}/01_Kriging/04_T1_80perc"
@@ -117,13 +131,14 @@ class OrdinaryKriging(QtWidgets.QDialog, Ui_Dialog):
             return f"{self.filePath}/01_Kriging/03_T2_Total"
         elif 'T2_80' in layer.name():
             return f"{self.filePath}/01_Kriging/05_T2_80perc"
-        else:
-            return f"{self.filePath}/01_Kriging/01_T1_T2_Total"
+        elif 'T1_validation' in layer.name():
+            return f"{self.filePath}/03_Error_Compensation/T1_Error_Compensation"
+        elif 'T2_validation' in layer.name():
+            return f"{self.filePath}/03_Error_Compensation/T2_Error_Compensation"
 
     def runSmartMap(self):
         parameters = self.getParameters()
         path = self.getPathByLayer(parameters['layer'])
-        print(path)
 
         smartMapDialog = self.smartMap.dlg
         self.smartMap.reset_gui()
@@ -159,5 +174,15 @@ class OrdinaryKriging(QtWidgets.QDialog, Ui_Dialog):
         self.smartMap.pushButton_Area_Contorno_clicked()
 
         self.smartMap.pushButton_VariogramaAjust_clicked()
+
+        # smartMapDialog.tabWidget_Interpolacao_OK.setCurrentIndex(2)
         self.smartMap.pushButton_Krigagem_clicked()
+
+        # smartMapDialog.tabWidget_Interpolacao_OK.setCurrentIndex(3)
         self.smartMap.pushButton_VariogramaSave_clicked()
+
+        # smartMapDialog.tabWidget_Interpolacao_OK.setCurrentIndex(0)
+        smartMapDialog.comboBox_Modelo.setCurrentIndex(2)
+        self.smartMap.comboBox_Modelo_changed(2)
+
+        self.systemService.copyVariogram(path, f'{self.filePath}/05_Results/02_Variograms')

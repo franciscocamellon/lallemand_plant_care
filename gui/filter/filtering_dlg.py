@@ -26,7 +26,7 @@ from typing import Optional
 from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtWidgets import QProgressBar
 from qgis.core import QgsFieldProxyModel, QgsMapLayerProxyModel, QgsApplication, \
-    QgsTask
+    QgsTask, QgsCoordinateReferenceSystem
 
 from .filtering_dlg_base import Ui_Dialog
 from ..settings.options_settings_dlg import OptionsSettingsPage
@@ -49,6 +49,7 @@ class FilteringPoints(QtWidgets.QDialog, Ui_Dialog):
         self.project = project
         self.filePath = self.project.homePath()
         self.settings = OptionsSettingsPage().getTreatmentPolygonsSettings()
+        self.kriging = OptionsSettingsPage().getKrigingSettings()
         self.setWindowTitle('Filtering harvester points')
         self.progress_bar: Optional[QProgressBar] = None
         self.task: Optional[QgsTask] = None
@@ -64,8 +65,6 @@ class FilteringPoints(QtWidgets.QDialog, Ui_Dialog):
         self.updateSamplingGui()
         self.harvesterLayerComboBox.layerChanged.connect(self.updateFilteringGui)
         self.samplingLayerComboBox.layerChanged.connect(self.updateSamplingGui)
-        self.reprojectCheckBox.stateChanged.connect(self.enableWidget)
-        self.samplesGroupBox.toggled.connect(self.enableSamples)
         self.yeldFilterPushButton.clicked.connect(self.runFilter)
         self.samplerPushButton.clicked.connect(self.runSampling)
 
@@ -74,11 +73,15 @@ class FilteringPoints(QtWidgets.QDialog, Ui_Dialog):
         if len(layers) == 0:
             self.harvesterLayerComboBox.setEnabled(False)
         else:
+            harvesterLayer = self.layerService.filterByLayerName(list(layers.values()),
+                                                                 ['GPS', 'T1', 'T2', 'Gain', 'Yield'],
+                                                                 inverse=True)
             boundaryLayer = self.layerService.filterByLayerName(list(layers.values()), ['contour'])
             treatmentLayer = self.layerService.filterByLayerName(list(layers.values()), ['treatment'])
-            samplingLayer = self.layerService.filterByLayerName(list(layers.values()), ['filtermap', 'Yield', 'Map'])
+            samplingLayer = self.layerService.filterByLayerName(list(layers.values()), ['filtermap', 'Yield_Map', 'T1_T2_total'])
 
             self.harvesterLayerComboBox.setFilters(QgsMapLayerProxyModel.PointLayer)
+            self.harvesterLayerComboBox.setExceptedLayerList(harvesterLayer)
 
             self.treatmentLayerComboBox.setFilters(QgsMapLayerProxyModel.PolygonLayer)
             self.treatmentLayerComboBox.setExceptedLayerList(treatmentLayer)
@@ -98,45 +101,55 @@ class FilteringPoints(QtWidgets.QDialog, Ui_Dialog):
             self.setLayerFields()
 
     def setLayerFields(self):
-        self.harvesterDatageComboBox.setFilters(QgsFieldProxyModel.Numeric)
         self.harvesterLayerYeldComboBox.setFilters(QgsFieldProxyModel.Numeric)
+        self.harvesterLayerYeldComboBox.setLayer(self.harvesterLayerComboBox.currentLayer())
+        samplingFields = self.layerService.filterByFieldName(self.harvesterLayerComboBox.currentLayer(),
+                                                             self.kriging[0])
+
+        self.harvesterLayerYeldComboBox.setFields(samplingFields)
+
+        self.harvesterDatageComboBox.setFilters(QgsFieldProxyModel.Numeric)
         self.treatmentLayerIdComboBox.setFilters(QgsFieldProxyModel.Numeric)
 
         self.harvesterDatageComboBox.setLayer(self.harvesterLayerComboBox.currentLayer())
-        self.harvesterLayerYeldComboBox.setLayer(self.harvesterLayerComboBox.currentLayer())
         self.treatmentLayerIdComboBox.setLayer(self.treatmentLayerComboBox.currentLayer())
 
     def updateFilteringGui(self):
-        self.crsOperations = self.widgetService.updateGui(self.harvesterLayerComboBox, self.suggestedCrsSelectionWidget,
-                                                          self.crsWarningLabel, self.crsLabel)
+
+        if self.harvesterLayerComboBox.currentLayer().crs().isGeographic():
+            self.crsWarningLabel.show()
+            self.crsOperations = self.layerService.getSuggestedCrs(self.harvesterLayerComboBox.currentLayer())
+            self.suggestedCrsSelectionWidget.setEnabled(True)
+            self.suggestedCrsSelectionWidget.setCrs(QgsCoordinateReferenceSystem(self.crsOperations[2]))
+        else:
+            self.crsWarningLabel.hide()
+            self.suggestedCrsSelectionWidget.setCrs(self.harvesterLayerComboBox.currentLayer().crs())
+
+        self.crsLabel.setText(f'CRS -> {self.harvesterLayerComboBox.currentLayer().crs().authid()}')
+        self.setLayerFields()
 
     def updateSamplingGui(self):
+        self.yieldFieldComboBox.setFilters(QgsFieldProxyModel.Numeric)
+        self.yieldFieldComboBox.setLayer(self.samplingLayerComboBox.currentLayer())
+        samplingFields = self.layerService.filterByFieldName(self.samplingLayerComboBox.currentLayer(),
+                                                             self.kriging[0])
+
+        self.yieldFieldComboBox.setFields(samplingFields)
+
         if self.samplingLayerComboBox.count() > 0:
             if self.samplingLayerComboBox.currentLayer().crs().isGeographic():
-                self.enableSamples(False)
                 self.samplingCrsLabel.show()
                 self.samplingWarningLabel.show()
                 self.samplingCrsLabel.setText(f'CRS -> {self.samplingLayerComboBox.currentLayer().crs().authid()}')
-                self.samplesGroupBox.setEnabled(False)
                 self.samplerPushButton.setEnabled(False)
+                self.yieldFieldComboBox.setEnabled(False)
             else:
                 self.samplingWarningLabel.hide()
                 self.samplingCrsLabel.hide()
-                self.samplesGroupBox.setEnabled(True)
-                self.samplesGroupBox.setChecked(True)
-                self.enableSamples(True)
                 self.samplerPushButton.setEnabled(True)
+                self.yieldFieldComboBox.setEnabled(True)
         else:
             self.samplingLayerComboBox.setEnabled(False)
-
-    def enableSamples(self, state):
-        widgets = [self.samplesGroupBox, self.eightySamplesCheckBox, self.twentySamplesCheckBox,
-                   self.totalSamplesCheckBox]
-        for widget in widgets:
-            widget.setChecked(state)
-
-    def enableWidget(self, state):
-        WidgetService.enableWidget(self.suggestedCrsSelectionWidget, state)
 
     def getYieldFilteringParameters(self):
         return {
@@ -147,11 +160,11 @@ class FilteringPoints(QtWidgets.QDialog, Ui_Dialog):
             'Datage': self.harvesterDatageComboBox.currentField(),
             'Rendement': self.harvesterLayerYeldComboBox.currentField(),
             'Target_Projection': self.targetProjection.currentIndex(),
-            'Polygones_pairs': self.settings[1],
-            'Polygones_impairs': self.settings[0],
+            'Polygones_pairs': self.settings[0][1],
+            'Polygones_impairs': self.settings[0][0],
             'Colonne_date': self.colonneDateComboBox.currentIndex(),
-            'Largeur_coupe': self.largeurCoupeSpinBox.value(),
-            'Sous_Echantillonnage': self.sousEchantillonnageSpinBox.value(),
+            'Largeur_coupe': self.settings[1],
+            'Sous_Echantillonnage': self.settings[2],
             'RPLOTS': f"{self.filePath}/00_Data/00_Raw_Files/rPlots.html",
             'Carte_filtree': '',
             'Table_errors': f"{self.filePath}/00_Data/00_Raw_Files/table_errors.csv"
@@ -165,7 +178,7 @@ class FilteringPoints(QtWidgets.QDialog, Ui_Dialog):
         }
 
     def getReprojectionParameters(self):
-        reprojectedLayerName = f'Yield_Map_{self.crsOperations[1]}'
+        reprojectedLayerName = 'T1_T2_total'
         return {
             'reproject': self.reprojectCheckBox.isChecked(),
             'layerName': reprojectedLayerName,
@@ -176,13 +189,15 @@ class FilteringPoints(QtWidgets.QDialog, Ui_Dialog):
 
     def runFilter(self):
 
-        self.task = FilterTask(self.getFilterTaskParameters())
+        self.task = FilterTask(self.getFilterTaskParameters(), self.project,
+                               self.harvesterLayerYeldComboBox.currentField())
 
         QgsApplication.taskManager().addTask(self.task)
         self.close()
 
     def runSampling(self):
-        self.samplingTask = SamplingTask(self.samplingLayerComboBox, self.project)
+        self.samplingTask = SamplingTask(self.samplingLayerComboBox,
+                                         self.yieldFieldComboBox.currentField(), self.project)
 
         QgsApplication.taskManager().addTask(self.samplingTask)
         self.close()

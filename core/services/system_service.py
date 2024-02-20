@@ -23,6 +23,7 @@
 """
 import os
 import datetime
+import re
 import shutil
 
 from .message_service import MessageService
@@ -32,10 +33,18 @@ from ..constants import DIRECTORY_STRUCTURE
 class SystemService:
 
     def __init__(self):
-        """
-        Constructor for the SystemService class.
-        """
         self.messageService = MessageService()
+
+    @staticmethod
+    def filterByFileName(directoryPath, filterString):
+        fileList = os.listdir(directoryPath)
+        regexPattern = '|'.join(map(re.escape, filterString))
+        pattern = re.compile(regexPattern)
+
+        for file in fileList:
+            if pattern.search(file):
+                print(file, pattern.search(file))
+                return os.path.join(directoryPath, file)
 
     def createDirectoryStructure(self, basePath):
 
@@ -81,8 +90,18 @@ class SystemService:
             return f'{mainDirectory}/'
 
     @staticmethod
-    def copyFile(source, target):
+    def _copyFile(source, target):
         shutil.copyfile(source, target)
+
+    def copyVariogram(self, sourcePath, targetPath):
+        if not os.path.exists(targetPath):
+            os.makedirs(targetPath)
+
+        for resultFile in os.listdir(sourcePath):
+            if "0_Variograma" in resultFile:
+                oldFilePath = os.path.join(sourcePath, resultFile)
+                newFilePath = os.path.join(targetPath, resultFile)
+                self._copyFile(oldFilePath, newFilePath)
 
     def fileExist(self, path, task=False):
         if os.path.isfile(path):
@@ -93,3 +112,7 @@ class SystemService:
                 return self.messageService.standardButtonMessage('Load trial files',
                                                                  [f'{file} already exist!', 'Overwrite?'],
                                                                  4, [5, 6])
+
+    def getFieldName(self, string):
+        underscoreReplacedString = string.replace('_', '')
+        return underscoreReplacedString[0:11]

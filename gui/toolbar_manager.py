@@ -22,18 +22,24 @@
  ***************************************************************************/
 """
 
-from qgis.PyQt.QtCore import pyqtSlot
-from qgis.PyQt.QtWidgets import QWidget
+from qgis.PyQt.QtCore import Qt, pyqtSlot
+from qgis.PyQt.QtWidgets import QWidget, QToolButton, QMenu, QAction
+from qgis.core import QgsMapLayer
 
 from .filter.filtering_dlg import FilteringPoints
-from .kriging.kriging_dlg import OrdinaryKriging
-from .treatment.treatment_polygons_dlg import TreatmentPolygons
 from .geostatistics_trial.geostatistics_trial import GeostatisticsTrial
+from .kriging.kriging_dlg import OrdinaryKriging
 from .layer_manager.load_files_dlg import LoadFiles
 from .lpc_team.farmer_manager import FarmerManager
 from .lpc_team.lpc_team_manager import RegisterLpcTeam
+from .report.report_dlg import StatisticsReport
 from .toolbar.toolbar_form_base import Ui_Form
+from .treatment.treatment_polygons_dlg import TreatmentPolygons
+from .validation.validation_dlg import SamplingValidation
+from ..core.constants import QGIS_TOC_GROUPS
 from ..core.services.layer_service import LayerService
+from ..core.tools.composer_layout_runner import ComposerLayoutRunner
+from ..core.tools.export_layout_runner import ExportLayoutRunner
 
 
 class ToolbarManager(QWidget, Ui_Form):
@@ -43,10 +49,9 @@ class ToolbarManager(QWidget, Ui_Form):
         self.setupUi(self)
         self.iface = iface
         self.toolbar = toolbar
+        self.actions = []
         self.layerService = LayerService()
         self.splitter.hide()
-        self.settingsPushButton.hide()
-        self.reportPushButton.hide()
         self.createTrialPushButton.clicked.connect(self.createTrialProject)
         self.loadFilePushButton.clicked.connect(self.loadFiles)
         self.lpcTeamPushButton.clicked.connect(self.manageLpcTeam)
@@ -54,6 +59,23 @@ class ToolbarManager(QWidget, Ui_Form):
         self.treatmentPushButton.clicked.connect(self.treatments)
         self.filterPushButton.clicked.connect(self.filtering)
         self.krigingPushButton.clicked.connect(self.ordinaryKriging)
+        self.samplingValidationPushButton.clicked.connect(self.validation)
+        self.clearStructurePushButton.clicked.connect(self.clearTreeView)
+        self.reportPushButton.clicked.connect(self.getReport)
+        self.mapsPushButton.clicked.connect(self.composer)
+        self.exportMapPushButton.clicked.connect(self.exportMaps)
+
+    def createToolButton(self, parent, text):
+        """
+        Creates a tool button (pop up menu)
+        """
+        button = QToolButton(parent)
+        button.setObjectName(text)
+        button.setToolButtonStyle(Qt.ToolButtonIconOnly)
+        button.setPopupMode(QToolButton.MenuButtonPopup)
+        parent.addWidget(button)
+        self.actions.append(button)
+        return button
 
     @staticmethod
     def initGui():
@@ -137,3 +159,47 @@ class ToolbarManager(QWidget, Ui_Form):
             result = dlg.exec_()
             if result:
                 pass
+
+    def validation(self):
+        project = self.layerService.checkForSavedProject()
+        if project:
+            dlg = SamplingValidation(self.iface, project)
+            dlg.show()
+            result = dlg.exec_()
+            if result:
+                pass
+
+    def clearTreeView(self):
+        project = self.layerService.checkForSavedProject()
+        root = project.layerTreeRoot()
+        if project:
+            for layer in self.iface.mapCanvas().layers():
+                if layer.type() == QgsMapLayer.RasterLayer:
+                    layer_node = root.findLayer(layer.id())
+
+                    self.layerService.addMapLayer(layer, QGIS_TOC_GROUPS[3])
+
+                    if 'validation' in layer.name().split('_'):
+                        self.layerService.addMapLayer(layer, QGIS_TOC_GROUPS[5])
+
+                    parent = layer_node.parent()
+                    parent.removeChildNode(layer_node)
+
+    def getReport(self):
+        project = self.layerService.checkForSavedProject()
+        if project:
+            dlg = StatisticsReport(self.iface, project)
+            dlg.show()
+            result = dlg.exec_()
+            if result:
+                pass
+
+    def composer(self):
+        project = self.layerService.checkForSavedProject()
+        composerLayoutRunner = ComposerLayoutRunner(self.iface, project)
+        composerLayoutRunner.run()
+
+    def exportMaps(self):
+        project = self.layerService.checkForSavedProject()
+        exportLayoutRunner = ExportLayoutRunner(self.iface, project)
+        exportLayoutRunner.run()

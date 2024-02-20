@@ -41,6 +41,23 @@ class WidgetService:
         self.layerService = LayerService()
 
     @staticmethod
+    def _setTextColor(lineEdit, color):
+        palette = lineEdit.palette()
+        palette.setColor(QPalette.Text, QColor(color))
+        lineEdit.setPalette(palette)
+
+    @staticmethod
+    def _setBackgroundColor(lineEdit, color):
+        palette = lineEdit.palette()
+        palette.setColor(QPalette.Base, QColor(color))
+        lineEdit.setPalette(palette)
+
+    @staticmethod
+    def floatValidator(widget):
+        floatValidator = QDoubleValidator()
+        widget.setValidator(floatValidator)
+
+    @staticmethod
     def getSelectedData(tableWidget, totalColumns, msgTitle):
         currentRow = tableWidget.currentRow()
         selectedItems = tableWidget.selectedItems()
@@ -137,23 +154,6 @@ class WidgetService:
             self._setBackgroundColor(lineEdit, Qt.white)
         else:
             self._setBackgroundColor(lineEdit, Qt.pink)
-
-    @staticmethod
-    def floatValidator(widget):
-        floatValidator = QDoubleValidator()
-        widget.setValidator(floatValidator)
-
-    @staticmethod
-    def _setTextColor(lineEdit, color):
-        palette = lineEdit.palette()
-        palette.setColor(QPalette.Text, QColor(color))
-        lineEdit.setPalette(palette)
-
-    @staticmethod
-    def _setBackgroundColor(lineEdit, color):
-        palette = lineEdit.palette()
-        palette.setColor(QPalette.Base, QColor(color))
-        lineEdit.setPalette(palette)
 
     def updateGui(self, mapLayerComboBox, crsSelectionWidget, warningLabel, crsLabel):
         crsInfo = ''

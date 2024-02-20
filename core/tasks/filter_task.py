@@ -42,10 +42,13 @@ iface: QgisInterface
 
 
 class FilterTask(QgsTask):
-    def __init__(self, filterTaskParameters):
+    def __init__(self, filterTaskParameters, project, field):
         super().__init__("Filter task", QgsTask.CanCancel)
         self.feedback = UserFeedback()
         self.context = QgsProcessingContext()
+        self.project = project
+        self.filePath = self.project.homePath()
+        self.yieldField = field
         self.filterTaskParameters = filterTaskParameters
         self.exception = ''
         self.yieldMapVector = ''
@@ -66,10 +69,7 @@ class FilterTask(QgsTask):
                 output = AlgorithmRunner().runYieldMapFiltering(filterParameters, context=self.context,
                                                                 feedback=self.feedback)
 
-                # filteredLayer = self.layerService.createVectorLayer('Yield_Map', output)
-
-                filteredFeatures = self.layerService.getFeaturesByRequest(output,
-                                                                          "\"Biais_rendement\"='F - Pas de biais'")
+                filteredFeatures = self.layerService.getFeaturesByRequest(output, "\"Biais_rendement\"='F - Pas de biais'")
                 self.yieldMapVector = self.layerService.createMemoryVectorLayer(output.wkbType(), 'Yield_Map',
                                                                                 output.crs().authid(),
                                                                                 fields=output.fields(),
@@ -86,7 +86,15 @@ class FilterTask(QgsTask):
                 if self.yieldMapVector.isValid():
                     self.layerService.saveVectorLayer(self.yieldMapVector, filteredMapLayerPath)
                     self.layerService.loadShapeFile(QGIS_TOC_GROUPS[0], filteredMapLayerPath)
-                    self.layerService.loadShapeFile(QGIS_TOC_GROUPS[1], outputReprojectLayer)
+
+                    reprojectedLoadedLayer = self.layerService.loadShapeFile(QGIS_TOC_GROUPS[2], outputReprojectLayer)
+                    self.layerService.applySymbology(reprojectedLoadedLayer, self.yieldField)
+
+                    yieldHistogramPath = f"{self.filePath}/05_Results/01_Histograms/"
+
+                    yieldStatisticsTable = self.getHistogramParameters(self.yieldMapVector, self.yieldField)
+                    self.layerService.populateFrequencyHistogram(self.yieldMapVector, self.yieldField, yieldStatisticsTable,
+                                                                 yieldHistogramPath)
                     return True
 
             else:
@@ -95,6 +103,22 @@ class FilterTask(QgsTask):
         except Exception as e:
             self.exception = e
             return False
+
+    def getHistogramParameters(self, layer, field):
+        statisticFields = ['COUNT', 'MIN', 'MAX', 'SUM', 'MEAN', 'STD_DEV', 'CV']
+        statisticValues = self.getLayerStatistics(layer, field)
+        tableData = list()
+
+        for statistic in statisticFields:
+            if statistic == 'COUNT':
+                tableData.append([f'{float(statisticValues[statistic]):.0f}'])
+            else:
+                tableData.append([f'{float(statisticValues[statistic]):.2f}'])
+
+        return tableData
+    @staticmethod
+    def getLayerStatistics(layer, field):
+        return AlgorithmRunner().runBasicStatisticsForFields(layer, field)
 
     def finished(self, result):
         if self.isCanceled():
@@ -118,7 +142,7 @@ class FilterTask(QgsTask):
                     f"The following error occurred:\n{self.exception.__class__.__name__}: {self.exception}",
                 )
             return
-        print('result:', result)
+
         iface.messageBar().pushMessage(
             "Success",
             f"Finished filtering.",

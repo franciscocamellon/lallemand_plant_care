@@ -36,6 +36,7 @@ from ..constants import QGIS_TOC_GROUPS
 from ..services.layer_service import LayerService
 from ..services.message_service import UserFeedback
 from ..services.system_service import SystemService
+from ..tools.algorithm_runner import AlgorithmRunner
 from ...gui.settings.options_settings_dlg import OptionsSettingsPage
 
 iface: QgisInterface
@@ -43,9 +44,10 @@ iface: QgisInterface
 
 class SamplingTask(QgsTask):
 
-    def __init__(self, widgetLayer, project):
+    def __init__(self, widgetLayer, field, project):
         super().__init__("Sampling task", QgsTask.CanCancel)
         self.samplingLayerComboBox = widgetLayer
+        self.yieldField = field
         self.project = project
         self.filePath = self.project.homePath()
         self.userFeedback = UserFeedback()
@@ -62,9 +64,10 @@ class SamplingTask(QgsTask):
 
             layer = self.samplingLayerComboBox.currentLayer()
 
-            for treatment in self.treatments:
+            for treatment in self.treatments[0]:
                 totalLayerName = f'{treatment}_total'
                 totalOutputPath = f"{self.filePath}/00_Data/02_Sampling/{totalLayerName}.shp"
+                histogramTotalPath = f"{self.filePath}/05_Results/01_Histograms/"
 
                 if not self.systemService.fileExist(totalOutputPath, task=True):
                     selectedFeatures = self.layerService.getFeaturesByRequest(layer, f"\"Traitement\"='{treatment}'")
@@ -73,26 +76,61 @@ class SamplingTask(QgsTask):
                                                                                       fields=layer.fields(),
                                                                                       features=selectedFeatures)
                     self.layerService.saveVectorLayer(selectedFeaturesLayer, totalOutputPath)
-                    self.layerService.loadShapeFile(QGIS_TOC_GROUPS[2], totalOutputPath, style=True)
+                    loadedLayer = self.layerService.loadShapeFile(QGIS_TOC_GROUPS[2], totalOutputPath)
+                    self.layerService.applySymbology(loadedLayer, self.yieldField)
+
+                    staTotalTable = self.getHistogramParameters(selectedFeaturesLayer, self.yieldField)
+                    self.layerService.populateFrequencyHistogram(selectedFeaturesLayer, self.yieldField, staTotalTable,
+                                                                 histogramTotalPath)
 
                     for percent in [80, 20]:
+
                         percentFeatures = self.layerService.getPercentualFeaturesById(selectedFeaturesLayer, percent)
-                        percentLayerName = f'{treatment}_{percent}_perc'
-                        outputPath = f"{self.filePath}/00_Data/02_Sampling/{percentLayerName}.shp"
 
-                        if not self.systemService.fileExist(outputPath, task=True):
+                        if percent == 80:
+                            percentLayerName = f'{treatment}_{percent}_perc'
+                            percentLayerPath = f"{self.filePath}/00_Data/02_Sampling/{percentLayerName}.shp"
+                            histogramPercentPath = f"{self.filePath}/05_Results/01_Histograms/"
 
-                            percentFeaturesLayer = self.layerService.createMemoryVectorLayer(
-                                selectedFeaturesLayer.wkbType(),
-                                percentLayerName,
-                                selectedFeaturesLayer.crs().authid(),
-                                fields=selectedFeaturesLayer.fields(),
-                                features=percentFeatures)
+                            if not self.systemService.fileExist(percentLayerPath, task=True):
 
-                            self.layerService.saveVectorLayer(percentFeaturesLayer, outputPath)
-                            self.layerService.loadShapeFile(QGIS_TOC_GROUPS[2], outputPath, style=True)
-                        else:
-                            raise FileExistsException(f'Sampling file {percentLayerName} already exists.')
+                                percentFeaturesLayer = self.layerService.createMemoryVectorLayer(
+                                    selectedFeaturesLayer.wkbType(),
+                                    percentLayerName,
+                                    selectedFeaturesLayer.crs().authid(),
+                                    fields=selectedFeaturesLayer.fields(),
+                                    features=percentFeatures)
+
+                                self.layerService.saveVectorLayer(percentFeaturesLayer, percentLayerPath)
+                                loadedLayer = self.layerService.loadShapeFile(QGIS_TOC_GROUPS[2], percentLayerPath)
+                                self.layerService.applySymbology(loadedLayer, self.yieldField)
+
+                                staPercentTable = self.getHistogramParameters(percentFeaturesLayer, self.yieldField)
+                                self.layerService.populateFrequencyHistogram(percentFeaturesLayer, self.yieldField,
+                                                                             staPercentTable,
+                                                                             histogramPercentPath)
+                            else:
+                                raise FileExistsException(f'Sampling file {percentLayerName} already exists.')
+
+                        elif percent == 20:
+                            validationLayerName = f'{treatment}_validation'
+                            validationLayerPath = f"{self.filePath}/02_Validation/{validationLayerName}.shp"
+
+                            if not self.systemService.fileExist(validationLayerPath, task=True):
+                                percentFeaturesLayer = self.layerService.createMemoryVectorLayer(
+                                    selectedFeaturesLayer.wkbType(),
+                                    validationLayerName,
+                                    selectedFeaturesLayer.crs().authid(),
+                                    fields=selectedFeaturesLayer.fields(),
+                                    features=percentFeatures)
+                                validationLayer = self.layerService.createValidationVectorLayer(percentFeaturesLayer)
+
+                                self.layerService.saveVectorLayer(validationLayer, validationLayerPath)
+                                self.layerService.loadShapeFile(QGIS_TOC_GROUPS[4], validationLayerPath)
+
+                            else:
+                                raise FileExistsException(f'Sampling file {validationLayerName} already exists.')
+
                 else:
                     raise FileExistsException(f'Sampling file {totalLayerName} already exists.')
 
@@ -101,6 +139,23 @@ class SamplingTask(QgsTask):
         except Exception as e:
             self.exception = e
             return False
+
+    def getHistogramParameters(self, layer, field):
+        statisticFields = ['COUNT', 'MIN', 'MAX', 'SUM', 'MEAN', 'STD_DEV', 'CV']
+        statisticValues = self.getLayerStatistics(layer, field)
+        tableData = list()
+
+        for statistic in statisticFields:
+            if statistic == 'COUNT':
+                tableData.append([f'{float(statisticValues[statistic]):.0f}'])
+            else:
+                tableData.append([f'{float(statisticValues[statistic]):.2f}'])
+
+        return tableData
+
+    @staticmethod
+    def getLayerStatistics(layer, field):
+        return AlgorithmRunner().runBasicStatisticsForFields(layer, field)
 
     def finished(self, result):
 

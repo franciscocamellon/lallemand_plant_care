@@ -25,9 +25,11 @@
 from typing import Optional
 
 from qgis.PyQt import QtWidgets
-from qgis.core import QgsFieldProxyModel, QgsProject, QgsCoordinateReferenceSystem, QgsTask, QgsApplication
+from qgis.core import QgsMapLayerProxyModel, QgsFieldProxyModel, QgsProject, QgsCoordinateReferenceSystem, QgsTask, \
+    QgsApplication
 
 from .treatment_polygons_dlg_base import Ui_TreatmentPolygonsDialogBase
+from ..settings.options_settings_dlg import OptionsSettingsPage
 from ...core.constants import POLYGONS_BUILDER_METHODS
 from ...core.services.layer_service import LayerService
 from ...core.services.system_service import SystemService
@@ -45,15 +47,16 @@ class TreatmentPolygons(QtWidgets.QDialog, Ui_TreatmentPolygonsDialogBase):
         self.setWindowTitle('Treatment polygons')
         self.layerService = LayerService()
         self.systemService = SystemService()
+        self.settings = OptionsSettingsPage().getTreatmentPolygonsSettings()
         self.treatmentTask: Optional[QgsTask] = None
-        self.crsOperations = ''
-        self.borderSizeSpinBox.setValue(10)
+        self.crsOperations = self.layerService.getSuggestedCrs(self.gpsPointLayerComboBox.currentLayer())
         self.methodComboBox.insertItems(0, POLYGONS_BUILDER_METHODS)
         self.enableWidget(False)
+        self.suggestedCrsSelectionWidget.setEnabled(False)
+        self.setMapLayerCombobox()
         self.updateGui()
         self.treatmentCheckBox.stateChanged.connect(self.enableWidget)
-        self.gpsPointLayerComboBox.layerChanged.connect(self.setLayerFields)
-        self.setMapLayerCombobox()
+        self.gpsPointLayerComboBox.layerChanged.connect(self.updateGui)
         self.createPolygonsPushButton.clicked.connect(self.createPolygons)
 
     def setMapLayerCombobox(self):
@@ -61,30 +64,39 @@ class TreatmentPolygons(QtWidgets.QDialog, Ui_TreatmentPolygonsDialogBase):
         if len(layers) == 0:
             self.gpsPointLayerComboBox.setEnabled(False)
         else:
-            self.gpsPointLayerComboBox.setLayer(list(layers.values())[0])
+            treatmentLayer = self.layerService.filterByLayerName(list(layers.values()), ['T1', 'T2', 'Gain', 'Yield'],
+                                                                 inverse=True)
+            self.gpsPointLayerComboBox.setFilters(QgsMapLayerProxyModel.PointLayer)
+            self.gpsPointLayerComboBox.setExceptedLayerList(treatmentLayer)
+            self.borderSizeSpinBox.setValue(self.settings[3])
+        self.setLayerFields()
 
     def setLayerFields(self):
         layer = self.gpsPointLayerComboBox.currentLayer()
         self.sortingFieldComboBox.setFilters(QgsFieldProxyModel.Numeric)
         self.sortingFieldComboBox.setLayer(layer)
 
-    def enableWidget(self, state):
-        widgets = [self.methodComboBox, self.sortingFieldComboBox, self.borderSizeSpinBox, self.boundaryCheckBox]
-        for widget in widgets:
-            WidgetService.enableWidget(widget, state)
-
     def updateGui(self):
 
         if self.gpsPointLayerComboBox.currentLayer().crs().isGeographic():
             self.crsWarningLabel.show()
-            crsInfo = self.layerService.getSuggestedCrs(self.gpsPointLayerComboBox.currentLayer())
-            self.crsOperations = crsInfo
-            self.suggestedCrsSelectionWidget.setCrs(QgsCoordinateReferenceSystem(crsInfo[2]))
+            self.crsOperations = self.layerService.getSuggestedCrs(self.gpsPointLayerComboBox.currentLayer())
+            self.suggestedCrsSelectionWidget.setEnabled(True)
+            self.suggestedCrsSelectionWidget.setCrs(QgsCoordinateReferenceSystem(self.crsOperations[2]))
+
         else:
+
             self.crsWarningLabel.hide()
             self.suggestedCrsSelectionWidget.setCrs(self.gpsPointLayerComboBox.currentLayer().crs())
+            self.borderSizeSpinBox.setValue(self.settings[2])
 
         self.crsLabel.setText(f'CRS -> {self.gpsPointLayerComboBox.currentLayer().crs().authid()}')
+        self.setLayerFields()
+
+    def enableWidget(self, state):
+        widgets = [self.methodComboBox, self.sortingFieldComboBox, self.borderSizeSpinBox, self.boundaryCheckBox]
+        for widget in widgets:
+            WidgetService.enableWidget(widget, state)
 
     def getTaskParameters(self):
         return {

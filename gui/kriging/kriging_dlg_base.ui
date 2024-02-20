@@ -360,7 +360,7 @@
                <number>0</number>
               </property>
               <item>
-               <widget class="QCheckBox" name="outlinePolygonCheckBox">
+               <widget class="QLabel" name="outlinePolygonLabel">
                 <property name="styleSheet">
                  <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;</string>
                 </property>
@@ -478,7 +478,6 @@
   <tabstop>samplingFieldComboBox</tabstop>
   <tabstop>pixelSizeXSpinBox</tabstop>
   <tabstop>pixelSizeYSpinBox</tabstop>
-  <tabstop>outlinePolygonCheckBox</tabstop>
   <tabstop>boundaryLayerComboBox</tabstop>
   <tabstop>interpolatePushButton</tabstop>
  </tabstops>
