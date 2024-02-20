@@ -22,6 +22,7 @@
  ***************************************************************************/
 """
 import os
+from typing import Optional
 
 from ..constants import COMPOSER_LAYERS
 from ..services.composer_service import ComposerService
@@ -36,7 +37,7 @@ class ComposerLayoutRunner:
         self.project = project
         self.filePath = self.project.homePath()
         self.exception = ''
-        self.composerService = ''
+        self.composerService: Optional[ComposerService] = None
         self.layerService = LayerService()
         self.messageService = MessageService(iface=self.iface)
 
