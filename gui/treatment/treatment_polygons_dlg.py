@@ -48,6 +48,7 @@ class TreatmentPolygons(QtWidgets.QDialog, Ui_TreatmentPolygonsDialogBase):
         self.layerService = LayerService()
         self.systemService = SystemService()
         self.settings = OptionsSettingsPage().getTreatmentPolygonsSettings()
+
         self.treatmentTask: Optional[QgsTask] = None
         self.crsOperations = self.layerService.getSuggestedCrs(self.gpsPointLayerComboBox.currentLayer())
         self.methodComboBox.insertItems(0, POLYGONS_BUILDER_METHODS)
@@ -68,7 +69,8 @@ class TreatmentPolygons(QtWidgets.QDialog, Ui_TreatmentPolygonsDialogBase):
                                                                  inverse=True)
             self.gpsPointLayerComboBox.setFilters(QgsMapLayerProxyModel.PointLayer)
             self.gpsPointLayerComboBox.setExceptedLayerList(treatmentLayer)
-            self.borderSizeSpinBox.setValue(self.settings[3])
+            borderSize = float(self.settings[3]) if self.settings[3] is not None else 10.0
+            self.borderSizeSpinBox.setValue(borderSize)
         self.setLayerFields()
 
     def setLayerFields(self):
@@ -88,7 +90,8 @@ class TreatmentPolygons(QtWidgets.QDialog, Ui_TreatmentPolygonsDialogBase):
 
             self.crsWarningLabel.hide()
             self.suggestedCrsSelectionWidget.setCrs(self.gpsPointLayerComboBox.currentLayer().crs())
-            self.borderSizeSpinBox.setValue(self.settings[2])
+            borderSize = float(self.settings[3]) if self.settings[3] is not None else 10.0
+            self.borderSizeSpinBox.setValue(borderSize)
 
         self.crsLabel.setText(f'CRS -> {self.gpsPointLayerComboBox.currentLayer().crs().authid()}')
         self.setLayerFields()

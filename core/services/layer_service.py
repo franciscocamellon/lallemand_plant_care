@@ -24,8 +24,10 @@
 import os
 import random
 import re
-from contextlib import contextmanager
 
+from qgis.PyQt.Qt import QVariant
+from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtGui import QColor
 from qgis.core import (
     QgsProject,
     QgsField,
@@ -47,19 +49,15 @@ from qgis.core import (
     QgsRasterShader,
     QgsColorRampLegendNodeSettings,
     QgsSingleBandPseudoColorRenderer,
-    QgsSimpleMarkerSymbolLayer,
     QgsRasterBandStats,
     QgsRendererRange,
-    QgsMarkerSymbol, QgsSymbol)
-from qgis.PyQt.Qt import QVariant
-from qgis.PyQt.QtGui import QColor
-from qgis.PyQt.QtCore import Qt
+    QgsSymbol)
 
-from .plot_service import PlotterService
-from ...gui.settings.options_settings_dlg import OptionsSettingsPage
 from .message_service import MessageService
+from .plot_service import PlotterService
 from .system_service import SystemService
-from ..constants import VALIDATION_FIELDS
+from ..constants import VALIDATION_FIELDS, QGIS_TOC_GROUPS
+from ...gui.settings.options_settings_dlg import OptionsSettingsPage
 
 
 class LayerService:
@@ -126,6 +124,10 @@ class LayerService:
         root = project.instance().layerTreeRoot()
         group = root.findGroup(groupName)
         group.addLayer(layer)
+
+    def createLayersTreeGroup(self, project):
+        for groupName in QGIS_TOC_GROUPS:
+            self.createLayerTreeGroup(project, groupName)
 
     @staticmethod
     def addMapLayer(layer, groupName):
@@ -282,9 +284,10 @@ class LayerService:
     def createValidationVectorLayer(self, layer):
         # TODO with edit(layer):
         fields = self.krigingSettings[0]
-        fields.append('1Krig')
-        fields.append('fid')
-        fieldsToDelete = self.filterByFieldName(layer, fields, inverse=True)
+        fieldsList = fields.split(';')
+        fieldsList.append('1Krig')
+        fieldsList.append('fid')
+        fieldsToDelete = self.filterByFieldName(layer, fieldsList, inverse=True)
         newOutput = self.deleteFields(layer, fieldsToDelete)
         return self.createValidationFields(newOutput)
 
@@ -431,13 +434,18 @@ class LayerService:
             self.messageService.logMessage(f'Converting feature CRS: {errorMessage}: FAILED', 2)
             return False
 
-    def createLayerTreeGroup(self, project, group_name):
+    def createLayerTreeGroup(self, project, groupName):
 
         try:
             root = project.instance().layerTreeRoot()
-            group = QgsLayerTreeGroup(group_name)
-            root.addChildNode(group)
-            return root
+            group = root.findGroup(groupName)
+
+            if group is None:
+                group = QgsLayerTreeGroup(groupName)
+                root.addChildNode(group)
+                return root
+            else:
+                return root
 
         except Exception as group_exception:
             errorMessage = f'Error creating layer tree group: {str(group_exception)}'
@@ -482,7 +490,6 @@ class LayerService:
             )
 
             if error == QgsVectorFileWriter.NoError:
-                self.messageService.logMessage(f'saveVectorLayer: {error}: FAILED', 2)
                 pass
 
         except Exception as layerException:
@@ -525,36 +532,62 @@ class LayerService:
 
         return feature
 
-    def createLayerSymbology(self, layer, fieldName):
+    def createSamplingLayerSymbology(self, layer, fieldName):
         minValue = layer.minimumValue(layer.fields().indexOf(fieldName))
         maxValue = layer.maximumValue(layer.fields().indexOf(fieldName))
 
-        step = (maxValue - minValue) / 4
-        adjustedIntervals = [round((maxValue - i * step), 1) for i in range(5)]
+        numberClasses = int(self.symbologySettings[0])
+        classes = self.calculateVectorClasses(minValue, maxValue, numberClasses)
+        colors = self.symbologySettings[1]
 
-        colors = ['#267300', '#55ff00', '#ffff00', '#bfbcbc']
+        rendererInterval = list()
+        for index in range(4):
+            symbol = self.createSamplingPointSymbol(layer.geometryType(), colors[index], 1.5, Qt.PenStyle(Qt.NoPen))
+            label = self.createClassLabels(index, classes)
+            intervalRange = QgsRendererRange(classes[index + 1], classes[index], symbol, label)
+            rendererInterval.append(intervalRange)
 
-        ranges = []
-        for i in range(4):
-            symbol = QgsSymbol.defaultSymbol(layer.geometryType())
-            symbol.setColor(QColor(colors[i]))
-            symbol.symbolLayer(0).setStrokeStyle(Qt.PenStyle(Qt.NoPen))
-            symbol.symbolLayer(0).setSize(1.5)
-
-            if i == 0:
-                label = f"> {adjustedIntervals[i + 1]}"
-            elif i == 3:
-                label = f"< {adjustedIntervals[i]}"
-            else:
-                label = f"{adjustedIntervals[i + 1]} - {adjustedIntervals[i]}"
-
-            intervalRange = QgsRendererRange(adjustedIntervals[i + 1], adjustedIntervals[i], symbol, label)
-            ranges.append(intervalRange)
-
-        renderer = QgsGraduatedSymbolRenderer(fieldName, ranges)
+        renderer = QgsGraduatedSymbolRenderer(fieldName, rendererInterval)
         renderer.setMode(QgsGraduatedSymbolRenderer.EqualInterval)
-
         return renderer
+
+    def createBoundaryLayerSymbology(self, layer):
+        symbol = self.createFillSymbol(layer.geometryType(), 'black', 0.3, Qt.BrushStyle.NoBrush)
+        layer.renderer().setSymbol(symbol)
+        layer.triggerRepaint()
+
+    @staticmethod
+    def createFillSymbol(geometryType, color, size, brushStyle):
+        symbol = QgsSymbol.defaultSymbol(geometryType)
+        symbol.symbolLayer(0).setBrushStyle(brushStyle)
+        symbol.symbolLayer(0).setStrokeColor(QColor(color))
+        symbol.symbolLayer(0).setStrokeStyle(Qt.PenStyle.SolidLine)
+        symbol.symbolLayer(0).setStrokeWidth(size)
+        return symbol
+
+    @staticmethod
+    def createSamplingPointSymbol(geometryType, color, size, penStyle):
+        symbol = QgsSymbol.defaultSymbol(geometryType)
+        symbol.setColor(QColor(color))
+        symbol.symbolLayer(0).setStrokeStyle(penStyle)
+        symbol.symbolLayer(0).setSize(size)
+        return symbol
+
+    @staticmethod
+    def createClassLabels(index, classInterval):
+        if index == 0:
+            label = f"> {classInterval[index + 1]}"
+        elif index == 3:
+            label = f"< {classInterval[index]}"
+        else:
+            label = f"{classInterval[index + 1]} - {classInterval[index]}"
+        return label
+
+    @staticmethod
+    def calculateVectorClasses(minValue, maxValue, numberClasses):
+        step = (maxValue - minValue) / numberClasses
+        classes = [round((maxValue - i * step), 1) for i in range(5)]
+        return classes
 
     @staticmethod
     def calculateClasses(minValue, maxValue, numberClasses):
@@ -624,6 +657,6 @@ class LayerService:
         if raster:
             renderer = self.createRasterRenderer(layer)
         else:
-            renderer = self.createLayerSymbology(layer, fieldName)
+            renderer = self.createSamplingLayerSymbology(layer, fieldName)
         layer.setRenderer(renderer)
         layer.triggerRepaint()

@@ -67,6 +67,9 @@
        <height>30</height>
       </size>
      </property>
+     <property name="toolTip">
+      <string>Lallemand</string>
+     </property>
      <property name="text">
       <string/>
      </property>
@@ -131,6 +134,9 @@
            <height>30</height>
           </size>
          </property>
+         <property name="toolTip">
+          <string>Load files</string>
+         </property>
          <property name="text">
           <string/>
          </property>
@@ -153,6 +159,9 @@
            <width>30</width>
            <height>30</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>Create polygons</string>
          </property>
          <property name="text">
           <string/>
@@ -177,6 +186,9 @@
            <height>30</height>
           </size>
          </property>
+         <property name="toolTip">
+          <string>Filter tools</string>
+         </property>
          <property name="text">
           <string/>
          </property>
@@ -199,6 +211,9 @@
            <width>30</width>
            <height>30</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>Kriging</string>
          </property>
          <property name="text">
           <string/>
@@ -223,6 +238,9 @@
            <height>30</height>
           </size>
          </property>
+         <property name="toolTip">
+          <string>Validation tools</string>
+         </property>
          <property name="text">
           <string/>
          </property>
@@ -245,6 +263,9 @@
            <width>30</width>
            <height>30</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>Move layer to group</string>
          </property>
          <property name="text">
           <string/>
@@ -275,6 +296,9 @@
            <height>30</height>
           </size>
          </property>
+         <property name="toolTip">
+          <string>Trial management</string>
+         </property>
          <property name="text">
           <string/>
          </property>
@@ -298,6 +322,9 @@
            <height>30</height>
           </size>
          </property>
+         <property name="toolTip">
+          <string>Team management</string>
+         </property>
          <property name="text">
           <string/>
          </property>
@@ -320,6 +347,9 @@
            <width>30</width>
            <height>30</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>Farmer management</string>
          </property>
          <property name="text">
           <string/>
@@ -347,6 +377,9 @@
            <height>30</height>
           </size>
          </property>
+         <property name="toolTip">
+          <string>Report tools</string>
+         </property>
          <property name="text">
           <string/>
          </property>
@@ -370,6 +403,9 @@
            <height>30</height>
           </size>
          </property>
+         <property name="toolTip">
+          <string>Load map templates</string>
+         </property>
          <property name="text">
           <string/>
          </property>
@@ -392,6 +428,9 @@
            <width>30</width>
            <height>30</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>Export maps</string>
          </property>
          <property name="text">
           <string/>

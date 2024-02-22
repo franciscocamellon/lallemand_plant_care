@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
-        Form.resize(731, 691)
+        Form.resize(923, 691)
         self.gridLayout = QtWidgets.QGridLayout(Form)
         self.gridLayout.setObjectName("gridLayout")
         self.mGroupBox_3 = QgsCollapsibleGroupBox(Form)
@@ -513,12 +513,31 @@ class Ui_Form(object):
 
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
+        Form.setTabOrder(self.mGroupBox, self.databaseNameLineEdit)
+        Form.setTabOrder(self.databaseNameLineEdit, self.serverIpLineEdit)
+        Form.setTabOrder(self.serverIpLineEdit, self.serverPortLineEdit)
+        Form.setTabOrder(self.serverPortLineEdit, self.serverUserLineEdit)
+        Form.setTabOrder(self.serverUserLineEdit, self.serverPasswordLineEdit)
+        Form.setTabOrder(self.serverPasswordLineEdit, self.mGroupBox_2)
         Form.setTabOrder(self.mGroupBox_2, self.oddPolygonsNameLineEdit)
         Form.setTabOrder(self.oddPolygonsNameLineEdit, self.evenPolygonsNameLineEdit)
-        Form.setTabOrder(self.evenPolygonsNameLineEdit, self.mGroupBox_3)
+        Form.setTabOrder(self.evenPolygonsNameLineEdit, self.sizeBorderSpinBox)
+        Form.setTabOrder(self.sizeBorderSpinBox, self.largeurCoupeSpinBox)
+        Form.setTabOrder(self.largeurCoupeSpinBox, self.sousEchantillonnageSpinBox)
+        Form.setTabOrder(self.sousEchantillonnageSpinBox, self.mGroupBox_3)
         Form.setTabOrder(self.mGroupBox_3, self.fieldToInterpolateLineEdit)
         Form.setTabOrder(self.fieldToInterpolateLineEdit, self.pixelSizeXSpinBox)
         Form.setTabOrder(self.pixelSizeXSpinBox, self.pixelSizeYSpinBox)
+        Form.setTabOrder(self.pixelSizeYSpinBox, self.mGroupBox_4)
+        Form.setTabOrder(self.mGroupBox_4, self.binsSpinBox)
+        Form.setTabOrder(self.binsSpinBox, self.colorColorButton)
+        Form.setTabOrder(self.colorColorButton, self.edgeColorButton)
+        Form.setTabOrder(self.edgeColorButton, self.mGroupBox_5)
+        Form.setTabOrder(self.mGroupBox_5, self.classesSpinBox)
+        Form.setTabOrder(self.classesSpinBox, self.firstColorButton)
+        Form.setTabOrder(self.firstColorButton, self.secondColorButton)
+        Form.setTabOrder(self.secondColorButton, self.thirdColorButton)
+        Form.setTabOrder(self.thirdColorButton, self.fourthColorButton)
 
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate

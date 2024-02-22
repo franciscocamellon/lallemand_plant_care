@@ -426,7 +426,7 @@ class Ui_Dialog(object):
         Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
         self.parametersGroupBox.setTitle(_translate("Dialog", "Parameters"))
         self.validationLayerLabel.setText(_translate("Dialog", "Validation points"))
-        self.fieldLabel_2.setText(_translate("Dialog", "Validation field"))
+        self.fieldLabel_2.setText(_translate("Dialog", "Field to evaluate"))
         self.krigingRasterLabel.setText(_translate("Dialog", "Ordinary kriging raster"))
         self.validatePushButton.setText(_translate("Dialog", "Validate"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.validationTab), _translate("Dialog", "Validation"))
@@ -446,4 +446,3 @@ class Ui_Dialog(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.gainSurfaceTab), _translate("Dialog", "Gain surface"))
 from qgsfieldcombobox import QgsFieldComboBox
 from qgsmaplayercombobox import QgsMapLayerComboBox
-

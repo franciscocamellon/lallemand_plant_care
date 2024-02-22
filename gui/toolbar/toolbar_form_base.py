@@ -175,3 +175,16 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Form"))
+        self.showToolbarPushButton.setToolTip(_translate("Form", "Lallemand"))
+        self.loadFilePushButton.setToolTip(_translate("Form", "Load files"))
+        self.treatmentPushButton.setToolTip(_translate("Form", "Create polygons"))
+        self.filterPushButton.setToolTip(_translate("Form", "Filter tools"))
+        self.krigingPushButton.setToolTip(_translate("Form", "Kriging"))
+        self.samplingValidationPushButton.setToolTip(_translate("Form", "Validation tools"))
+        self.clearStructurePushButton.setToolTip(_translate("Form", "Move layer to group"))
+        self.createTrialPushButton.setToolTip(_translate("Form", "Trial management"))
+        self.lpcTeamPushButton.setToolTip(_translate("Form", "Team management"))
+        self.farmerPushButton.setToolTip(_translate("Form", "Farmer management"))
+        self.reportPushButton.setToolTip(_translate("Form", "Report tools"))
+        self.mapsPushButton.setToolTip(_translate("Form", "Load map templates"))
+        self.exportMapPushButton.setToolTip(_translate("Form", "Export maps"))

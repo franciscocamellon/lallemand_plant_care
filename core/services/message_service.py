@@ -142,17 +142,15 @@ class MessageService:
         return fileDialog
 
 
-class UserFeedback:
+class UserFeedback(QgsProcessingFeedback):
 
     def __init__(self, message=None, title=None, parent=None):
         super(UserFeedback, self).__init__()
         self.title = title
         self.message = message
         self.progressBar = QProgressDialog(self.message, "Cancel", 0, 5, parent)
-        self.progressBar.setWindowModality(Qt.WindowModal)
-
-    def setTitle(self):
         self.progressBar.setWindowTitle(self.title)
+        self.progressBar.setWindowModality(Qt.WindowModal)
 
     def setProgress(self, percent):
         self.progressBar.setValue(percent)

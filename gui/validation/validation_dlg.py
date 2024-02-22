@@ -118,21 +118,23 @@ class SamplingValidation(QtWidgets.QDialog, Ui_Dialog):
         grid = self.krigingRasterComboBox.currentLayer()
         points = self.validationLayerComboBox.currentLayer()
         field = self.fieldToEstimateComboBox.currentField()
+        self.close()
         print(field)
-        feedback = UserFeedback()
+        feedback = UserFeedback(message='Validating...', title='Lallemand', parent=self)
         output = AlgorithmRunner().runAddRasterValuesToPoints(points, [grid], context=self.context, feedback=feedback)
 
         fieldName = self.systemService.getFieldName(grid.name())
         print(fieldName)
-
+        total = 100.0 / output.featureCount() if output.featureCount() else 0
         output.startEditing()
-        for feature in output.getFeatures():
+        for index, feature in enumerate(output.getFeatures()):
             feature[VALIDATION_FIELDS[0]] = feature[fieldName]
             output.updateFeature(feature)
             if bool(feature[VALIDATION_FIELDS[0]]):
                 feature[VALIDATION_FIELDS[1]] = feature[field] - feature[VALIDATION_FIELDS[0]]
                 feature[VALIDATION_FIELDS[2]] = math.pow(feature[VALIDATION_FIELDS[1]], 2)
                 output.updateFeature(feature)
+            feedback.setProgress(int(index * total))
         output.commitChanges()
         output.triggerRepaint()
 
@@ -145,14 +147,16 @@ class SamplingValidation(QtWidgets.QDialog, Ui_Dialog):
         rmse = math.sqrt(errorStatistics['SUM'] / errorStatistics['COUNT'])
         percentualRmse = (rmse / (variableStatistics['SUM'] / variableStatistics['COUNT'])) * 100
 
+        total = 100.0 / output.featureCount() if output.featureCount() else 0
         output.startEditing()
-        for feature in output.getFeatures():
+        for index, feature in enumerate(output.getFeatures()):
             if isinstance(feature[fieldName], QVariant):
                 pass
             else:
                 feature[VALIDATION_FIELDS[3]] = rmse
                 feature[VALIDATION_FIELDS[4]] = percentualRmse
                 output.updateFeature(feature)
+            feedback.setProgress(int(index * total))
         output.commitChanges()
         output.triggerRepaint()
 
@@ -172,7 +176,7 @@ class SamplingValidation(QtWidgets.QDialog, Ui_Dialog):
         feedback.close()
 
     def runErrorCompensation(self):
-
+        self.close()
         t1FilePath = f"{self.filePath}/03_Error_Compensation/T1_Error_Compensation/T1_Final_Surface.tiff"
         t2FilePath = f"{self.filePath}/03_Error_Compensation/T2_Error_Compensation/T2_Final_Surface.tiff"
         t1Expression = f'"{self.t1RasterComboBox.currentLayer().name()}@1" + "{self.t1errorRasterComboBox.currentLayer().name()}@1"'
@@ -182,8 +186,9 @@ class SamplingValidation(QtWidgets.QDialog, Ui_Dialog):
         t2Parameters = self.getRasterCalculatorParameters(t2Expression, self.t2RasterComboBox.currentLayer(),
                                                           t2FilePath)
 
+        feedback = UserFeedback(message='Validating...', title='Lallemand', parent=self)
         for parameter in [t1Parameters, t2Parameters]:
-            feedback = UserFeedback()
+
             finalSurface = AlgorithmRunner().runRasterCalculator(parameter, context=self.context, feedback=feedback)
 
             if self.surfacePointsCheckBox.isChecked():

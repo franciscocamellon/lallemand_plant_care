@@ -26,6 +26,7 @@ from qgis.PyQt.QtCore import Qt, pyqtSlot
 from qgis.PyQt.QtWidgets import QWidget, QToolButton, QMenu, QAction
 from qgis.core import QgsMapLayer
 
+
 from .filter.filtering_dlg import FilteringPoints
 from .geostatistics_trial.geostatistics_trial import GeostatisticsTrial
 from .kriging.kriging_dlg import OrdinaryKriging
@@ -40,6 +41,7 @@ from ..core.constants import QGIS_TOC_GROUPS
 from ..core.services.layer_service import LayerService
 from ..core.tools.composer_layout_runner import ComposerLayoutRunner
 from ..core.tools.export_layout_runner import ExportLayoutRunner
+from ..core.services.message_service import UserFeedback
 
 
 class ToolbarManager(QWidget, Ui_Form):
@@ -173,14 +175,16 @@ class ToolbarManager(QWidget, Ui_Form):
         project = self.layerService.checkForSavedProject()
         root = project.layerTreeRoot()
         if project:
-            for layer in self.iface.mapCanvas().layers():
+            for index, layer in enumerate(self.iface.mapCanvas().layers()):
                 if layer.type() == QgsMapLayer.RasterLayer:
                     layer_node = root.findLayer(layer.id())
 
-                    self.layerService.addMapLayer(layer, QGIS_TOC_GROUPS[3])
-
                     if 'validation' in layer.name().split('_'):
+                        self.layerService.applySymbology(layer, '', raster=True)
                         self.layerService.addMapLayer(layer, QGIS_TOC_GROUPS[5])
+                    else:
+                        self.layerService.applySymbology(layer, '', raster=True)
+                        self.layerService.addMapLayer(layer, QGIS_TOC_GROUPS[3])
 
                     parent = layer_node.parent()
                     parent.removeChildNode(layer_node)

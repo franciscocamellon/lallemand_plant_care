@@ -75,6 +75,8 @@ class LoadFiles(QtWidgets.QDialog, Ui_LoadFilesDialogBase):
         filePath = self.project.homePath()
         epsg = self.suggestedCrsSelectionWidget.crs()
 
+        self.layerService.createLayersTreeGroup(self.project)
+
         if self.reprojectCheckBox.isChecked():
 
             reprojectedLayerName = f'{self.pointLayerName}_{self.crsOperations[1]}'

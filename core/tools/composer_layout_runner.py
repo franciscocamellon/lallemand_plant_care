@@ -46,6 +46,7 @@ class ComposerLayoutRunner:
         contour = self.layerService.filterByLayerName(list(layers), ['_contour_'], inverse=True)
 
         filteredLayers = self.layerService.filterByLayerName(list(layers), COMPOSER_LAYERS, inverse=True)
+
         totalFeatures = len(filteredLayers)
         progressPerFeature = 100.0 / totalFeatures if totalFeatures else 0
 

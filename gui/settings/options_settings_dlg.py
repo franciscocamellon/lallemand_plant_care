@@ -115,9 +115,9 @@ class OptionsSettingsPage(QgsOptionsPageWidget, Ui_Form):
     def getTreatmentPolygonsSettings(self):
         return (
             [self.settings.value('LPC/odd_polygons'), self.settings.value('LPC/even_polygons')],
-            float(self.settings.value('LPC/largeur_coupe')),
-            float(self.settings.value('LPC/sous_echantillonnage')),
-            float(self.settings.value('LPC/border_size'))
+            self.settings.value('LPC/largeur_coupe'),
+            self.settings.value('LPC/sous_echantillonnage'),
+            self.settings.value('LPC/border_size')
         )
 
     def saveKrigingSettings(self):
@@ -131,8 +131,10 @@ class OptionsSettingsPage(QgsOptionsPageWidget, Ui_Form):
         self.pixelSizeYSpinBox.setValue(float(self.settings.value('LPC/pixel_size_y', self.kriging[2])))
 
     def getKrigingSettings(self):
-        fields = self.settings.value('LPC/field_interpolate').split(';')
-        pixelSize = [float(self.settings.value('LPC/pixel_size_x')), float(self.settings.value('LPC/pixel_size_y'))]
+        fields = self.settings.value('LPC/field_interpolate')
+        pixelX = self.settings.value('LPC/pixel_size_x')
+        pixelY = self.settings.value('LPC/pixel_size_y')
+        pixelSize = [pixelX, pixelY]
         return fields, pixelSize
 
     def saveHistogramSettings(self):
@@ -147,7 +149,7 @@ class OptionsSettingsPage(QgsOptionsPageWidget, Ui_Form):
 
     def getHistogramSettings(self):
         return (
-            int(self.settings.value('LPC/histogram_bins')),
+            self.settings.value('LPC/histogram_bins'),
             QColor(self.settings.value('LPC/histogram_color')),
             QColor(self.settings.value('LPC/histogram_edge_color'))
         )
