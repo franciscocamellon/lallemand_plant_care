@@ -25,6 +25,9 @@
 import os
 from qgis.core import QgsProcessingProvider
 from qgis.PyQt.QtGui import QIcon
+
+from .algorithms.export_maps_algorithm import ExportMapsProcessingAlgorithm
+from .algorithms.report_algorithm import ReportProcessingAlgorithm
 from .algorithms.sampling_algorithm import SamplingProcessingAlgorithm
 
 
@@ -48,6 +51,8 @@ class LPCAlgorithmProvider(QgsProcessingProvider):
         Loads all algorithms belonging to this provider.
         """
         self.addAlgorithm(SamplingProcessingAlgorithm())
+        self.addAlgorithm(ReportProcessingAlgorithm())
+        self.addAlgorithm(ExportMapsProcessingAlgorithm())
 
     def id(self):
         """
