@@ -23,7 +23,13 @@
 """
 import os
 from typing import Optional
+from qgis.PyQt.QtWidgets import QProgressBar
+from qgis.PyQt.QtCore import QCoreApplication, Qt
+from qgis.core import Qgis, QgsProcessingFeedback
+from qgis.PyQt.QtWidgets import QProgressBar
+from processing import execAlgorithmDialog, createAlgorithmDialog
 
+from .algorithm_runner import AlgorithmRunner
 from ..constants import COMPOSER_LAYERS
 from ..services.composer_service import ComposerService
 from ..services.layer_service import LayerService
@@ -39,6 +45,7 @@ class ComposerLayoutRunner:
         self.exception = ''
         self.composerService: Optional[ComposerService] = None
         self.layerService = LayerService()
+        self.algRunner = AlgorithmRunner()
         self.messageService = MessageService(iface=self.iface)
 
     def run(self):
@@ -47,6 +54,33 @@ class ComposerLayoutRunner:
 
         filteredLayers = self.layerService.filterByLayerName(list(layers), COMPOSER_LAYERS, inverse=True)
 
+        # progressMessageBar = self.iface.messageBar().createMessage("Loading composer templates...")
+        # progressBar = QProgressBar()
+        # progressBar.setMaximum(len([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]))
+        # progressBar.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        # progressMessageBar.layout().addWidget(progressBar)
+        # self.iface.messageBar().pushWidget(progressMessageBar, Qgis.Info)
+        #
+        # def progress_changed(progress):
+        #     # print(progress)
+        #     progressBar.setValue(progress)
+        #
+        # f = QgsProcessingFeedback()
+        # f.progressChanged.connect(progress_changed)
+        #
+        # self.algRunner.runLoadComposerTemplates([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], contour[0], feedback=f)
+        # progressBar.setValue(len([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]))
+        # # self.iface.messageBar().clearWidgets()
+        parameters = {
+            'INPUT_LAYERS': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+            'TRIAL_BOUNDS_LAYER': contour[0]
+        }
+        dialog = createAlgorithmDialog('lpc:loadcomposertemplates', parameters)
+        dialog.show()
+        dialog.exec_()
+
+
+"""
         totalFeatures = len(filteredLayers)
         progressPerFeature = 100.0 / totalFeatures if totalFeatures else 0
 
@@ -76,4 +110,4 @@ class ComposerLayoutRunner:
 
         except Exception as loadException:
             self.messageService.logMessage(f'Error on loading layout template. {loadException}', 2)
-            return False
+            return False"""

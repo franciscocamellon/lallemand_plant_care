@@ -121,134 +121,13 @@ class ReportProcessingAlgorithm(QgsProcessingAlgorithm):
         layerAttribute = self.parameterAsString(parameters, self.INPUT_FIELD, context)
         filePath = self.parameterAsFile(parameters, self.FOLDER_PATH, context)
 
-        # If source was not found, throw an exception to indicate that the algorithm
-        # encountered a fatal error. The exception text can be any string, but in this
-        # case we use the pre-built invalidSourceError method to return a standard
-        # helper text for when a source cannot be evaluated
-        if inputLayer is None:
-            raise QgsProcessingException(self.invalidSourceError(parameters, self.INPUT))
-
-        (sink, dest_id) = self.parameterAsSink(
-            parameters,
-            self.OUTPUT,
-            context,
-            inputLayer.fields(),
-            inputLayer.wkbType(),
-            inputLayer.sourceCrs()
-        )
-
-        # Send some information to the user
-        feedback.pushInfo('CRS is {}'.format(inputLayer.sourceCrs().authid()))
-
-        # Compute the number of steps to display within the progress bar and
-        # get features from source
-        total = 100.0 / inputLayer.featureCount() if inputLayer.featureCount() else 0
-        # features = inputLayer.getFeatures()
-        #
-        # for current, feature in enumerate(features):
-        #     # Stop the algorithm if cancel button has been clicked
-        #     if feedback.isCanceled():
-        #         break
-        #
-        #     # Add a feature in the sink
-        #     sink.addFeature(feature, QgsFeatureSink.FastInsert)
-        #
-        #     # Update the progress bar
-        #     feedback.setProgress(int(current * total))
-
-        for treatment in self.treatments[0]:
-
-            if feedback.isCanceled():
-                break
-
-            totalLayerName = f'{treatment}_total'
-            totalOutputPath = f"{filePath}/00_Data/02_Sampling/{totalLayerName}.shp"
-            histogramTotalPath = f"{filePath}/05_Results/01_Histograms/"
-
-            selectedFeatures = self.layerService.getFeaturesByRequest(inputLayer, f"\"Traitement\"='{treatment}'")
-            for current, feature in enumerate(selectedFeatures):
-                # Stop the algorithm if cancel button has been clicked
-                if feedback.isCanceled():
-                    break
-
-                # Add a feature in the sink
-                sink.addFeature(feature, QgsFeatureSink.FastInsert)
-
-                # Update the progress bar
-                feedback.setProgress(int(current * total))
-            # selectedFeaturesLayer = self.layerService.createMemoryVectorLayer(inputLayer.wkbType(), totalLayerName,
-            #                                                                   inputLayer.crs().authid(),
-            #                                                                   fields=inputLayer.fields(),
-            #                                                                   features=selectedFeatures)
-            # self.layerService.saveVectorLayer(selectedFeaturesLayer, totalOutputPath)
-            # loadedLayer = self.layerService.loadShapeFile(QGIS_TOC_GROUPS[2], totalOutputPath)
-            # self.layerService.applySymbology(loadedLayer, layerAttribute)
-
-            # staTotalTable = self.getHistogramParameters(selectedFeaturesLayer, layerAttribute)
-            # self.layerService.populateFrequencyHistogram(selectedFeaturesLayer, layerAttribute, staTotalTable,
-            #                                              histogramTotalPath)
-            #
-            # for percent in [80, 20]:
-            #
-            #     percentFeatures = self.layerService.getPercentualFeaturesById(selectedFeaturesLayer, percent)
-            #
-            #     if percent == 80:
-            #         percentLayerName = f'{treatment}_{percent}_perc'
-            #         percentLayerPath = f"{filePath}/00_Data/02_Sampling/{percentLayerName}.shp"
-            #         histogramPercentPath = f"{filePath}/05_Results/01_Histograms/"
-            #
-            #         percentFeaturesLayer = self.layerService.createMemoryVectorLayer(
-            #             selectedFeaturesLayer.wkbType(),
-            #             percentLayerName,
-            #             selectedFeaturesLayer.crs().authid(),
-            #             fields=selectedFeaturesLayer.fields(),
-            #             features=percentFeatures)
-            #
-            #         self.layerService.saveVectorLayer(percentFeaturesLayer, percentLayerPath)
-                    # loadedLayer = self.layerService.loadShapeFile(QGIS_TOC_GROUPS[2], percentLayerPath)
-                    # self.layerService.applySymbology(loadedLayer, layerAttribute)
-
-                    # staPercentTable = self.getHistogramParameters(percentFeaturesLayer, layerAttribute)
-                    # self.layerService.populateFrequencyHistogram(percentFeaturesLayer, layerAttribute,
-                    #                                              staPercentTable,
-                    #                                              histogramPercentPath)
-
-                # elif percent == 20:
-                #     validationLayerName = f'{treatment}_validation'
-                #     validationLayerPath = f"{filePath}/02_Validation/{validationLayerName}.shp"
-                #
-                #     if not self.systemService.fileExist(validationLayerPath, task=True):
-                #         percentFeaturesLayer = self.layerService.createMemoryVectorLayer(
-                #             selectedFeaturesLayer.wkbType(),
-                #             validationLayerName,
-                #             selectedFeaturesLayer.crs().authid(),
-                #             fields=selectedFeaturesLayer.fields(),
-                #             features=percentFeatures)
-                #         validationLayer = self.layerService.createValidationVectorLayer(percentFeaturesLayer)
-                #
-                #         self.layerService.saveVectorLayer(validationLayer, validationLayerPath)
-                        # self.layerService.loadShapeFile(QGIS_TOC_GROUPS[4], validationLayerPath)
-
-        # return {self.OUTPUT: None}
+        reportData, tableData, imageData = self.getReportParameters()
+        self.reportService.createWordReport(reportData, tableData, imageData, self.filePath,
+                                            self.feedback)
 
         return {self.OUTPUT: dest_id}
 
-    def getHistogramParameters(self, layer, field):
-        statisticFields = ['COUNT', 'MIN', 'MAX', 'SUM', 'MEAN', 'STD_DEV', 'CV']
-        statisticValues = self.getLayerStatistics(layer, field)
-        tableData = list()
 
-        for statistic in statisticFields:
-            if statistic == 'COUNT':
-                tableData.append([f'{float(statisticValues[statistic]):.0f}'])
-            else:
-                tableData.append([f'{float(statisticValues[statistic]):.2f}'])
-
-        return tableData
-
-    @staticmethod
-    def getLayerStatistics(layer, field):
-        return AlgorithmRunner().runBasicStatisticsForFields(layer, field)
 
     def name(self):
         """

@@ -21,12 +21,13 @@
  *                                                                         *
  ***************************************************************************/
 """
+import os.path
 
 from qgis.PyQt.QtCore import Qt, pyqtSlot
 from qgis.PyQt.QtWidgets import QWidget, QToolButton, QMenu, QAction
 from qgis.core import QgsMapLayer
 
-
+from ..core.tools.algorithm_runner import AlgorithmRunner
 from .filter.filtering_dlg import FilteringPoints
 from .geostatistics_trial.geostatistics_trial import GeostatisticsTrial
 from .kriging.kriging_dlg import OrdinaryKriging
@@ -53,6 +54,7 @@ class ToolbarManager(QWidget, Ui_Form):
         self.toolbar = toolbar
         self.actions = []
         self.layerService = LayerService()
+        self.algRunner = AlgorithmRunner()
         self.splitter.hide()
         self.createTrialPushButton.clicked.connect(self.createTrialProject)
         self.loadFilePushButton.clicked.connect(self.loadFiles)
@@ -200,10 +202,10 @@ class ToolbarManager(QWidget, Ui_Form):
 
     def composer(self):
         project = self.layerService.checkForSavedProject()
-        composerLayoutRunner = ComposerLayoutRunner(self.iface, project)
-        composerLayoutRunner.run()
+        if project:
+            self.algRunner.runLoadComposerTemplates(project)
 
     def exportMaps(self):
         project = self.layerService.checkForSavedProject()
-        exportLayoutRunner = ExportLayoutRunner(self.iface, project)
-        exportLayoutRunner.run()
+        if project:
+            self.algRunner.runExportMaps(project)

@@ -318,7 +318,7 @@ class LayerService:
             else:
                 self.messageService.warningMessage("Project Save", "Project not saved.")
                 self.messageService.logMessage(f'Checking for saved project: Project not saved. FAILED', 2)
-                return None
+                return False
 
     def loadShapeFile(self, groupName, file_path):
 

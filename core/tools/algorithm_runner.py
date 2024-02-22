@@ -21,18 +21,22 @@
  *                                                                         *
  ***************************************************************************/
 """
+import os
 
 import processing
+from processing import createAlgorithmDialog
 
 from qgis.core import QgsCoordinateReferenceSystem, QgsProcessingUtils, QgsProject
 from qgis.PyQt.Qt import QObject
+
+from ..services.layer_service import LayerService
 
 
 class AlgorithmRunner(QObject):
 
     def __init__(self):
         super(AlgorithmRunner, self).__init__()
-        pass
+        self.layerService = LayerService()
 
     @staticmethod
     def _getLayerFromContext(outputDict, context, field=None, returnError=False):
@@ -136,3 +140,24 @@ class AlgorithmRunner(QObject):
     def runPixelsToPoints(self, parameters, context=None, feedback=None):
         output = processing.run("native:pixelstopoints", parameters, context=context, feedback=feedback)
         return self._getLayerFromContext(output, context, field='OUTPUT')
+
+    def runLoadComposerTemplates(self, project):
+        layers = project.instance().mapLayers().values()
+        contour = self.layerService.filterByLayerName(list(layers), ['_contour_'], inverse=True)
+        parameters = {
+            'INPUT_LAYERS': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+            'TRIAL_BOUNDS_LAYER': contour[0]
+        }
+        dialog = createAlgorithmDialog('lpc:loadcomposertemplates', parameters)
+        dialog.show()
+        dialog.exec_()
+
+    def runExportMaps(self, project):
+        parameters = {
+            'LAYOUTS': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+            'RESOLUTION': 150,
+            'OUTPUT': os.path.join(project.homePath(), '05_Results', '03_Maps')
+        }
+        dialog = createAlgorithmDialog('lpc:exportmaps', parameters)
+        dialog.show()
+        dialog.exec_()

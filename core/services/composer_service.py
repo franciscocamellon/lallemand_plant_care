@@ -300,11 +300,19 @@ class ComposerService:
 
         return exportSettings
 
-    def createLayoutExporter(self, layout, fileName):
-        exportSettings = self.overrideExportSettings(layout)
-        exporter = QgsLayoutExporter(layout)
-        exporter.layout().refresh()
-        exportedMapPath = f"{self.filePath}/05_Results/03_Maps/{fileName}.png"
-        result = exporter.exportToImage(exportedMapPath, exportSettings)
+    def createLayoutExporter(self, layout, fileName, path=None):
+        try:
+            exportSettings = self.overrideExportSettings(layout)
+            exporter = QgsLayoutExporter(layout)
 
-        return result == QgsLayoutExporter.Success
+            if path:
+                exportedMapPath = os.path.join(path, f'{fileName}.png')
+            else:
+                exportedMapPath = os.path.join(self.filePath, '05_Results', '03_Maps', f'{fileName}.png')
+            result = exporter.exportToImage(exportedMapPath, exportSettings)
+
+            return result == QgsLayoutExporter.Success
+        except Exception as exporterException:
+            # TODO log this error
+            print(f"An error occurred: {str(exporterException)}")
+            return False

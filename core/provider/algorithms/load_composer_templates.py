@@ -26,16 +26,20 @@ import os.path
 from qgis.core import QgsProject
 from qgis.PyQt.QtCore import QCoreApplication
 from qgis.PyQt.QtGui import QImageWriter
-from qgis.core import (QgsProcessingAlgorithm,
+from qgis.core import (
+    QgsProcessing,
+    QgsProcessingAlgorithm,
                        QgsProcessingMultiStepFeedback,
                        QgsProcessingOutputNumber,
                        QgsProcessingParameterEnum,
                        QgsProcessingParameterFile,
                        QgsProcessingParameterNumber,
-                      )
+QgsProcessingParameterFeatureSource,
+QgsProcessingParameterVectorLayer
+                       )
 from processing.core.ProcessingConfig import ProcessingConfig
 
-from ...constants import QGIS_TOC_GROUPS
+from ...constants import QGIS_TOC_GROUPS, COMPOSER_LAYERS
 from ...factories.postgres_factory import PostgresFactory
 from ...services.composer_service import ComposerService
 from ...services.layer_service import LayerService
@@ -48,7 +52,7 @@ from ...tools.algorithm_runner import AlgorithmRunner
 from ....gui.settings.options_settings_dlg import OptionsSettingsPage
 
 
-class ExportMapsProcessingAlgorithm(QgsProcessingAlgorithm):
+class LoadComposerTemplatesAlgorithm(QgsProcessingAlgorithm):
     """
     This is an example algorithm that takes a vector layer and
     creates a new identical one.
@@ -66,11 +70,9 @@ class ExportMapsProcessingAlgorithm(QgsProcessingAlgorithm):
     # used when calling the algorithm from another algorithm, or when
     # calling from the QGIS console.
 
-    LAYOUTS = 'LAYOUTS'
-    EXTENSION = 'EXTENSION'
-    RESOLUTION = 'RESOLUTION'
+    INPUT_LAYERS = 'INPUT_LAYERS'
+    TRIAL_BOUNDS_LAYER = 'TRIAL_BOUNDS_LAYER'
     OUTPUT = 'OUTPUT'
-    EXPORTED_LAYOUTS = 'EXPORTED_LAYOUTS'
 
     def __init__(self):
         super().__init__()
@@ -88,47 +90,27 @@ class ExportMapsProcessingAlgorithm(QgsProcessingAlgorithm):
         with some other properties.
         """
 
-        self.layoutList = sorted([composerLayout.name() for composerLayout in QgsProject.instance().layoutManager().printLayouts()],
-                                 key=str.lower)
+        self.project = QgsProject.instance()
+
+        layers = self.project.instance().mapLayers().values()
+        contour = self.layerService.filterByLayerName(list(layers), ['_contour_'], inverse=True)
+
+        self.filteredLayers = self.layerService.filterByLayerName(list(layers), COMPOSER_LAYERS, inverse=True)
         self.addParameter(
             QgsProcessingParameterEnum(
-                self.LAYOUTS,
-                self.tr('Layouts to export'),
-                options=self.layoutList,
+                self.INPUT_LAYERS,
+                self.tr('Layers to add in templates'),
+                options=[layer.name() for layer in self.filteredLayers],
                 allowMultiple=True
             )
         )
 
-        # self.addParameter(
-        #     QgsProcessingParameterEnum(
-        #         self.EXTENSION,
-        #         self.tr('Extension for exported maps'),
-        #         options=self.listFormats,
-        #         defaultValue=ProcessingConfig.getSetting('DEFAULT_EXPORT_EXTENSION')
-        #     )
-        # )
-
         self.addParameter(
-            QgsProcessingParameterNumber(
-                self.RESOLUTION,
-                self.tr('Export resolution (if not set, the layout resolution is used)'),
-                optional=True,
-                minValue=1
-            )
-        )
-
-        self.addParameter(
-            QgsProcessingParameterFile(
-                self.OUTPUT,
-                self.tr('Output folder where to save maps'),
-                QgsProcessingParameterFile.Folder
-            )
-        )
-
-        self.addOutput(
-            QgsProcessingOutputNumber(
-                self.EXPORTED_LAYOUTS,
-                self.tr('Number of layouts exported')
+            QgsProcessingParameterVectorLayer(
+                self.TRIAL_BOUNDS_LAYER,
+                self.tr("Trial bounds layer"),
+                [QgsProcessing.TypeVectorPolygon],
+                optional=False,
             )
         )
 
@@ -137,36 +119,38 @@ class ExportMapsProcessingAlgorithm(QgsProcessingAlgorithm):
         Here is where the processing itself takes place.
         """
 
-        outputFolder = self.parameterAsFile(parameters, self.OUTPUT, context)
-        layoutIds = self.parameterAsEnums(parameters, self.LAYOUTS, context)
-        project = QgsProject.instance()
+        layerIds = self.parameterAsEnums(parameters, self.INPUT_LAYERS, context)
+        trialBoundsLayer = self.parameterAsVectorLayer(parameters, self.TRIAL_BOUNDS_LAYER, context)
 
-        layouts = project.layoutManager().printLayouts()
+        totalFeatures = len(self.filteredLayers)
+        progressPerFeature = 100.0 / totalFeatures if totalFeatures else 0
 
-        composerService = ComposerService(project)
+        composerService = ComposerService(self.project)
+        print([self.filteredLayers[layerId] for layerId in layerIds])
+        layerLayoutMapping = composerService.mapLayersToLayouts([self.filteredLayers[layerId] for layerId in layerIds])
 
-        multiFeedback = QgsProcessingMultiStepFeedback(len(layouts), feedback)
-        total = 100.0 / len(layouts) if len(layouts) else 0
+        multiFeedback = QgsProcessingMultiStepFeedback(totalFeatures, feedback)
 
-        if not os.path.isdir(outputFolder):
-            multiFeedback.reportError(self.tr('\nERROR: No valid output folder given. We cannot continue...\n'))
+        if not trialBoundsLayer:
+            multiFeedback.reportError(self.tr('\nERROR: No valid extent layer...\n'))
         else:
-            for layoutId in layoutIds:
+            for layer, layoutPath in layerLayoutMapping.items():
 
-                if multiFeedback.isCanceled():
-                    self.messageService.criticalMessageBar('Exporting maps', 'operation aborted by the user!')
-                    break
-                layout = project.layoutManager().layoutByName(self.layoutList[layoutId])
-                result = composerService.createLayoutExporter(layout, layout.name(), path=outputFolder)
-                multiFeedback.pushInfo(self.tr(f'Exporting map from layout {layout.name()}.'))
+                if os.path.isfile(layoutPath):
+                    layout = composerService.createLayout(trialBoundsLayer)
+                    composerService.loadLayoutFromTemplate(layout, layoutPath)
+                    composerService.updateComposerLayout(layout, layer, trialBoundsLayer)
 
-                if result:
-                    multiFeedback.pushInfo(self.tr('Map exported successfully!'))
-                    self.messageService.logMessage(f'Exporting map from layout {layout.name()}: SUCCESS', 3)
-                    feedback.setProgress(int(layoutId * total))
-                else:
-                    multiFeedback.reportError(self.tr('Map could not be exported!'))
-                    self.messageService.logMessage(f'Exporting map from layout {layout.name()}: FAILED', 2)
+                    result = self.project.layoutManager().addLayout(layout)
+                    multiFeedback.pushInfo(self.tr(f'Loading layout {layout.name()}.'))
+                    if result:
+                        multiFeedback.pushInfo(self.tr('Map exported successfully!'))
+                        self.messageService.logMessage(f'Loading layout {layout.name()}: SUCCESS', 3)
+                        progressIndex = list(layerLayoutMapping.keys()).index(layer)
+                        feedback.setProgress(int(progressIndex * progressPerFeature))
+                    else:
+                        multiFeedback.reportError(self.tr(f'Layout {layout.name()} could not be loaded!'))
+                        self.messageService.logMessage(f'Loading layout {layout.name()}: FAILED', 2)
 
         return {self.OUTPUT: None}
 
@@ -178,14 +162,14 @@ class ExportMapsProcessingAlgorithm(QgsProcessingAlgorithm):
         lowercase alphanumeric characters only and no spaces or other
         formatting characters.
         """
-        return 'exportmaps'
+        return 'loadcomposertemplates'
 
     def displayName(self):
         """
         Returns the translated algorithm name, which should be used for any
         user-visible display of the algorithm name.
         """
-        return self.tr('Export maps')
+        return self.tr('Load Composer Templates')
 
     def group(self):
         """
@@ -216,7 +200,7 @@ class ExportMapsProcessingAlgorithm(QgsProcessingAlgorithm):
         """
         Returns a translatable string with the self.tr() function.
         """
-        return QCoreApplication.translate('ExportMapsProcessingAlgorithm', string)
+        return QCoreApplication.translate('LoadComposerTemplatesAlgorithm', string)
 
     def createInstance(self):
-        return ExportMapsProcessingAlgorithm()
+        return LoadComposerTemplatesAlgorithm()
