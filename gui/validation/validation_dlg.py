@@ -22,21 +22,18 @@
  ***************************************************************************/
 """
 import math
-from typing import Optional
 
-from qgis.utils import plugins
 from qgis.PyQt import QtWidgets
 from qgis.PyQt.Qt import QVariant
-from qgis.core import QgsFieldProxyModel, QgsMapLayerProxyModel, QgsTask, QgsProcessingContext
+from qgis.core import QgsFieldProxyModel, QgsMapLayerProxyModel, QgsProcessingContext
 
 from ...core.constants import VALIDATION_FIELDS, QGIS_TOC_GROUPS
 from ...core.services.system_service import SystemService
-from ...core.tools.algorithm_runner import AlgorithmRunner
-from ...core.services.message_service import MessageService, UserFeedback
+from ...core.algorithms.algorithm_runner import AlgorithmRunner
+from ...core.services.message_service import UserFeedback
 from .validation_dlg_base import Ui_Dialog
 from ..settings.options_settings_dlg import OptionsSettingsPage
 from ...core.services.layer_service import LayerService
-from ...core.services.widget_service import WidgetService
 
 
 class SamplingValidation(QtWidgets.QDialog, Ui_Dialog):

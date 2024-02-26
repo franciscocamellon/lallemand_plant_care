@@ -29,15 +29,12 @@ from qgis.core import (
     Qgis,
     QgsProcessingContext
 )
-from qgis.gui import QgisInterface
 from qgis.utils import iface
 
-from ..constants import QGIS_TOC_GROUPS
 from ..services.layer_service import LayerService
 from ..services.message_service import UserFeedback
 from ..services.report_service import ReportService
 from ..services.system_service import SystemService
-from ..tools.algorithm_runner import AlgorithmRunner
 
 
 class ReportTask(QgsTask):

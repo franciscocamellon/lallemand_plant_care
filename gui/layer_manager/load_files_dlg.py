@@ -30,7 +30,7 @@ from ...core.services.layer_service import LayerService
 from ...core.services.message_service import UserFeedback
 from ...core.services.system_service import SystemService
 from ...core.services.widget_service import WidgetService
-from ...core.tools.algorithm_runner import AlgorithmRunner
+from ...core.algorithms.algorithm_runner import AlgorithmRunner
 
 
 class LoadFiles(QtWidgets.QDialog, Ui_LoadFilesDialogBase):

@@ -141,6 +141,38 @@ class AlgorithmRunner(QObject):
         output = processing.run("native:pixelstopoints", parameters, context=context, feedback=feedback)
         return self._getLayerFromContext(output, context, field='OUTPUT')
 
+    @staticmethod
+    def runRMSE(layer, yieldField, errorField, context=None, feedback=None):
+        parameters = {
+            'VALIDATION_LAYER': layer,
+            'YIELD_FIELD': yieldField,
+            'ERROR_FIELD': errorField
+        }
+        return processing.run("lpc:rmse", parameters, context=context, feedback=feedback)
+
+    @staticmethod
+    def runFilterTreatments(layer, yieldField, t1output, t2output, context=None, feedback=None):
+
+        parameters = {
+            'YIELD_FILTERED_LAYER': layer,
+            'TREATMENT_FIELD': yieldField,
+            'TREATMENT_NAMES': [0, 1],
+            'T1_OUTPUT': t1output,
+            'T2_OUTPUT': t2output
+        }
+        return processing.run("lpc:filtertreatments", parameters, context=context, feedback=feedback)
+
+    @staticmethod
+    def runSimpleSample(layer, context=None, feedback=None):
+        parameters = {
+            'TREATMENT_FILTERED_LAYER': layer,
+            'SAMPLE_VALUE': 80,
+            'COMPLEMENTARY_VALUE': 20,
+            'SAMPLE_OUTPUT': 'TEMPORARY_OUTPUT',
+            'COMPLEMENTARY_OUTPUT': 'TEMPORARY_OUTPUT'
+        }
+        return processing.run("lpc:simplerandomsampling", parameters, context=context, feedback=feedback)
+
     def runLoadComposerTemplates(self, project):
         layers = project.instance().mapLayers().values()
         contour = self.layerService.filterByLayerName(list(layers), ['_contour_'], inverse=True)
@@ -159,5 +191,25 @@ class AlgorithmRunner(QObject):
             'OUTPUT': os.path.join(project.homePath(), '05_Results', '03_Maps')
         }
         dialog = createAlgorithmDialog('lpc:exportmaps', parameters)
+        dialog.show()
+        dialog.exec_()
+
+    def runCreateReport(self, parameters, project):
+        parameters['OUTPUT'] = os.path.join(project.homePath(), '05_Results')
+        dialog = createAlgorithmDialog('lpc:createreport', parameters)
+        dialog.show()
+        dialog.exec_()
+
+    @staticmethod
+    def runCreateSampleLayers(parameters=None):
+        if not parameters:
+            parameters = {
+                'YIELD_FILTERED_LAYER': 'T1_T2_total',
+                'TREATMENT_FIELD': 'Traitement',
+                'YIELD_FIELD': 'Prod_ha_h_',
+                'OUTPUT': 'TEMPORARY_OUTPUT'
+            }
+
+        dialog = createAlgorithmDialog('lpc:createsamplelayers', parameters)
         dialog.show()
         dialog.exec_()

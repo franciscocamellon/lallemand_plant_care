@@ -36,7 +36,7 @@ from ..constants import QGIS_TOC_GROUPS
 from ..services.layer_service import LayerService
 from ..services.message_service import UserFeedback
 from ..services.system_service import SystemService
-from ..tools.algorithm_runner import AlgorithmRunner
+from ..algorithms.algorithm_runner import AlgorithmRunner
 from ...gui.settings.options_settings_dlg import OptionsSettingsPage
 
 iface: QgisInterface
@@ -85,7 +85,7 @@ class SamplingTask(QgsTask):
 
                     for percent in [80, 20]:
 
-                        percentFeatures = self.layerService.getPercentualFeaturesById(selectedFeaturesLayer, percent)
+                        percentFeatures, comp = self.layerService.getPercentualFeaturesById(selectedFeaturesLayer, percent)
 
                         if percent == 80:
                             percentLayerName = f'{treatment}_{percent}_perc'

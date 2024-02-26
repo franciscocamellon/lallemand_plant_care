@@ -36,7 +36,7 @@ from ..constants import QGIS_TOC_GROUPS
 from ..services.layer_service import LayerService
 from ..services.message_service import UserFeedback
 from ..services.system_service import SystemService
-from ..tools.algorithm_runner import AlgorithmRunner
+from ..algorithms.algorithm_runner import AlgorithmRunner
 
 iface: QgisInterface
 

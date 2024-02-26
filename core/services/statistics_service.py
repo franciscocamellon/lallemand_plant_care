@@ -21,41 +21,14 @@
  *                                                                         *
  ***************************************************************************/
 """
-import os.path
-import re
-from scipy.stats import f_oneway
-import pandas as pd
 import numpy as np
-from docx import Document
+import pandas as pd
+from scipy.stats import f_oneway
 
-from qgis.core import (
-    QgsProject,
-    QgsField,
-    QgsFields,
-    QgsVectorLayer,
-    QgsRasterLayer,
-    QgsFeature,
-    QgsGeometry,
-    QgsPointXY,
-    QgsLayerTreeGroup,
-    QgsLayerTreeLayer,
-    QgsCoordinateTransform,
-    QgsVectorFileWriter,
-    QgsCoordinateTransformContext,
-    QgsWkbTypes,
-    QgsFeatureRequest,
-    QgsExpression
-)
-from qgis.PyQt.QtWidgets import QMessageBox, QFileDialog
-from qgis.PyQt.Qt import QVariant
-
-from .plot_service import PlotterService
-from ...gui.settings.options_settings_dlg import OptionsSettingsPage
-from .message_service import MessageService
-from .system_service import SystemService
 from .layer_service import LayerService
-from ..constants import VALIDATION_FIELDS, GAIN_SURFACE_DATA, STATISTICS_INTERVALS, STATISTICS_INTERVAL
-from ..tools.algorithm_runner import AlgorithmRunner
+from .message_service import MessageService
+from ..constants import GAIN_SURFACE_DATA, STATISTICS_INTERVAL
+from ...gui.settings.options_settings_dlg import OptionsSettingsPage
 
 
 class StatisticsService:

@@ -18,8 +18,8 @@
         <file>icons/verified.png</file>
         <file>icons/maps.png</file>
         <file>icons/export_layout.png</file>
-        <file>icons/export_layout1.png</file>
         <file>icons/load_layout.png</file>
-        <file>icons/load_layout1.png</file>
+        <file>icons/sample.png</file>
+        <file>icons/dropper.png</file>
     </qresource>
 </RCC>

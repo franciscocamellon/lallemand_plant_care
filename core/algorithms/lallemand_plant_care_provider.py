@@ -26,10 +26,16 @@ import os
 from qgis.core import QgsProcessingProvider
 from qgis.PyQt.QtGui import QIcon
 
-from .algorithms.export_maps_algorithm import ExportMapsProcessingAlgorithm
-from .algorithms.load_composer_templates import LoadComposerTemplatesAlgorithm
-from .algorithms.report_algorithm import ReportProcessingAlgorithm
-from .algorithms.sampling_algorithm import SamplingProcessingAlgorithm
+from .analysis.create_sample_layers_algorithm import CreateSampleLayersProcessingAlgorithm
+from .analysis.filter_treatments_algorithm import FilterTreatmentProcessingAlgorithm
+from .analysis.simple_sampling_algorithm import SamplingProcessingAlgorithm
+from .graphs.histogram_graph_algorithm import HistogramGraphProcessingAlgorithm
+from .rmse.calculate_error_algorithm import CalculateErrorProcessingAlgorithm
+from .maps.export_maps_algorithm import ExportMapsProcessingAlgorithm
+from .maps.load_composer_templates import LoadComposerTemplatesAlgorithm
+from .report.presentation_algorithm import PresentationProcessingAlgorithm
+from .report.report_algorithm import ReportProcessingAlgorithm
+from .rmse.rmse_algorithm import RMSEProcessingAlgorithm
 
 
 class LPCAlgorithmProvider(QgsProcessingProvider):
@@ -51,8 +57,14 @@ class LPCAlgorithmProvider(QgsProcessingProvider):
         """
         Loads all algorithms belonging to this provider.
         """
+        self.addAlgorithm(FilterTreatmentProcessingAlgorithm())
         self.addAlgorithm(SamplingProcessingAlgorithm())
+        self.addAlgorithm(CreateSampleLayersProcessingAlgorithm())
+        self.addAlgorithm(RMSEProcessingAlgorithm())
+        self.addAlgorithm(CalculateErrorProcessingAlgorithm())
+        self.addAlgorithm(HistogramGraphProcessingAlgorithm())
         self.addAlgorithm(ReportProcessingAlgorithm())
+        self.addAlgorithm(PresentationProcessingAlgorithm())
         self.addAlgorithm(ExportMapsProcessingAlgorithm())
         self.addAlgorithm(LoadComposerTemplatesAlgorithm())
 

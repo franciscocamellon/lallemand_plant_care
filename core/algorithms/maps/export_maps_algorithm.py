@@ -23,73 +23,37 @@
 """
 
 import os.path
-from qgis.core import QgsProject
+
 from qgis.PyQt.QtCore import QCoreApplication
-from qgis.PyQt.QtGui import QImageWriter
-from qgis.core import (QgsProcessingAlgorithm,
+from qgis.core import (QgsProject,
+                       QgsProcessingAlgorithm,
                        QgsProcessingMultiStepFeedback,
                        QgsProcessingOutputNumber,
                        QgsProcessingParameterEnum,
                        QgsProcessingParameterFile,
                        QgsProcessingParameterNumber,
-                      )
-from processing.core.ProcessingConfig import ProcessingConfig
+                       )
 
-from ...constants import QGIS_TOC_GROUPS
-from ...factories.postgres_factory import PostgresFactory
 from ...services.composer_service import ComposerService
-from ...services.layer_service import LayerService
 from ...services.message_service import MessageService
-from ...services.plot_service import PlotterService
-from ...services.report_service import ReportService
-from ...services.statistics_service import StatisticsService
-from ...services.system_service import SystemService
-from ...tools.algorithm_runner import AlgorithmRunner
-from ....gui.settings.options_settings_dlg import OptionsSettingsPage
 
 
 class ExportMapsProcessingAlgorithm(QgsProcessingAlgorithm):
-    """
-    This is an example algorithm that takes a vector layer and
-    creates a new identical one.
-
-    It is meant to be used as an example of how to create your own
-    algorithms and explain methods and variables used to do it. An
-    algorithm like this will be available in all elements, and there
-    is not need for additional work.
-
-    All Processing algorithms should extend the QgsProcessingAlgorithm
-    class.
-    """
-
-    # Constants used to refer to parameters and outputs. They will be
-    # used when calling the algorithm from another algorithm, or when
-    # calling from the QGIS console.
 
     LAYOUTS = 'LAYOUTS'
     EXTENSION = 'EXTENSION'
     RESOLUTION = 'RESOLUTION'
     OUTPUT = 'OUTPUT'
-    EXPORTED_LAYOUTS = 'EXPORTED_LAYOUTS'
 
     def __init__(self):
         super().__init__()
-        self.layerService = LayerService()
-        self.postgresFactory = PostgresFactory()
-        self.statisticsService = StatisticsService()
-        self.reportService = ReportService()
-        self.systemService = SystemService()
-        self.plotService = PlotterService()
         self.messageService = MessageService()
 
     def initAlgorithm(self, config=None):
-        """
-        Here we define the inputs and output of the algorithm, along
-        with some other properties.
-        """
 
-        self.layoutList = sorted([composerLayout.name() for composerLayout in QgsProject.instance().layoutManager().printLayouts()],
-                                 key=str.lower)
+        self.layoutList = sorted(
+            [composerLayout.name() for composerLayout in QgsProject.instance().layoutManager().printLayouts()],
+            key=str.lower)
         self.addParameter(
             QgsProcessingParameterEnum(
                 self.LAYOUTS,
@@ -98,15 +62,6 @@ class ExportMapsProcessingAlgorithm(QgsProcessingAlgorithm):
                 allowMultiple=True
             )
         )
-
-        # self.addParameter(
-        #     QgsProcessingParameterEnum(
-        #         self.EXTENSION,
-        #         self.tr('Extension for exported maps'),
-        #         options=self.listFormats,
-        #         defaultValue=ProcessingConfig.getSetting('DEFAULT_EXPORT_EXTENSION')
-        #     )
-        # )
 
         self.addParameter(
             QgsProcessingParameterNumber(
@@ -125,17 +80,7 @@ class ExportMapsProcessingAlgorithm(QgsProcessingAlgorithm):
             )
         )
 
-        self.addOutput(
-            QgsProcessingOutputNumber(
-                self.EXPORTED_LAYOUTS,
-                self.tr('Number of layouts exported')
-            )
-        )
-
     def processAlgorithm(self, parameters, context, feedback):
-        """
-        Here is where the processing itself takes place.
-        """
 
         outputFolder = self.parameterAsFile(parameters, self.OUTPUT, context)
         layoutIds = self.parameterAsEnums(parameters, self.LAYOUTS, context)

@@ -23,52 +23,23 @@
 """
 
 import os.path
-from qgis.core import QgsProject
-from qgis.PyQt.QtCore import QCoreApplication
-from qgis.PyQt.QtGui import QImageWriter
-from qgis.core import (
-    QgsProcessing,
-    QgsProcessingAlgorithm,
-                       QgsProcessingMultiStepFeedback,
-                       QgsProcessingOutputNumber,
-                       QgsProcessingParameterEnum,
-                       QgsProcessingParameterFile,
-                       QgsProcessingParameterNumber,
-QgsProcessingParameterFeatureSource,
-QgsProcessingParameterVectorLayer
-                       )
-from processing.core.ProcessingConfig import ProcessingConfig
 
-from ...constants import QGIS_TOC_GROUPS, COMPOSER_LAYERS
-from ...factories.postgres_factory import PostgresFactory
+from qgis.PyQt.QtCore import QCoreApplication
+from qgis.core import (QgsProject,
+                       QgsProcessing,
+                       QgsProcessingAlgorithm,
+                       QgsProcessingMultiStepFeedback,
+                       QgsProcessingParameterEnum,
+                       QgsProcessingParameterVectorLayer
+                       )
+
+from ...constants import COMPOSER_LAYERS
 from ...services.composer_service import ComposerService
 from ...services.layer_service import LayerService
 from ...services.message_service import MessageService
-from ...services.plot_service import PlotterService
-from ...services.report_service import ReportService
-from ...services.statistics_service import StatisticsService
-from ...services.system_service import SystemService
-from ...tools.algorithm_runner import AlgorithmRunner
-from ....gui.settings.options_settings_dlg import OptionsSettingsPage
 
 
 class LoadComposerTemplatesAlgorithm(QgsProcessingAlgorithm):
-    """
-    This is an example algorithm that takes a vector layer and
-    creates a new identical one.
-
-    It is meant to be used as an example of how to create your own
-    algorithms and explain methods and variables used to do it. An
-    algorithm like this will be available in all elements, and there
-    is not need for additional work.
-
-    All Processing algorithms should extend the QgsProcessingAlgorithm
-    class.
-    """
-
-    # Constants used to refer to parameters and outputs. They will be
-    # used when calling the algorithm from another algorithm, or when
-    # calling from the QGIS console.
 
     INPUT_LAYERS = 'INPUT_LAYERS'
     TRIAL_BOUNDS_LAYER = 'TRIAL_BOUNDS_LAYER'
@@ -77,18 +48,9 @@ class LoadComposerTemplatesAlgorithm(QgsProcessingAlgorithm):
     def __init__(self):
         super().__init__()
         self.layerService = LayerService()
-        self.postgresFactory = PostgresFactory()
-        self.statisticsService = StatisticsService()
-        self.reportService = ReportService()
-        self.systemService = SystemService()
-        self.plotService = PlotterService()
         self.messageService = MessageService()
 
     def initAlgorithm(self, config=None):
-        """
-        Here we define the inputs and output of the algorithm, along
-        with some other properties.
-        """
 
         self.project = QgsProject.instance()
 
@@ -115,9 +77,6 @@ class LoadComposerTemplatesAlgorithm(QgsProcessingAlgorithm):
         )
 
     def processAlgorithm(self, parameters, context, feedback):
-        """
-        Here is where the processing itself takes place.
-        """
 
         layerIds = self.parameterAsEnums(parameters, self.INPUT_LAYERS, context)
         trialBoundsLayer = self.parameterAsVectorLayer(parameters, self.TRIAL_BOUNDS_LAYER, context)
@@ -126,7 +85,6 @@ class LoadComposerTemplatesAlgorithm(QgsProcessingAlgorithm):
         progressPerFeature = 100.0 / totalFeatures if totalFeatures else 0
 
         composerService = ComposerService(self.project)
-        print([self.filteredLayers[layerId] for layerId in layerIds])
         layerLayoutMapping = composerService.mapLayersToLayouts([self.filteredLayers[layerId] for layerId in layerIds])
 
         multiFeedback = QgsProcessingMultiStepFeedback(totalFeatures, feedback)
@@ -169,7 +127,7 @@ class LoadComposerTemplatesAlgorithm(QgsProcessingAlgorithm):
         Returns the translated algorithm name, which should be used for any
         user-visible display of the algorithm name.
         """
-        return self.tr('Load Composer Templates')
+        return self.tr('Load composer templates')
 
     def group(self):
         """

@@ -21,6 +21,7 @@
  *                                                                         *
  ***************************************************************************/
 """
+import math
 import os
 import random
 import re
@@ -52,6 +53,7 @@ from qgis.core import (
     QgsRasterBandStats,
     QgsRendererRange,
     QgsSymbol)
+from qgis.core.additions.edit import edit
 
 from .message_service import MessageService
 from .plot_service import PlotterService
@@ -169,6 +171,27 @@ class LayerService:
         return filteredLayers
 
     @staticmethod
+    def filterExactLayerName(layers, filterString, inverse=False):
+        filteredLayers = []
+        regexPattern = '|'.join(rf'\b{re.escape(s)}\b' for s in filterString)
+        pattern = re.compile(regexPattern)
+
+        for layer in layers:
+            if inverse and pattern.search(layer.name()):
+                filteredLayers.append(layer)
+            elif not inverse and not pattern.search(layer.name()):
+                filteredLayers.append(layer)
+
+        return filteredLayers
+
+    def filterVectorLayerByName(self, layers, filterString, inverse=False):
+        filteredLayers = self.filterExactLayerName(layers, filterString, inverse=inverse)
+
+        for layer in filteredLayers:
+            if layer.type() == 0:
+                return layer
+
+    @staticmethod
     def filterByFieldName(layer, filterString, inverse=False):
         filteredFields = QgsFields()
         regexPattern = '|'.join(map(re.escape, filterString))
@@ -192,19 +215,31 @@ class LayerService:
         return fieldsDictionary
 
     @staticmethod
-    def getFeaturesByRequest(layer, expression):
+    def getFeaturesByRequest(layer, expression, featureList=False):
         request = QgsExpression(expression)
-        return layer.getFeatures(QgsFeatureRequest(request))
+        if featureList:
+            return [feature for feature in layer.getFeatures(QgsFeatureRequest(request))]
+        else:
+            return layer.getFeatures(QgsFeatureRequest(request))
 
     @staticmethod
-    def getPercentualFeaturesById(layer, value):
-        ids = layer.allFeatureIds()
-        value = int(round(value / 100.0, 4) * len(ids))
-        randomSelection = random.sample(ids, value)
+    def getPercentualFeaturesById(layer, value, featureList=False):
+        idsList = layer.allFeatureIds()
+        totalFeatures = len(idsList)
+        selectedCount = int(round(value / 100.0, 4) * totalFeatures)
+        randomSelection = random.sample(idsList, selectedCount)
 
         layer.selectByIds(randomSelection)
+        if featureList:
+            selectedFeatures = [feature for feature in layer.getSelectedFeatures()]
+            layer.invertSelection()
+            complementaryFeatures = [feature for feature in layer.getSelectedFeatures()]
+        else:
+            selectedFeatures = layer.getSelectedFeatures()
+            layer.invertSelection()
+            complementaryFeatures = layer.getSelectedFeatures()
 
-        return layer.getSelectedFeatures()
+        return selectedFeatures, complementaryFeatures
 
     @staticmethod
     def _createQgsField(fieldName, fieldType):
@@ -660,3 +695,74 @@ class LayerService:
             renderer = self.createSamplingLayerSymbology(layer, fieldName)
         layer.setRenderer(renderer)
         layer.triggerRepaint()
+
+    @staticmethod
+    def updateFeatures(layer, field, estimatedField, feedback):
+
+        total = 100.0 / layer.featureCount() if layer.featureCount() else 0
+        layer.startEditing()
+
+        for index, feature in enumerate(layer.getFeatures()):
+            feature[VALIDATION_FIELDS[0]] = feature[estimatedField]
+            layer.updateFeature(feature)
+            if bool(feature[VALIDATION_FIELDS[0]]):
+                feature[VALIDATION_FIELDS[1]] = feature[field] - feature[VALIDATION_FIELDS[0]]
+                feature[VALIDATION_FIELDS[2]] = math.pow(feature[VALIDATION_FIELDS[1]], 2)
+                layer.updateFeature(feature)
+            feedback.setProgress(int(index * total))
+        layer.commitChanges()
+        layer.triggerRepaint()
+
+        return layer
+
+    @staticmethod
+    def updateRmseField(layer, estimatedField, rmse, percentualRmse, feedback):
+
+        total = 100.0 / layer.featureCount() if layer.featureCount() else 0
+        layer.startEditing()
+
+        for index, feature in enumerate(layer.getFeatures()):
+            if isinstance(feature[estimatedField], QVariant):
+                pass
+            else:
+                feature[VALIDATION_FIELDS[3]] = rmse
+                feature[VALIDATION_FIELDS[4]] = percentualRmse
+                layer.updateFeature(feature)
+            feedback.setProgress(int(index * total))
+
+        layer.commitChanges()
+        layer.triggerRepaint()
+
+        return layer
+
+    @staticmethod
+    def deleteFeatures(layer):
+        with edit(layer):
+            for feature in layer.getFeatures():
+                layer.deleteFeature(feature.id())
+
+    @staticmethod
+    def updateOutputLayer(originalLayer, modifiedLayer):
+        provider = originalLayer.dataProvider()
+        originalLayer.selectAll()
+        originalLayer.startEditing()
+        originalLayer.deleteSelectedFeatures()
+        featureList = [feature for feature in modifiedLayer.getFeatures()]
+        provider.addFeatures(featureList)
+        originalLayer.commitChanges()
+        originalLayer.triggerRepaint()
+        originalLayer.invertSelection()
+
+    @staticmethod
+    def _updateOutputLayer(originalLayer, modifiedLayer):
+        with edit(originalLayer):
+            # Delete all features in the originalLayer
+            for feature in originalLayer.getFeatures():
+                originalLayer.deleteFeature(feature.id())
+
+            # Use addFeatures with a generator expression
+            provider = originalLayer.dataProvider()
+            provider.addFeatures(feature for feature in modifiedLayer.getFeatures())
+
+        # Trigger repaint outside the editing block
+        originalLayer.triggerRepaint()

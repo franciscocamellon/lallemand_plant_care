@@ -21,13 +21,11 @@
  *                                                                         *
  ***************************************************************************/
 """
-import os.path
 
-from qgis.PyQt.QtCore import Qt, pyqtSlot
-from qgis.PyQt.QtWidgets import QWidget, QToolButton, QMenu, QAction
+from qgis.PyQt.QtCore import pyqtSlot
+from qgis.PyQt.QtWidgets import QWidget
 from qgis.core import QgsMapLayer
 
-from ..core.tools.algorithm_runner import AlgorithmRunner
 from .filter.filtering_dlg import FilteringPoints
 from .geostatistics_trial.geostatistics_trial import GeostatisticsTrial
 from .kriging.kriging_dlg import OrdinaryKriging
@@ -38,11 +36,9 @@ from .report.report_dlg import StatisticsReport
 from .toolbar.toolbar_form_base import Ui_Form
 from .treatment.treatment_polygons_dlg import TreatmentPolygons
 from .validation.validation_dlg import SamplingValidation
+from ..core.algorithms.algorithm_runner import AlgorithmRunner
 from ..core.constants import QGIS_TOC_GROUPS
 from ..core.services.layer_service import LayerService
-from ..core.tools.composer_layout_runner import ComposerLayoutRunner
-from ..core.tools.export_layout_runner import ExportLayoutRunner
-from ..core.services.message_service import UserFeedback
 
 
 class ToolbarManager(QWidget, Ui_Form):
@@ -52,7 +48,7 @@ class ToolbarManager(QWidget, Ui_Form):
         self.setupUi(self)
         self.iface = iface
         self.toolbar = toolbar
-        self.actions = []
+        self.actions = list()
         self.layerService = LayerService()
         self.algRunner = AlgorithmRunner()
         self.splitter.hide()
@@ -68,26 +64,10 @@ class ToolbarManager(QWidget, Ui_Form):
         self.reportPushButton.clicked.connect(self.getReport)
         self.mapsPushButton.clicked.connect(self.composer)
         self.exportMapPushButton.clicked.connect(self.exportMaps)
+        self.samplingPushButton.clicked.connect(self.sampling)
 
-    def createToolButton(self, parent, text):
-        """
-        Creates a tool button (pop up menu)
-        """
-        button = QToolButton(parent)
-        button.setObjectName(text)
-        button.setToolButtonStyle(Qt.ToolButtonIconOnly)
-        button.setPopupMode(QToolButton.MenuButtonPopup)
-        parent.addWidget(button)
-        self.actions.append(button)
-        return button
-
-    @staticmethod
-    def initGui():
-        return True
-
-    @staticmethod
-    def unload():
-        return True
+    def unload(self):
+        pass
 
     @pyqtSlot(bool, name="on_showToolbarPushButton_toggled")
     def toggleToolbar(self, toggled=None):
@@ -194,6 +174,7 @@ class ToolbarManager(QWidget, Ui_Form):
     def getReport(self):
         project = self.layerService.checkForSavedProject()
         if project:
+            # StatisticsReport(self.iface, project).runReport()
             dlg = StatisticsReport(self.iface, project)
             dlg.show()
             result = dlg.exec_()
@@ -209,3 +190,8 @@ class ToolbarManager(QWidget, Ui_Form):
         project = self.layerService.checkForSavedProject()
         if project:
             self.algRunner.runExportMaps(project)
+
+    def sampling(self):
+        project = self.layerService.checkForSavedProject()
+        if project:
+            self.algRunner.runCreateSampleLayers()
