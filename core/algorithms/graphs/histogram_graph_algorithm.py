@@ -28,6 +28,7 @@ from qgis.PyQt.QtCore import QCoreApplication
 from qgis.core import (QgsProject,
                        QgsFeatureSink,
                        QgsProcessing,
+QgsProcessingParameterFile,
                        QgsProcessingParameterField,
                        QgsProcessingAlgorithm,
                        QgsProcessingParameterVectorLayer,
@@ -41,8 +42,7 @@ from ....gui.settings.options_settings_dlg import OptionsSettingsPage
 
 
 class HistogramGraphProcessingAlgorithm(QgsProcessingAlgorithm):
-    YIELD_FILTERED_LAYER = 'YIELD_FILTERED_LAYER'
-    TREATMENT_FIELD = 'TREATMENT_FIELD'
+    YIELD_LAYER = 'YIELD_FILTERED_LAYER'
     YIELD_FIELD = 'YIELD_FIELD'
     OUTPUT = 'OUTPUT'
 
@@ -64,7 +64,7 @@ class HistogramGraphProcessingAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterVectorLayer(
                 self.YIELD_FILTERED_LAYER,
-                self.tr('Yield filtered layer'),
+                self.tr('Layer to calculate statistics'),
                 [QgsProcessing.TypeVectorPoint],
                 optional=False
             )
@@ -72,8 +72,8 @@ class HistogramGraphProcessingAlgorithm(QgsProcessingAlgorithm):
 
         self.addParameter(
             QgsProcessingParameterField(
-                self.TREATMENT_FIELD,
-                self.tr('Treatment field to filter'),
+                self.YIELD_FIELD,
+                self.tr('Field with histogram values'),
                 parentLayerParameterName=self.YIELD_FILTERED_LAYER,
                 type=QgsProcessingParameterField.Any,
                 allowMultiple=False,
@@ -82,13 +82,10 @@ class HistogramGraphProcessingAlgorithm(QgsProcessingAlgorithm):
         )
 
         self.addParameter(
-            QgsProcessingParameterField(
-                self.YIELD_FIELD,
-                self.tr('Treatment field to filter'),
-                parentLayerParameterName=self.YIELD_FILTERED_LAYER,
-                type=QgsProcessingParameterField.Any,
-                allowMultiple=False,
-                optional=False
+            QgsProcessingParameterFile(
+                self.OUTPUT,
+                self.tr('Output folder where to save maps'),
+                QgsProcessingParameterFile.Folder
             )
         )
 
@@ -98,44 +95,19 @@ class HistogramGraphProcessingAlgorithm(QgsProcessingAlgorithm):
         """
 
         yieldLayer = self.parameterAsVectorLayer(parameters, self.YIELD_FILTERED_LAYER, context)
-        treatmentField = self.parameterAsFields(parameters, self.TREATMENT_FIELD, context)
         yieldField = self.parameterAsFields(parameters, self.YIELD_FIELD, context)
+        outputFolder = self.parameterAsFile(parameters, self.OUTPUT, context)
 
         filePath = self.project.homePath()
         multiFeedback = QgsProcessingMultiStepFeedback(3, feedback)
         multiFeedback.pushInfo(self.tr(f'Initializing filtering...\n'))
 
-        treatmentsDict = self.algRunner.runFilterTreatments(yieldLayer, treatmentField[0], 'TEMPORARY_OUTPUT', 'TEMPORARY_OUTPUT', context, feedback)
-
-        for name, layer in treatmentsDict.items():
-            treatmentPath = str()
-            treatment = str()
-            if name == 'T1_OUTPUT':
-                treatment = 'T1'
-                treatmentPath = os.path.join(filePath, '00_Data', '02_Sampling', f'{treatment}_total.shp')
-            elif name == 'T2_OUTPUT':
-                treatment = 'T2'
-                treatmentPath = os.path.join(filePath, '00_Data', '02_Sampling', f'{treatment}_total.shp')
-
-            self.layerService.saveVectorLayer(layer, treatmentPath)
-            loadedLayer = self.layerService.loadShapeFile(QGIS_TOC_GROUPS[2], treatmentPath)
-            self.layerService.applySymbology(loadedLayer, yieldField[0])
-
-            sampleDict = self.algRunner.runSimpleSample(layer, context, feedback)
-
-            for key, sampleLayer in sampleDict.items():
-                group = QGIS_TOC_GROUPS[2] if key == 'SAMPLE_OUTPUT' else QGIS_TOC_GROUPS[4]
-                treatmentSuffix = '80_perc' if key == 'SAMPLE_OUTPUT' else 'validation'
-                middlePath = os.path.join('00_Data', '02_Sampling') if key == 'SAMPLE_OUTPUT' else '02_Validation'
-                samplePath = os.path.join(filePath, middlePath, f'{treatment}_{treatmentSuffix}.shp')
-
-                self.layerService.saveVectorLayer(sampleLayer, samplePath)
-
-                if key == 'SAMPLE_OUTPUT':
-                    loadedLayer = self.layerService.loadShapeFile(group, samplePath)
-                    self.layerService.applySymbology(loadedLayer, yieldField[0])
-                else:
-                    self.layerService.loadShapeFile(group, samplePath)
+        histogramValues = [feature[yieldField[0]] for feature in yieldLayer.getFeatures()]
+        dataTable = self.getHistogramParameters(yieldLayer, yieldField)
+        self.plotterService.createFrequencyHistogram(histogramValues, dataTable,
+                                                     yieldLayer.name(), exportPng=True, path=outputFolder)
+        self.plotterService.createVFrequencyHistogram(histogramValues, dataTable,
+                                                      yieldLayer.name(), exportPng=True, path=outputFolder)
 
         return {self.OUTPUT: None}
 
@@ -149,6 +121,19 @@ class HistogramGraphProcessingAlgorithm(QgsProcessingAlgorithm):
 
             sink.addFeature(feature, QgsFeatureSink.FastInsert)
             feedback.setProgress(int(current * total))
+
+    def getHistogramParameters(self, layer, field):
+        statisticFields = ['COUNT', 'MIN', 'MAX', 'SUM', 'MEAN', 'STD_DEV', 'CV']
+        statisticValues = AlgorithmRunner().runBasicStatisticsForFields(layer, field)
+        tableData = list()
+
+        for statistic in statisticFields:
+            if statistic == 'COUNT':
+                tableData.append([f'{float(statisticValues[statistic]):.0f}'])
+            else:
+                tableData.append([f'{float(statisticValues[statistic]):.2f}'])
+
+        return tableData
 
     def name(self):
         """
@@ -172,7 +157,7 @@ class HistogramGraphProcessingAlgorithm(QgsProcessingAlgorithm):
         Returns the name of the group this algorithm belongs to. This string
         should be localised.
         """
-        return self.tr('Analysis')
+        return self.tr('Graphs')
 
     def groupId(self):
         """
@@ -182,7 +167,7 @@ class HistogramGraphProcessingAlgorithm(QgsProcessingAlgorithm):
         contain lowercase alphanumeric characters only and no spaces or other
         formatting characters.
         """
-        return 'analysis'
+        return 'graphs'
 
     def shortHelpString(self):
         """
