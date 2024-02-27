@@ -84,7 +84,7 @@ class CreateSampleLayersProcessingAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterField(
                 self.YIELD_FIELD,
-                self.tr('Treatment field to filter'),
+                self.tr('Yield field to histogram'),
                 parentLayerParameterName=self.YIELD_FILTERED_LAYER,
                 type=QgsProcessingParameterField.Any,
                 allowMultiple=False,
@@ -102,6 +102,7 @@ class CreateSampleLayersProcessingAlgorithm(QgsProcessingAlgorithm):
         yieldField = self.parameterAsFields(parameters, self.YIELD_FIELD, context)
 
         filePath = self.project.homePath()
+        histogramPath = os.path.join(filePath, '05_Results', '01_Histograms')
         multiFeedback = QgsProcessingMultiStepFeedback(3, feedback)
         multiFeedback.pushInfo(self.tr(f'Initializing filtering...\n'))
 
@@ -118,8 +119,9 @@ class CreateSampleLayersProcessingAlgorithm(QgsProcessingAlgorithm):
                 treatmentPath = os.path.join(filePath, '00_Data', '02_Sampling', f'{treatment}_total.shp')
 
             self.layerService.saveVectorLayer(layer, treatmentPath)
-            loadedLayer = self.layerService.loadShapeFile(QGIS_TOC_GROUPS[2], treatmentPath)
-            self.layerService.applySymbology(loadedLayer, yieldField[0])
+            totalLayer = self.layerService.loadShapeFile(QGIS_TOC_GROUPS[2], treatmentPath)
+            self.layerService.applySymbology(totalLayer, yieldField[0])
+            self.algRunner.runHistogramFromAttribute(totalLayer, yieldField[0], histogramPath, context, feedback)
 
             sampleDict = self.algRunner.runSimpleSample(layer, context, feedback)
 
@@ -131,9 +133,12 @@ class CreateSampleLayersProcessingAlgorithm(QgsProcessingAlgorithm):
 
                 self.layerService.saveVectorLayer(sampleLayer, samplePath)
 
+
                 if key == 'SAMPLE_OUTPUT':
-                    loadedLayer = self.layerService.loadShapeFile(group, samplePath)
-                    self.layerService.applySymbology(loadedLayer, yieldField[0])
+                    percentualLayer = self.layerService.loadShapeFile(group, samplePath)
+                    self.algRunner.runHistogramFromAttribute(percentualLayer, yieldField[0], histogramPath, context,
+                                                             feedback)
+                    self.layerService.applySymbology(percentualLayer, yieldField[0])
                 else:
                     self.layerService.loadShapeFile(group, samplePath)
 

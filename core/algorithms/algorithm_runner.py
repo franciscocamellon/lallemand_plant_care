@@ -173,6 +173,15 @@ class AlgorithmRunner(QObject):
         }
         return processing.run("lpc:simplerandomsampling", parameters, context=context, feedback=feedback)
 
+    @staticmethod
+    def runHistogramFromAttribute(layer, field, path, context=None, feedback=None):
+        parameters = {
+            'YIELD_FILTERED_LAYER': layer,
+            'YIELD_FIELD': field,
+            'OUTPUT': path
+        }
+        return processing.run("lpc:histogramfromattribute", parameters, context=context, feedback=feedback)
+
     def runLoadComposerTemplates(self, project):
         layers = project.instance().mapLayers().values()
         contour = self.layerService.filterByLayerName(list(layers), ['_contour_'], inverse=True)
