@@ -144,17 +144,6 @@ class CreateSampleLayersProcessingAlgorithm(QgsProcessingAlgorithm):
 
         return {self.OUTPUT: None}
 
-    @staticmethod
-    def addToSink(features, sink, feedback):
-        total = 100.0 / len(features) if len(features) else 0
-
-        for current, feature in enumerate(features):
-            if feedback.isCanceled():
-                break
-
-            sink.addFeature(feature, QgsFeatureSink.FastInsert)
-            feedback.setProgress(int(current * total))
-
     def name(self):
         """
         Returns the algorithm name, used for identifying the algorithm. This

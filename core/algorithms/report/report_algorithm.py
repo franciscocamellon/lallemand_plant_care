@@ -23,16 +23,14 @@
 """
 import os.path
 
-from processing.gui.wrappers import WidgetWrapper
-from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtCore import QCoreApplication
 from qgis.core import (QgsProject, QgsProcessing,
                        QgsProcessingAlgorithm,
                        QgsProcessingParameterVectorLayer,
-                       QgsProcessingParameterFile,
-                       QgsProcessingParameterDefinition)
+                       QgsProcessingParameterFile)
 
-from ...constants import FETCH_ALL_TRIAL, FETCH_ONE_TRIAL, FETCH_ONE_FARMER, FETCH_ONE_CROP
+from ....gui.wrappers.trial_name_wrapper import ParameterTrialName
+from ...constants import FETCH_ONE_TRIAL, FETCH_ONE_FARMER, FETCH_ONE_CROP
 from ...factories.postgres_factory import PostgresFactory
 from ...services.layer_service import LayerService
 from ...services.report_service import ReportService
@@ -64,7 +62,12 @@ class ReportProcessingAlgorithm(QgsProcessingAlgorithm):
         Here we define the inputs and output of the algorithm, along
         with some other properties.
         """
-        self.addParameter(ParameterTrialName(self.TRIAL_NAME, description="Trial name"))
+        self.addParameter(
+            ParameterTrialName(
+                self.TRIAL_NAME,
+                description="Trial name"
+            )
+        )
 
         self.addParameter(
             QgsProcessingParameterVectorLayer(
@@ -271,63 +274,3 @@ class ReportProcessingAlgorithm(QgsProcessingAlgorithm):
 
     def createInstance(self):
         return ReportProcessingAlgorithm()
-
-
-class TrialNameWidgetWrapper(WidgetWrapper):
-    def __init__(self, *args, **kwargs):
-        super(TrialNameWidgetWrapper, self).__init__(*args, **kwargs)
-
-    def createWidget(self):
-        self.trialComboBox = QtWidgets.QComboBox()
-        PostgresFactory().fetchDataToCombobox(self.trialComboBox, FETCH_ALL_TRIAL, ['field_name'], 'id')
-        self.trialComboBox.dialogType = self.dialogType
-        return self.trialComboBox
-
-    def parentLayerChanged(self, layer=None):
-        pass
-
-    def setLayer(self, layer):
-        pass
-
-    def setValue(self, value):
-        pass
-
-    def value(self):
-        return self.trialComboBox.itemData(self.trialComboBox.currentIndex())
-
-    def postInitialize(self, wrappers):
-        pass
-
-
-class ParameterTrialName(QgsProcessingParameterDefinition):
-    def __init__(self, name, description=""):
-        super().__init__(name, description)
-
-    def clone(self):
-        copy = ParameterTrialName(self.name(), self.description())
-        return copy
-
-    def type(self):
-        return self.typeName()
-
-    @staticmethod
-    def typeName():
-        return "trialname"
-
-    def checkValueIsAcceptable(self, value, context=None):
-        return True
-
-    def metadata(self):
-        return {
-            "widget_wrapper": "lallemand_plant_care.core.provider.algorithms.report_algorithm.TrialNameWidgetWrapper"
-        }
-
-    def valueAsPythonString(self, value, context):
-        return str(value)
-
-    def asScriptCode(self):
-        raise NotImplementedError()
-
-    @classmethod
-    def fromScriptCode(cls, name, description, isOptional, definition):
-        raise NotImplementedError()

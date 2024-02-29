@@ -119,12 +119,25 @@ class ToolbarManager(QWidget, Ui_Form):
 
     def treatments(self):
         project = self.layerService.checkForSavedProject()
+
         if project:
-            dlg = TreatmentPolygons(project)
-            dlg.show()
-            result = dlg.exec_()
-            if result:
-                pass
+            layer = project.mapLayersByName('GPS_points')[0]
+            epsg = str()
+            reproject: bool() = None
+            parameters = {'GPS_POINTS_LAYER': layer,
+                          'REPROJECT': '',
+                          'CRS': '',
+                          'SORTING_FIELD': 'ID',
+                          'METHOD': 1,
+                          'BORDER_SIZE': 10,
+                          'BOUNDARY': True}
+
+            if layer and layer.crs().isGeographic():
+                crsOperations = self.layerService.getSuggestedCrs(layer)
+                reproject = True
+                epsg = crsOperations[2]
+
+            self.algRunner.runTreatmentPolygons(epsg, reproject, parameters)
 
     def filtering(self):
         project = self.layerService.checkForSavedProject()

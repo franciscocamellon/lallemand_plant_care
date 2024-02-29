@@ -105,8 +105,6 @@ class AlgorithmRunner(QObject):
         return output['OUTPUT']
 
     def runYieldMapFiltering(self, parameters, context=None, feedback=None):
-        output = QgsProcessingUtils.generateTempFilename('OUTPUT.gpkg')
-        parameters['Carte_filtree'] = 'TEMPORARY_OUTPUT'
 
         outputDict = processing.run('r:Yield_map_filtering', parameters, context=context, feedback=feedback)
         return self._getLayerFromContext(outputDict, context)
@@ -203,7 +201,8 @@ class AlgorithmRunner(QObject):
         dialog.show()
         dialog.exec_()
 
-    def runCreateReport(self, parameters, project):
+    @staticmethod
+    def runCreateReport(parameters, project):
         parameters['OUTPUT'] = os.path.join(project.homePath(), '05_Results')
         dialog = createAlgorithmDialog('lpc:createreport', parameters)
         dialog.show()
@@ -220,5 +219,15 @@ class AlgorithmRunner(QObject):
             }
 
         dialog = createAlgorithmDialog('lpc:createsamplelayers', parameters)
+        dialog.show()
+        dialog.exec_()
+
+    @staticmethod
+    def runTreatmentPolygons(epsg, reproject, parameters=None):
+
+        parameters['REPROJECT'] = reproject
+        parameters['CRS'] = QgsCoordinateReferenceSystem(epsg)
+
+        dialog = createAlgorithmDialog('lpc:treatmentpolygonsbuilder', parameters)
         dialog.show()
         dialog.exec_()
