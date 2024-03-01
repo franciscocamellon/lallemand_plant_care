@@ -21,24 +21,22 @@
  *                                                                         *
  ***************************************************************************/
 """
-import time
 from typing import Optional
 
-from qgis.PyQt import QtCore, QtWidgets
-from qgis.PyQt.QtWidgets import QMessageBox, QProgressDialog
-from qgis.core import QgsApplication, QgsMapLayerProxyModel, QgsTask
+from qgis.PyQt import QtWidgets
+from qgis.core import QgsMapLayerProxyModel, QgsTask
 
+from ...core.algorithms.algorithm_runner import AlgorithmRunner
 from .report_dlg_base import Ui_Dialog
 from ..settings.options_settings_dlg import OptionsSettingsPage
 from ...core.constants import FETCH_ALL_TRIAL, FETCH_ONE_TRIAL, FETCH_ONE_FARMER, FETCH_ONE_CROP
 from ...core.factories.postgres_factory import PostgresFactory
 from ...core.services.layer_service import LayerService
-from ...core.services.message_service import MessageService, UserFeedback
+from ...core.services.message_service import MessageService
 from ...core.services.plot_service import PlotterService
 from ...core.services.report_service import ReportService
 from ...core.services.statistics_service import StatisticsService
 from ...core.services.system_service import SystemService
-from ...core.tasks.report_task import ReportTask
 
 
 class StatisticsReport(QtWidgets.QDialog, Ui_Dialog):
@@ -156,7 +154,8 @@ class StatisticsReport(QtWidgets.QDialog, Ui_Dialog):
         }
 
         imageData = {
-            '{T1_T2_POINTS}': [self.systemService.filterByFileName(mapsPath, ['01_Points_with_measured_yield_values']), 4.32],
+            '{T1_T2_POINTS}': [self.systemService.filterByFileName(mapsPath, ['01_Points_with_measured_yield_values']),
+                               4.32],
             '{T1_POINTS}': [self.systemService.filterByFileName(mapsPath, ['02_T1_Measured_yield']), 3.13],
             '{T2_POINTS}': [self.systemService.filterByFileName(mapsPath, ['03_T2_Measured_yield']), 3.13],
             '{T1_T2_MODEL}': [self.systemService.filterByFileName(mapsPath, ['06_Model_T1_T2']), 4.32],
@@ -171,12 +170,40 @@ class StatisticsReport(QtWidgets.QDialog, Ui_Dialog):
         self.statisticsService.runStatistics(self.gainPointsLayerComboBox.currentLayer())
 
     def runReport(self):
-        self.feedback = UserFeedback(message='Creating report...', title='Trial Report')
-        reportData, tableData, imageData = self.getReportParameters()
-        self.reportService.createWordReport(reportData, tableData, imageData, self.filePath,
-                                            self.feedback)
-        self.close()
-        self.feedback.close()
+        # 'TRIAL_NAME':,
+        # 'YIELD':,
+        # 'T1_LAYER':,
+        # 'T2_LAYER':,
+        # 'T1_SURFACE':,
+        # 'T2_SURFACE':,
+        # 'GAIN_POINTS':,
+        # 'OUTPUT':
+        # self.feedback = UserFeedback(message='Creating report...', title='Trial Report')
+        # reportData, tableData, imageData = self.getReportParameters()
+        # self.reportService.createWordReport(reportData, tableData, imageData, self.filePath,
+        #                                     self.feedback)
+        # self.close()
+        # self.feedback.close()
+
+        yieldLayer = self.layerService.filterVectorLayerByName(list(self.layers.values()), ['Yield_Map'], inverse=True)
+        t1Layer = self.layerService.filterVectorLayerByName(list(self.layers.values()), ['T1_total'], inverse=True)
+        t2Layer = self.layerService.filterVectorLayerByName(list(self.layers.values()), ['T2_total'], inverse=True)
+
+        t1Surface = self.layerService.filterVectorLayerByName(list(self.layers.values()), ['T1_Final_Surface_Points'], inverse=True)
+        t2Surface = self.layerService.filterVectorLayerByName(list(self.layers.values()), ['T2_Final_Surface_Points'], inverse=True)
+        gainPoints = self.layerService.filterVectorLayerByName(list(self.layers.values()), ['Gain_Points'], inverse=True)
+
+        parameters = {
+            'TRIAL_NAME': '',
+            'YIELD': yieldLayer,
+            'T1_LAYER': t1Layer,
+            'T2_LAYER': t2Layer,
+            'T1_SURFACE': t1Surface,
+            'T2_SURFACE': t2Surface,
+            'GAIN_POINTS': gainPoints,
+            'OUTPUT': ''
+        }
+        AlgorithmRunner().runCreateReport(parameters, self.project)
 
     def getPresentationParameters(self):
         trialId = self.trialComboBox.itemData(self.trialComboBox.currentIndex())
@@ -224,24 +251,23 @@ class StatisticsReport(QtWidgets.QDialog, Ui_Dialog):
         return presentationData
 
     def runPresentation(self):
-        maximum = 5
-        progress = UserFeedback(message='Creating report...', title='Statistics report')
-        # progress = QProgressDialog('Gerando apresentação.' + '...', 'Cancelar', 1, maximum, self)
-        progress.show()
-        time.sleep(0.1)
-        self.close()
-        rootPath = f"{self.filePath}/05_Results/"
-        progress.setProgress(1)
-        pValue, anovaStats = self.getAnovaStatistics()
-        progress.setProgress(2)
-        gainStats = self.getGainStatistics()
-        progress.setProgress(3)
-        self.plotService.createGainStatisticsTable(pValue, gainStats, anovaStats, True, rootPath)
-        progress.setProgress(4)
-        self.reportService.createPresentation(self.getPresentationParameters(), self.filePath)
-        progress.setProgress(5)
-        # self.reportService.iterate_over_slides()
-        progress.close()
+        # maximum = 5
+        # progress = UserFeedback(message='Creating report...', title='Statistics report')
+        # # progress = QProgressDialog('Gerando apresentação.' + '...', 'Cancelar', 1, maximum, self)
+        # progress.show()
+        # time.sleep(0.1)
+        # self.close()
+        # rootPath = f"{self.filePath}/05_Results/"
+        # progress.setProgress(1)
+        # pValue, anovaStats = self.getAnovaStatistics()
+        # progress.setProgress(2)
+        # gainStats = self.getGainStatistics()
+        # progress.setProgress(3)
+        # self.plotService.createGainStatisticsTable(pValue, gainStats, anovaStats, True, rootPath)
+        # progress.setProgress(4)
+        # self.reportService.createPresentation(self.getPresentationParameters(), self.filePath)
+        # progress.setProgress(5)
+        self.reportService.iterate_over_slides()
 
     def getGainStatistics(self):
         gainStatsList = list()

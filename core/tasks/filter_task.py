@@ -36,7 +36,7 @@ from ..constants import QGIS_TOC_GROUPS
 from ..services.layer_service import LayerService
 from ..services.message_service import UserFeedback
 from ..services.system_service import SystemService
-from ..tools.algorithm_runner import AlgorithmRunner
+from ..algorithms.algorithm_runner import AlgorithmRunner
 
 iface: QgisInterface
 
@@ -69,7 +69,8 @@ class FilterTask(QgsTask):
                 output = AlgorithmRunner().runYieldMapFiltering(filterParameters, context=self.context,
                                                                 feedback=self.feedback)
 
-                filteredFeatures = self.layerService.getFeaturesByRequest(output, "\"Biais_rendement\"='F - Pas de biais'")
+                filteredFeatures = self.layerService.getFeaturesByRequest(output,
+                                                                          "\"Biais_rendement\"='F - Pas de biais'")
                 self.yieldMapVector = self.layerService.createMemoryVectorLayer(output.wkbType(), 'Yield_Map',
                                                                                 output.crs().authid(),
                                                                                 fields=output.fields(),
@@ -93,7 +94,8 @@ class FilterTask(QgsTask):
                     yieldHistogramPath = f"{self.filePath}/05_Results/01_Histograms/"
 
                     yieldStatisticsTable = self.getHistogramParameters(self.yieldMapVector, self.yieldField)
-                    self.layerService.populateFrequencyHistogram(self.yieldMapVector, self.yieldField, yieldStatisticsTable,
+                    self.layerService.populateFrequencyHistogram(self.yieldMapVector, self.yieldField,
+                                                                 yieldStatisticsTable,
                                                                  yieldHistogramPath)
                     return True
 
@@ -116,6 +118,7 @@ class FilterTask(QgsTask):
                 tableData.append([f'{float(statisticValues[statistic]):.2f}'])
 
         return tableData
+
     @staticmethod
     def getLayerStatistics(layer, field):
         return AlgorithmRunner().runBasicStatisticsForFields(layer, field)

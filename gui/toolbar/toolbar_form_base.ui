@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>471</width>
+    <width>600</width>
     <height>50</height>
    </rect>
   </property>
@@ -24,7 +24,7 @@
   </property>
   <property name="maximumSize">
    <size>
-    <width>471</width>
+    <width>660</width>
     <height>50</height>
    </size>
   </property>
@@ -32,6 +32,9 @@
    <string>Form</string>
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout">
+   <property name="spacing">
+    <number>3</number>
+   </property>
    <property name="leftMargin">
     <number>2</number>
    </property>
@@ -67,6 +70,9 @@
        <height>30</height>
       </size>
      </property>
+     <property name="toolTip">
+      <string>Lallemand</string>
+     </property>
      <property name="text">
       <string/>
      </property>
@@ -95,7 +101,7 @@
      </property>
      <property name="sizeHint" stdset="0">
       <size>
-       <width>15</width>
+       <width>10</width>
        <height>20</height>
       </size>
      </property>
@@ -125,11 +131,20 @@
        </property>
        <item>
         <widget class="QPushButton" name="loadFilePushButton">
+         <property name="minimumSize">
+          <size>
+           <width>30</width>
+           <height>0</height>
+          </size>
+         </property>
          <property name="maximumSize">
           <size>
            <width>30</width>
            <height>30</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>Load files</string>
          </property>
          <property name="text">
           <string/>
@@ -148,11 +163,20 @@
        </item>
        <item>
         <widget class="QPushButton" name="treatmentPushButton">
+         <property name="minimumSize">
+          <size>
+           <width>30</width>
+           <height>0</height>
+          </size>
+         </property>
          <property name="maximumSize">
           <size>
            <width>30</width>
            <height>30</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>Create polygons</string>
          </property>
          <property name="text">
           <string/>
@@ -171,11 +195,20 @@
        </item>
        <item>
         <widget class="QPushButton" name="filterPushButton">
+         <property name="minimumSize">
+          <size>
+           <width>30</width>
+           <height>0</height>
+          </size>
+         </property>
          <property name="maximumSize">
           <size>
            <width>30</width>
            <height>30</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>Filter tools</string>
          </property>
          <property name="text">
           <string/>
@@ -193,12 +226,53 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="krigingPushButton">
+        <widget class="QPushButton" name="samplingPushButton">
+         <property name="minimumSize">
+          <size>
+           <width>30</width>
+           <height>0</height>
+          </size>
+         </property>
          <property name="maximumSize">
           <size>
            <width>30</width>
            <height>30</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>Sampling</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="../../resources.qrc">
+           <normaloff>:/plugins/lallemand_plant_care/icons/sample.png</normaloff>:/plugins/lallemand_plant_care/icons/sample.png</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>20</width>
+           <height>20</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="krigingPushButton">
+         <property name="minimumSize">
+          <size>
+           <width>30</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>30</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>Kriging</string>
          </property>
          <property name="text">
           <string/>
@@ -220,8 +294,17 @@
          <property name="minimumSize">
           <size>
            <width>30</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>30</width>
            <height>30</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>Validate points</string>
          </property>
          <property name="text">
           <string/>
@@ -239,12 +322,61 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="clearStructurePushButton">
+        <widget class="QPushButton" name="errorCompensationPushButton">
          <property name="maximumSize">
           <size>
            <width>30</width>
            <height>30</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>Error compensation</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="../../resources.qrc">
+           <normaloff>:/plugins/lallemand_plant_care/icons/error_compensation.png</normaloff>:/plugins/lallemand_plant_care/icons/error_compensation.png</iconset>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="gainSurfacePushButton">
+         <property name="maximumSize">
+          <size>
+           <width>30</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>Gain surface</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="../../resources.qrc">
+           <normaloff>:/plugins/lallemand_plant_care/icons/gain_surface.png</normaloff>:/plugins/lallemand_plant_care/icons/gain_surface.png</iconset>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="clearStructurePushButton">
+         <property name="minimumSize">
+          <size>
+           <width>30</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>30</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>Move layer to group</string>
          </property>
          <property name="text">
           <string/>
@@ -265,7 +397,7 @@
         <widget class="QPushButton" name="createTrialPushButton">
          <property name="minimumSize">
           <size>
-           <width>0</width>
+           <width>30</width>
            <height>0</height>
           </size>
          </property>
@@ -274,6 +406,9 @@
            <width>30</width>
            <height>30</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>Trial management</string>
          </property>
          <property name="text">
           <string/>
@@ -292,11 +427,20 @@
        </item>
        <item>
         <widget class="QPushButton" name="lpcTeamPushButton">
+         <property name="minimumSize">
+          <size>
+           <width>30</width>
+           <height>0</height>
+          </size>
+         </property>
          <property name="maximumSize">
           <size>
            <width>30</width>
            <height>30</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>Team management</string>
          </property>
          <property name="text">
           <string/>
@@ -315,11 +459,20 @@
        </item>
        <item>
         <widget class="QPushButton" name="farmerPushButton">
+         <property name="minimumSize">
+          <size>
+           <width>30</width>
+           <height>0</height>
+          </size>
+         </property>
          <property name="maximumSize">
           <size>
            <width>30</width>
            <height>30</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>Farmer management</string>
          </property>
          <property name="text">
           <string/>
@@ -341,11 +494,46 @@
          <property name="enabled">
           <bool>true</bool>
          </property>
+         <property name="minimumSize">
+          <size>
+           <width>30</width>
+           <height>0</height>
+          </size>
+         </property>
          <property name="maximumSize">
           <size>
            <width>30</width>
            <height>30</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>Report tools</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="../../resources.qrc">
+           <normaloff>:/plugins/lallemand_plant_care/icons/report.png</normaloff>:/plugins/lallemand_plant_care/icons/report.png</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>24</width>
+           <height>24</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="presentationPushButton">
+         <property name="maximumSize">
+          <size>
+           <width>30</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>Export presentation</string>
          </property>
          <property name="text">
           <string/>
@@ -364,11 +552,20 @@
        </item>
        <item>
         <widget class="QPushButton" name="mapsPushButton">
+         <property name="minimumSize">
+          <size>
+           <width>30</width>
+           <height>0</height>
+          </size>
+         </property>
          <property name="maximumSize">
           <size>
            <width>30</width>
            <height>30</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>Load map templates</string>
          </property>
          <property name="text">
           <string/>
@@ -387,11 +584,20 @@
        </item>
        <item>
         <widget class="QPushButton" name="exportMapPushButton">
+         <property name="minimumSize">
+          <size>
+           <width>30</width>
+           <height>0</height>
+          </size>
+         </property>
          <property name="maximumSize">
           <size>
            <width>30</width>
            <height>30</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>Export maps</string>
          </property>
          <property name="text">
           <string/>
@@ -407,22 +613,6 @@
           </size>
          </property>
         </widget>
-       </item>
-       <item>
-        <spacer name="horizontalSpacer_2">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeType">
-          <enum>QSizePolicy::Fixed</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>170</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
        </item>
       </layout>
      </widget>

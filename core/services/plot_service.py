@@ -35,7 +35,6 @@ class PlotterService:
 
     def __init__(self):
         self.settings = OptionsSettingsPage().getHistogramSettings()
-        self.bins = self.settings[0]
         self.color = self.settings[1].getRgbF()
         self.edgeColor = self.settings[2].getRgbF()
         self.rowLabels = ['N of samples', 'Minimum', 'Maximum', 'Sum', 'Mean', 'Standard deviation',
@@ -44,12 +43,13 @@ class PlotterService:
                                ['Coef variation (%)']]
 
     def createVFrequencyHistogram(self, values, tableData, title, exportPng=False, path=None):
+        bins = int(self.settings[0])
         fontSize = 12
         cellText = np.hstack([self.rowTableLabels, tableData])
         fig = plt.figure(figsize=(4.2, 5))
 
         hist = fig.add_subplot(2, 1, 1)
-        hist.hist(values, bins=self.bins, color=self.color, edgecolor=self.edgeColor)
+        hist.hist(values, bins=bins, color=self.color, edgecolor=self.edgeColor)
         hist.set_title(f'{title} Histogram', fontsize=fontSize)
         hist.set_xlabel('Values', fontsize=fontSize)
         hist.set_ylabel('Frequency', fontsize=fontSize)
@@ -73,12 +73,13 @@ class PlotterService:
         plt.close()
 
     def createFrequencyHistogram(self, values, tableData, title, exportPng=False, path=None):
+        bins = int(self.settings[0])
         fontSize = 12
         cellText = np.hstack([self.rowTableLabels, tableData])
         fig = plt.figure(figsize=(6.5, 2.7))
 
         hist = fig.add_subplot(1, 2, 1)
-        hist.hist(values, bins=self.bins, color=self.color, edgecolor=self.edgeColor)
+        hist.hist(values, bins=bins, color=self.color, edgecolor=self.edgeColor)
         hist.set_title(f'{title} Histogram', fontsize=fontSize)
         hist.set_xlabel('Values', fontsize=fontSize)
         hist.set_ylabel('Frequency', fontsize=fontSize)

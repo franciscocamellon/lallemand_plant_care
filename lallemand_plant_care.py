@@ -28,9 +28,9 @@ from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 
-from .core.provider.lallemand_plant_care_provider import LPCAlgorithmProvider
+from .core.algorithms.lallemand_plant_care_provider import LPCAlgorithmProvider
 from .gui.toolbar_manager import ToolbarManager
-from .gui.settings.options_settings_dlg import OptionsSettingsFactory, OptionsSettingsPage
+from .gui.settings.options_settings_dlg import OptionsSettingsFactory
 # Initialize Qt resources from file resources.py
 from .resources import *
 

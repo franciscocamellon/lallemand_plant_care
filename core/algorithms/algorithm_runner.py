@@ -21,18 +21,22 @@
  *                                                                         *
  ***************************************************************************/
 """
+import os
 
 import processing
+from processing import createAlgorithmDialog
 
 from qgis.core import QgsCoordinateReferenceSystem, QgsProcessingUtils, QgsProject
 from qgis.PyQt.Qt import QObject
+
+from ..services.layer_service import LayerService
 
 
 class AlgorithmRunner(QObject):
 
     def __init__(self):
         super(AlgorithmRunner, self).__init__()
-        pass
+        self.layerService = LayerService()
 
     @staticmethod
     def _getLayerFromContext(outputDict, context, field=None, returnError=False):
@@ -101,8 +105,6 @@ class AlgorithmRunner(QObject):
         return output['OUTPUT']
 
     def runYieldMapFiltering(self, parameters, context=None, feedback=None):
-        output = QgsProcessingUtils.generateTempFilename('OUTPUT.gpkg')
-        parameters['Carte_filtree'] = 'TEMPORARY_OUTPUT'
 
         outputDict = processing.run('r:Yield_map_filtering', parameters, context=context, feedback=feedback)
         return self._getLayerFromContext(outputDict, context)
@@ -136,3 +138,129 @@ class AlgorithmRunner(QObject):
     def runPixelsToPoints(self, parameters, context=None, feedback=None):
         output = processing.run("native:pixelstopoints", parameters, context=context, feedback=feedback)
         return self._getLayerFromContext(output, context, field='OUTPUT')
+
+    @staticmethod
+    def runRMSE(layer, yieldField, errorField, context=None, feedback=None):
+        parameters = {
+            'VALIDATION_LAYER': layer,
+            'YIELD_FIELD': yieldField,
+            'ERROR_FIELD': errorField
+        }
+        return processing.run("lpc:rmse", parameters, context=context, feedback=feedback)
+
+    @staticmethod
+    def runFilterTreatments(layer, yieldField, t1output, t2output, context=None, feedback=None):
+
+        parameters = {
+            'YIELD_FILTERED_LAYER': layer,
+            'TREATMENT_FIELD': yieldField,
+            'TREATMENT_NAMES': [0, 1],
+            'T1_OUTPUT': t1output,
+            'T2_OUTPUT': t2output
+        }
+        return processing.run("lpc:filtertreatments", parameters, context=context, feedback=feedback)
+
+    @staticmethod
+    def runSimpleSample(layer, context=None, feedback=None):
+        parameters = {
+            'TREATMENT_FILTERED_LAYER': layer,
+            'SAMPLE_VALUE': 80,
+            'COMPLEMENTARY_VALUE': 20,
+            'SAMPLE_OUTPUT': 'TEMPORARY_OUTPUT',
+            'COMPLEMENTARY_OUTPUT': 'TEMPORARY_OUTPUT'
+        }
+        return processing.run("lpc:simplerandomsampling", parameters, context=context, feedback=feedback)
+
+    @staticmethod
+    def runHistogramFromAttribute(layer, field, path, context=None, feedback=None):
+        parameters = {
+            'YIELD_FILTERED_LAYER': layer,
+            'YIELD_FIELD': field,
+            'OUTPUT': path
+        }
+        return processing.run("lpc:histogramfromattribute", parameters, context=context, feedback=feedback)
+
+    def runLoadComposerTemplates(self, project):
+        layers = project.instance().mapLayers().values()
+        contour = self.layerService.filterByLayerName(list(layers), ['_contour_'], inverse=True)
+        parameters = {
+            'INPUT_LAYERS': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+            'TRIAL_BOUNDS_LAYER': contour[0]
+        }
+        dialog = createAlgorithmDialog('lpc:loadcomposertemplates', parameters)
+        dialog.show()
+        dialog.exec_()
+
+    @staticmethod
+    def runExportMaps(project):
+        parameters = {
+            'LAYOUTS': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+            'RESOLUTION': 150,
+            'OUTPUT': os.path.join(project.homePath(), '05_Results', '03_Maps')
+        }
+        dialog = createAlgorithmDialog('lpc:exportmaps', parameters)
+        dialog.show()
+        dialog.exec_()
+
+    @staticmethod
+    def runCreateReport(parameters, project):
+        parameters['OUTPUT'] = os.path.join(project.homePath(), '05_Results')
+        dialog = createAlgorithmDialog('lpc:createreport', parameters)
+        dialog.show()
+        dialog.exec_()
+
+    @staticmethod
+    def runCreatePresentation(parameters, project):
+        parameters['OUTPUT'] = os.path.join(project.homePath(), '05_Results')
+        dialog = createAlgorithmDialog('lpc:createpresentation', parameters)
+        dialog.show()
+        dialog.exec_()
+
+    @staticmethod
+    def runCreateSampleLayers(parameters=None):
+        if not parameters:
+            parameters = {
+                'YIELD_FILTERED_LAYER': 'T1_T2_total',
+                'TREATMENT_FIELD': 'Traitement',
+                'YIELD_FIELD': 'Prod_ha_h_',
+                'OUTPUT': 'TEMPORARY_OUTPUT'
+            }
+
+        dialog = createAlgorithmDialog('lpc:createsamplelayers', parameters)
+        dialog.show()
+        dialog.exec_()
+
+    @staticmethod
+    def runTreatmentPolygons(epsg, reproject, parameters=None):
+
+        parameters['REPROJECT'] = reproject
+        parameters['CRS'] = QgsCoordinateReferenceSystem(epsg)
+
+        dialog = createAlgorithmDialog('lpc:treatmentpolygonsbuilder', parameters)
+        dialog.show()
+        dialog.exec_()
+
+    @staticmethod
+    def runHarvesterFilter(parameters=None):
+
+        dialog = createAlgorithmDialog('lpc:filteringharvesterpoints', parameters)
+        dialog.show()
+        dialog.exec_()
+
+    @staticmethod
+    def runErrorCompensation(parameters):
+        dialog = createAlgorithmDialog('lpc:calculateerrorcompensation', parameters)
+        dialog.show()
+        dialog.exec_()
+
+    @staticmethod
+    def runGainSurface(parameters):
+        dialog = createAlgorithmDialog('lpc:creategainsurface', parameters)
+        dialog.show()
+        dialog.exec_()
+
+    @staticmethod
+    def runCalculateError(parameters):
+        dialog = createAlgorithmDialog('lpc:calculateerror', parameters)
+        dialog.show()
+        dialog.exec_()

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>731</width>
+    <width>923</width>
     <height>691</height>
    </rect>
   </property>
@@ -1648,13 +1648,32 @@
   </customwidget>
  </customwidgets>
  <tabstops>
+  <tabstop>mGroupBox</tabstop>
+  <tabstop>databaseNameLineEdit</tabstop>
+  <tabstop>serverIpLineEdit</tabstop>
+  <tabstop>serverPortLineEdit</tabstop>
+  <tabstop>serverUserLineEdit</tabstop>
+  <tabstop>serverPasswordLineEdit</tabstop>
   <tabstop>mGroupBox_2</tabstop>
   <tabstop>oddPolygonsNameLineEdit</tabstop>
   <tabstop>evenPolygonsNameLineEdit</tabstop>
+  <tabstop>sizeBorderSpinBox</tabstop>
+  <tabstop>largeurCoupeSpinBox</tabstop>
+  <tabstop>sousEchantillonnageSpinBox</tabstop>
   <tabstop>mGroupBox_3</tabstop>
   <tabstop>fieldToInterpolateLineEdit</tabstop>
   <tabstop>pixelSizeXSpinBox</tabstop>
   <tabstop>pixelSizeYSpinBox</tabstop>
+  <tabstop>mGroupBox_4</tabstop>
+  <tabstop>binsSpinBox</tabstop>
+  <tabstop>colorColorButton</tabstop>
+  <tabstop>edgeColorButton</tabstop>
+  <tabstop>mGroupBox_5</tabstop>
+  <tabstop>classesSpinBox</tabstop>
+  <tabstop>firstColorButton</tabstop>
+  <tabstop>secondColorButton</tabstop>
+  <tabstop>thirdColorButton</tabstop>
+  <tabstop>fourthColorButton</tabstop>
  </tabstops>
  <resources>
   <include location="../../resources.qrc"/>

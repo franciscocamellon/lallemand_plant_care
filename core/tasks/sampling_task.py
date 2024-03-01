@@ -36,7 +36,7 @@ from ..constants import QGIS_TOC_GROUPS
 from ..services.layer_service import LayerService
 from ..services.message_service import UserFeedback
 from ..services.system_service import SystemService
-from ..tools.algorithm_runner import AlgorithmRunner
+from ..algorithms.algorithm_runner import AlgorithmRunner
 from ...gui.settings.options_settings_dlg import OptionsSettingsPage
 
 iface: QgisInterface
@@ -85,7 +85,7 @@ class SamplingTask(QgsTask):
 
                     for percent in [80, 20]:
 
-                        percentFeatures = self.layerService.getPercentualFeaturesById(selectedFeaturesLayer, percent)
+                        percentFeatures, comp = self.layerService.getPercentualFeaturesById(selectedFeaturesLayer, percent)
 
                         if percent == 80:
                             percentLayerName = f'{treatment}_{percent}_perc'
@@ -162,7 +162,7 @@ class SamplingTask(QgsTask):
         if self.isCanceled():
 
             QgsMessageLog.logMessage(
-                message=f"Canceled filter task. {self.progress}% filtered.",
+                message=f"Canceled sampling task. {self.progress}% filtered.",
                 level=Qgis.Warning,
             )
             return
@@ -176,20 +176,20 @@ class SamplingTask(QgsTask):
             else:
                 QMessageBox.critical(
                     iface.mainWindow(),
-                    "Filter task error",
+                    "Sampling task error",
                     f"The following error occurred:\n{self.exception.__class__.__name__}: {self.exception}",
                 )
             return
 
         iface.messageBar().pushMessage(
             "Success",
-            f"Finished filtering.",
+            f"Finished sampling.",
             level=Qgis.Success,
         )
 
     def cancel(self):
         QgsMessageLog.logMessage(
-            message='Task "{name}" was cancelled'.format(name='Sampling task'),
+            message='Sampling task was cancelled',
             level=Qgis.Info)
         super().cancel()
 

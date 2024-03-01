@@ -25,7 +25,21 @@
 import os
 from qgis.core import QgsProcessingProvider
 from qgis.PyQt.QtGui import QIcon
-from .algorithms.sampling_algorithm import SamplingProcessingAlgorithm
+
+from .analysis.create_gain_surface_algorithm import GainSurfaceProcessingAlgorithm
+from .analysis.create_sample_layers_algorithm import CreateSampleLayersProcessingAlgorithm
+from .analysis.error_compensation_algorithm import ErrorCompensationProcessingAlgorithm
+from .analysis.filter_treatments_algorithm import FilterTreatmentProcessingAlgorithm
+from .analysis.simple_sampling_algorithm import SamplingProcessingAlgorithm
+from .vector.filtering_harvester_points_algorithm import FilteringHarvesterPointsProcessingAlgorithm
+from .vector.treatment_polygon_builder_algorithm import TreatmentPolygonsBuilderProcessingAlgorithm
+from .graphs.histogram_graph_algorithm import HistogramGraphProcessingAlgorithm
+from .rmse.calculate_error_algorithm import CalculateErrorProcessingAlgorithm
+from .maps.export_maps_algorithm import ExportMapsProcessingAlgorithm
+from .maps.load_composer_templates import LoadComposerTemplatesAlgorithm
+from .report.presentation_algorithm import PresentationProcessingAlgorithm
+from .report.report_algorithm import ReportProcessingAlgorithm
+from .rmse.rmse_algorithm import RMSEProcessingAlgorithm
 
 
 class LPCAlgorithmProvider(QgsProcessingProvider):
@@ -47,7 +61,20 @@ class LPCAlgorithmProvider(QgsProcessingProvider):
         """
         Loads all algorithms belonging to this provider.
         """
+        self.addAlgorithm(FilterTreatmentProcessingAlgorithm())
         self.addAlgorithm(SamplingProcessingAlgorithm())
+        self.addAlgorithm(CreateSampleLayersProcessingAlgorithm())
+        self.addAlgorithm(ErrorCompensationProcessingAlgorithm())
+        self.addAlgorithm(GainSurfaceProcessingAlgorithm())
+        self.addAlgorithm(TreatmentPolygonsBuilderProcessingAlgorithm())
+        self.addAlgorithm(FilteringHarvesterPointsProcessingAlgorithm())
+        self.addAlgorithm(RMSEProcessingAlgorithm())
+        self.addAlgorithm(CalculateErrorProcessingAlgorithm())
+        self.addAlgorithm(HistogramGraphProcessingAlgorithm())
+        self.addAlgorithm(ReportProcessingAlgorithm())
+        self.addAlgorithm(PresentationProcessingAlgorithm())
+        self.addAlgorithm(ExportMapsProcessingAlgorithm())
+        self.addAlgorithm(LoadComposerTemplatesAlgorithm())
 
     def id(self):
         """

@@ -22,24 +22,19 @@
  ***************************************************************************/
 """
 
-from qgis.PyQt.QtCore import Qt, pyqtSlot
-from qgis.PyQt.QtWidgets import QWidget, QToolButton, QMenu, QAction
+from qgis.PyQt.QtCore import pyqtSlot
+from qgis.PyQt.QtWidgets import QWidget
 from qgis.core import QgsMapLayer
 
-from .filter.filtering_dlg import FilteringPoints
 from .geostatistics_trial.geostatistics_trial import GeostatisticsTrial
 from .kriging.kriging_dlg import OrdinaryKriging
 from .layer_manager.load_files_dlg import LoadFiles
 from .lpc_team.farmer_manager import FarmerManager
 from .lpc_team.lpc_team_manager import RegisterLpcTeam
-from .report.report_dlg import StatisticsReport
 from .toolbar.toolbar_form_base import Ui_Form
-from .treatment.treatment_polygons_dlg import TreatmentPolygons
-from .validation.validation_dlg import SamplingValidation
+from ..core.algorithms.algorithm_runner import AlgorithmRunner
 from ..core.constants import QGIS_TOC_GROUPS
 from ..core.services.layer_service import LayerService
-from ..core.tools.composer_layout_runner import ComposerLayoutRunner
-from ..core.tools.export_layout_runner import ExportLayoutRunner
 
 
 class ToolbarManager(QWidget, Ui_Form):
@@ -49,8 +44,9 @@ class ToolbarManager(QWidget, Ui_Form):
         self.setupUi(self)
         self.iface = iface
         self.toolbar = toolbar
-        self.actions = []
+        self.actions = list()
         self.layerService = LayerService()
+        self.algRunner = AlgorithmRunner()
         self.splitter.hide()
         self.createTrialPushButton.clicked.connect(self.createTrialProject)
         self.loadFilePushButton.clicked.connect(self.loadFiles)
@@ -64,26 +60,13 @@ class ToolbarManager(QWidget, Ui_Form):
         self.reportPushButton.clicked.connect(self.getReport)
         self.mapsPushButton.clicked.connect(self.composer)
         self.exportMapPushButton.clicked.connect(self.exportMaps)
+        self.samplingPushButton.clicked.connect(self.sampling)
+        self.errorCompensationPushButton.clicked.connect(self.errorCompensation)
+        self.gainSurfacePushButton.clicked.connect(self.gainSurface)
+        self.presentationPushButton.clicked.connect(self.getPresentation)
 
-    def createToolButton(self, parent, text):
-        """
-        Creates a tool button (pop up menu)
-        """
-        button = QToolButton(parent)
-        button.setObjectName(text)
-        button.setToolButtonStyle(Qt.ToolButtonIconOnly)
-        button.setPopupMode(QToolButton.MenuButtonPopup)
-        parent.addWidget(button)
-        self.actions.append(button)
-        return button
-
-    @staticmethod
-    def initGui():
-        return True
-
-    @staticmethod
-    def unload():
-        return True
+    def unload(self):
+        pass
 
     @pyqtSlot(bool, name="on_showToolbarPushButton_toggled")
     def toggleToolbar(self, toggled=None):
@@ -135,21 +118,44 @@ class ToolbarManager(QWidget, Ui_Form):
 
     def treatments(self):
         project = self.layerService.checkForSavedProject()
+
         if project:
-            dlg = TreatmentPolygons(project)
-            dlg.show()
-            result = dlg.exec_()
-            if result:
-                pass
+            layer = project.mapLayersByName('GPS_points')[0]
+            epsg = str()
+            reproject: bool() = None
+            parameters = {'GPS_POINTS_LAYER': layer,
+                          'REPROJECT': '',
+                          'CRS': '',
+                          'SORTING_FIELD': 'ID',
+                          'METHOD': 1,
+                          'BORDER_SIZE': 10,
+                          'BOUNDARY': True}
+
+            if layer and layer.crs().isGeographic():
+                crsOperations = self.layerService.getSuggestedCrs(layer)
+                reproject = True
+                epsg = crsOperations[2]
+
+            self.algRunner.runTreatmentPolygons(epsg, reproject, parameters)
 
     def filtering(self):
+
         project = self.layerService.checkForSavedProject()
+        layers = project.mapLayers().values()
+        harvesterLayer = self.layerService.filterByLayerName(list(layers),
+                                                             ['GPS', 'T1', 'T2', 'Gain', 'Yield'],
+                                                             inverse=True)
         if project:
-            dlg = FilteringPoints(self.iface, project)
-            dlg.show()
-            result = dlg.exec_()
-            if result:
-                pass
+            parameters = {
+                'HARVESTER_POINTS_LAYER': harvesterLayer[0],
+                'REPROJECT': True,
+                'ID_FIELD': '',
+                'YIELD_FIELD': '',
+                'TREATMENT_POLYGONS': '',
+                'TREATMENT_ID_FIELD': '',
+                'BOUNDARY_POLYGON': '',
+                'TARGET_PROJECTION': 0, 'DATE_COLUMN': 0}
+            self.algRunner.runHarvesterFilter(parameters)
 
     def ordinaryKriging(self):
         project = self.layerService.checkForSavedProject()
@@ -163,24 +169,49 @@ class ToolbarManager(QWidget, Ui_Form):
     def validation(self):
         project = self.layerService.checkForSavedProject()
         if project:
-            dlg = SamplingValidation(self.iface, project)
-            dlg.show()
-            result = dlg.exec_()
-            if result:
-                pass
+            parameters = {
+                'GRID': '',
+                'VALIDATION_FIELD': '',
+                'VALIDATION_LAYER': ''
+            }
+            self.algRunner.runCalculateError(parameters)
+
+    def errorCompensation(self):
+        project = self.layerService.checkForSavedProject()
+        if project:
+            parameters = {
+                'POINTS': True,
+                'T1_80_RASTER': '',
+                'T1_ERROR_RASTER': '',
+                'T2_80_RASTER': '',
+                'T2_ERROR_RASTER': ''
+            }
+            self.algRunner.runErrorCompensation(parameters)
+
+    def gainSurface(self):
+        project = self.layerService.checkForSavedProject()
+        if project:
+            parameters = {
+                'POINTS': True,
+                'T1_RASTER': '',
+                'T2_RASTER': ''
+            }
+            self.algRunner.runGainSurface(parameters)
 
     def clearTreeView(self):
         project = self.layerService.checkForSavedProject()
         root = project.layerTreeRoot()
         if project:
-            for layer in self.iface.mapCanvas().layers():
+            for index, layer in enumerate(self.iface.mapCanvas().layers()):
                 if layer.type() == QgsMapLayer.RasterLayer:
                     layer_node = root.findLayer(layer.id())
 
-                    self.layerService.addMapLayer(layer, QGIS_TOC_GROUPS[3])
-
                     if 'validation' in layer.name().split('_'):
+                        self.layerService.applySymbology(layer, '', raster=True)
                         self.layerService.addMapLayer(layer, QGIS_TOC_GROUPS[5])
+                    else:
+                        self.layerService.applySymbology(layer, '', raster=True)
+                        self.layerService.addMapLayer(layer, QGIS_TOC_GROUPS[3])
 
                     parent = layer_node.parent()
                     parent.removeChildNode(layer_node)
@@ -188,18 +219,45 @@ class ToolbarManager(QWidget, Ui_Form):
     def getReport(self):
         project = self.layerService.checkForSavedProject()
         if project:
-            dlg = StatisticsReport(self.iface, project)
-            dlg.show()
-            result = dlg.exec_()
-            if result:
-                pass
+            parameters = {
+                'GAIN_POINTS': '',
+                'OUTPUT': '',
+                'T1_LAYER': '',
+                'T1_SURFACE': '',
+                'T2_LAYER': '',
+                'T2_SURFACE': '',
+                'TRIAL_NAME': '',
+                'YIELD': ''
+            }
+            self.algRunner.runCreateReport(parameters, project)
 
     def composer(self):
         project = self.layerService.checkForSavedProject()
-        composerLayoutRunner = ComposerLayoutRunner(self.iface, project)
-        composerLayoutRunner.run()
+        if project:
+            self.algRunner.runLoadComposerTemplates(project)
 
     def exportMaps(self):
         project = self.layerService.checkForSavedProject()
-        exportLayoutRunner = ExportLayoutRunner(self.iface, project)
-        exportLayoutRunner.run()
+        if project:
+            self.algRunner.runExportMaps(project)
+
+    def sampling(self):
+        project = self.layerService.checkForSavedProject()
+        if project:
+            self.algRunner.runCreateSampleLayers()
+
+    def getPresentation(self):
+        project = self.layerService.checkForSavedProject()
+        if project:
+            parameters = {
+                'GAIN_POINTS': '',
+                'OUTPUT': '',
+                'T1_SURFACE': '',
+                'T1_VALIDATION': '',
+                'T2_SURFACE': '',
+                'T2_VALIDATION': '',
+                'TRIAL_NAME': '',
+                'YIELD_FIELD': ''
+            }
+            self.algRunner.runCreatePresentation(parameters, project)
+

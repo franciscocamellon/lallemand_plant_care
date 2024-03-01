@@ -27,6 +27,7 @@ import re
 from docx import Document
 from docx.shared import Inches
 from pptx import Presentation
+from pptx.util import Pt
 
 from .layer_service import LayerService
 from .message_service import MessageService
@@ -162,7 +163,7 @@ class ReportService:
         self.addImageInParagraph(reportDocument, imageData, feedback)
         self.addImageInTable(reportDocument, imageData, feedback)
 
-        output = os.path.join(filePath, '05_Results', 'output_report.docx')
+        output = os.path.join(filePath, 'output_report.docx')
         reportDocument.save(output)
 
     def createPresentation(self, presentationData, filePath):
@@ -174,10 +175,54 @@ class ReportService:
                 if slideIndex == dataIndex:
                     for placeholderIndex, placeholderData in data.items():
                         if placeholderIndex == 1:
-                            continue
-                        placeholder = slide.placeholders[placeholderIndex]
-                        if placeholderData is None:
-                            continue
-                        picture = placeholder.insert_picture(placeholderData)
-        output = os.path.join(filePath, '05_Results', 'output_presentation.pptx')
+                            self.changeTextPlaceholder(slide, placeholderIndex, placeholderData, 36)
+                        elif placeholderIndex == 15:
+                            self.changeTextPlaceholder(slide, placeholderIndex, placeholderData, 18)
+                        else:
+                            placeholder = slide.placeholders[placeholderIndex]
+                            if placeholderData is None:
+                                continue
+                            picture = placeholder.insert_picture(placeholderData)
+
+        output = os.path.join(filePath, 'output_presentation.pptx')
         reportPresentation.save(output)
+
+    def changeTextPlaceholder(self, slide, placeholderIndex, text, size):
+        for shape in slide.placeholders:
+            if shape.placeholder_format.idx == placeholderIndex:
+                self.textFormatting(shape, text, size, bold=True, italic=False)
+
+    def textFormatting(self, shape, text, size, bold=False, italic=False):
+        text_frame = shape.text_frame
+        text_frame.clear()
+
+        paragraph = text_frame.paragraphs[0]
+        run = paragraph.add_run()
+        run.text = text
+        self.fontFormatting(run, size, bold=bold, italic=italic)
+
+    @staticmethod
+    def fontFormatting(run, size, bold=False, italic=False):
+        font = run.font
+        font.name = 'Times New Roman'
+        font.size = Pt(size)
+        font.bold = bold
+        font.italic = italic
+
+    def iterate_over_slides(self):
+        doc = os.path.join(self.layerService.getPresentationPath(), 'presentation_template.pptx')
+        reportPresentation = Presentation(doc)
+        for i, slide in enumerate(reportPresentation.slides, start=1):
+            print(f"Slide {i}")
+
+            # Access slide properties and elements
+            for shape in slide.shapes:
+                print(f"  Shape: {shape.name}")
+
+            # Access specific elements (e.g., title, text boxes)
+            if slide.shapes.title:
+                print(f"  Title: {slide.shapes.title.text}")
+
+            for placeholder in slide.placeholders:
+                if placeholder.has_text_frame:
+                    print(f"  Placeholder {placeholder.placeholder_format.idx}: {placeholder.text}")

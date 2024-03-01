@@ -137,6 +137,7 @@ class OrdinaryKriging(QtWidgets.QDialog, Ui_Dialog):
             return f"{self.filePath}/03_Error_Compensation/T2_Error_Compensation"
 
     def runSmartMap(self):
+        self.close()
         parameters = self.getParameters()
         path = self.getPathByLayer(parameters['layer'])
 

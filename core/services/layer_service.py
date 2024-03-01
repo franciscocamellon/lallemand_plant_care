@@ -21,11 +21,14 @@
  *                                                                         *
  ***************************************************************************/
 """
+import math
 import os
 import random
 import re
-from contextlib import contextmanager
 
+from qgis.PyQt.Qt import QVariant
+from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtGui import QColor
 from qgis.core import (
     QgsProject,
     QgsField,
@@ -47,19 +50,16 @@ from qgis.core import (
     QgsRasterShader,
     QgsColorRampLegendNodeSettings,
     QgsSingleBandPseudoColorRenderer,
-    QgsSimpleMarkerSymbolLayer,
     QgsRasterBandStats,
     QgsRendererRange,
-    QgsMarkerSymbol, QgsSymbol)
-from qgis.PyQt.Qt import QVariant
-from qgis.PyQt.QtGui import QColor
-from qgis.PyQt.QtCore import Qt
+    QgsSymbol)
+from qgis.core.additions.edit import edit
 
-from .plot_service import PlotterService
-from ...gui.settings.options_settings_dlg import OptionsSettingsPage
 from .message_service import MessageService
+from .plot_service import PlotterService
 from .system_service import SystemService
-from ..constants import VALIDATION_FIELDS
+from ..constants import VALIDATION_FIELDS, QGIS_TOC_GROUPS
+from ...gui.settings.options_settings_dlg import OptionsSettingsPage
 
 
 class LayerService:
@@ -127,6 +127,10 @@ class LayerService:
         group = root.findGroup(groupName)
         group.addLayer(layer)
 
+    def createLayersTreeGroup(self, project):
+        for groupName in QGIS_TOC_GROUPS:
+            self.createLayerTreeGroup(project, groupName)
+
     @staticmethod
     def addMapLayer(layer, groupName):
         project = QgsProject.instance()
@@ -167,6 +171,27 @@ class LayerService:
         return filteredLayers
 
     @staticmethod
+    def filterExactLayerName(layers, filterString, inverse=False):
+        filteredLayers = []
+        regexPattern = '|'.join(rf'\b{re.escape(s)}\b' for s in filterString)
+        pattern = re.compile(regexPattern)
+
+        for layer in layers:
+            if inverse and pattern.search(layer.name()):
+                filteredLayers.append(layer)
+            elif not inverse and not pattern.search(layer.name()):
+                filteredLayers.append(layer)
+
+        return filteredLayers
+
+    def filterVectorLayerByName(self, layers, filterString, inverse=False):
+        filteredLayers = self.filterExactLayerName(layers, filterString, inverse=inverse)
+
+        for layer in filteredLayers:
+            if layer.type() == 0:
+                return layer
+
+    @staticmethod
     def filterByFieldName(layer, filterString, inverse=False):
         filteredFields = QgsFields()
         regexPattern = '|'.join(map(re.escape, filterString))
@@ -190,19 +215,31 @@ class LayerService:
         return fieldsDictionary
 
     @staticmethod
-    def getFeaturesByRequest(layer, expression):
+    def getFeaturesByRequest(layer, expression, featureList=False):
         request = QgsExpression(expression)
-        return layer.getFeatures(QgsFeatureRequest(request))
+        if featureList:
+            return [feature for feature in layer.getFeatures(QgsFeatureRequest(request))]
+        else:
+            return layer.getFeatures(QgsFeatureRequest(request))
 
     @staticmethod
-    def getPercentualFeaturesById(layer, value):
-        ids = layer.allFeatureIds()
-        value = int(round(value / 100.0, 4) * len(ids))
-        randomSelection = random.sample(ids, value)
+    def getPercentualFeaturesById(layer, value, featureList=False):
+        idsList = layer.allFeatureIds()
+        totalFeatures = len(idsList)
+        selectedCount = int(round(value / 100.0, 4) * totalFeatures)
+        randomSelection = random.sample(idsList, selectedCount)
 
         layer.selectByIds(randomSelection)
+        if featureList:
+            selectedFeatures = [feature for feature in layer.getSelectedFeatures()]
+            layer.invertSelection()
+            complementaryFeatures = [feature for feature in layer.getSelectedFeatures()]
+        else:
+            selectedFeatures = layer.getSelectedFeatures()
+            layer.invertSelection()
+            complementaryFeatures = layer.getSelectedFeatures()
 
-        return layer.getSelectedFeatures()
+        return selectedFeatures, complementaryFeatures
 
     @staticmethod
     def _createQgsField(fieldName, fieldType):
@@ -282,9 +319,10 @@ class LayerService:
     def createValidationVectorLayer(self, layer):
         # TODO with edit(layer):
         fields = self.krigingSettings[0]
-        fields.append('1Krig')
-        fields.append('fid')
-        fieldsToDelete = self.filterByFieldName(layer, fields, inverse=True)
+        fieldsList = fields.split(';')
+        fieldsList.append('1Krig')
+        fieldsList.append('fid')
+        fieldsToDelete = self.filterByFieldName(layer, fieldsList, inverse=True)
         newOutput = self.deleteFields(layer, fieldsToDelete)
         return self.createValidationFields(newOutput)
 
@@ -315,7 +353,7 @@ class LayerService:
             else:
                 self.messageService.warningMessage("Project Save", "Project not saved.")
                 self.messageService.logMessage(f'Checking for saved project: Project not saved. FAILED', 2)
-                return None
+                return False
 
     def loadShapeFile(self, groupName, file_path):
 
@@ -431,13 +469,18 @@ class LayerService:
             self.messageService.logMessage(f'Converting feature CRS: {errorMessage}: FAILED', 2)
             return False
 
-    def createLayerTreeGroup(self, project, group_name):
+    def createLayerTreeGroup(self, project, groupName):
 
         try:
             root = project.instance().layerTreeRoot()
-            group = QgsLayerTreeGroup(group_name)
-            root.addChildNode(group)
-            return root
+            group = root.findGroup(groupName)
+
+            if group is None:
+                group = QgsLayerTreeGroup(groupName)
+                root.addChildNode(group)
+                return root
+            else:
+                return root
 
         except Exception as group_exception:
             errorMessage = f'Error creating layer tree group: {str(group_exception)}'
@@ -482,7 +525,6 @@ class LayerService:
             )
 
             if error == QgsVectorFileWriter.NoError:
-                self.messageService.logMessage(f'saveVectorLayer: {error}: FAILED', 2)
                 pass
 
         except Exception as layerException:
@@ -525,36 +567,62 @@ class LayerService:
 
         return feature
 
-    def createLayerSymbology(self, layer, fieldName):
+    def createSamplingLayerSymbology(self, layer, fieldName):
         minValue = layer.minimumValue(layer.fields().indexOf(fieldName))
         maxValue = layer.maximumValue(layer.fields().indexOf(fieldName))
 
-        step = (maxValue - minValue) / 4
-        adjustedIntervals = [round((maxValue - i * step), 1) for i in range(5)]
+        numberClasses = int(self.symbologySettings[0])
+        classes = self.calculateVectorClasses(minValue, maxValue, numberClasses)
+        colors = self.symbologySettings[1]
 
-        colors = ['#267300', '#55ff00', '#ffff00', '#bfbcbc']
+        rendererInterval = list()
+        for index in range(4):
+            symbol = self.createSamplingPointSymbol(layer.geometryType(), colors[index], 1.5, Qt.PenStyle(Qt.NoPen))
+            label = self.createClassLabels(index, classes)
+            intervalRange = QgsRendererRange(classes[index + 1], classes[index], symbol, label)
+            rendererInterval.append(intervalRange)
 
-        ranges = []
-        for i in range(4):
-            symbol = QgsSymbol.defaultSymbol(layer.geometryType())
-            symbol.setColor(QColor(colors[i]))
-            symbol.symbolLayer(0).setStrokeStyle(Qt.PenStyle(Qt.NoPen))
-            symbol.symbolLayer(0).setSize(1.5)
-
-            if i == 0:
-                label = f"> {adjustedIntervals[i + 1]}"
-            elif i == 3:
-                label = f"< {adjustedIntervals[i]}"
-            else:
-                label = f"{adjustedIntervals[i + 1]} - {adjustedIntervals[i]}"
-
-            intervalRange = QgsRendererRange(adjustedIntervals[i + 1], adjustedIntervals[i], symbol, label)
-            ranges.append(intervalRange)
-
-        renderer = QgsGraduatedSymbolRenderer(fieldName, ranges)
+        renderer = QgsGraduatedSymbolRenderer(fieldName, rendererInterval)
         renderer.setMode(QgsGraduatedSymbolRenderer.EqualInterval)
-
         return renderer
+
+    def createBoundaryLayerSymbology(self, layer):
+        symbol = self.createFillSymbol(layer.geometryType(), 'black', 0.3, Qt.BrushStyle.NoBrush)
+        layer.renderer().setSymbol(symbol)
+        layer.triggerRepaint()
+
+    @staticmethod
+    def createFillSymbol(geometryType, color, size, brushStyle):
+        symbol = QgsSymbol.defaultSymbol(geometryType)
+        symbol.symbolLayer(0).setBrushStyle(brushStyle)
+        symbol.symbolLayer(0).setStrokeColor(QColor(color))
+        symbol.symbolLayer(0).setStrokeStyle(Qt.PenStyle.SolidLine)
+        symbol.symbolLayer(0).setStrokeWidth(size)
+        return symbol
+
+    @staticmethod
+    def createSamplingPointSymbol(geometryType, color, size, penStyle):
+        symbol = QgsSymbol.defaultSymbol(geometryType)
+        symbol.setColor(QColor(color))
+        symbol.symbolLayer(0).setStrokeStyle(penStyle)
+        symbol.symbolLayer(0).setSize(size)
+        return symbol
+
+    @staticmethod
+    def createClassLabels(index, classInterval):
+        if index == 0:
+            label = f"> {classInterval[index + 1]}"
+        elif index == 3:
+            label = f"< {classInterval[index]}"
+        else:
+            label = f"{classInterval[index + 1]} - {classInterval[index]}"
+        return label
+
+    @staticmethod
+    def calculateVectorClasses(minValue, maxValue, numberClasses):
+        step = (maxValue - minValue) / numberClasses
+        classes = [round((maxValue - i * step), 1) for i in range(5)]
+        return classes
 
     @staticmethod
     def calculateClasses(minValue, maxValue, numberClasses):
@@ -624,6 +692,77 @@ class LayerService:
         if raster:
             renderer = self.createRasterRenderer(layer)
         else:
-            renderer = self.createLayerSymbology(layer, fieldName)
+            renderer = self.createSamplingLayerSymbology(layer, fieldName)
         layer.setRenderer(renderer)
         layer.triggerRepaint()
+
+    @staticmethod
+    def updateFeatures(layer, field, estimatedField, feedback):
+
+        total = 100.0 / layer.featureCount() if layer.featureCount() else 0
+        layer.startEditing()
+
+        for index, feature in enumerate(layer.getFeatures()):
+            feature[VALIDATION_FIELDS[0]] = feature[estimatedField]
+            layer.updateFeature(feature)
+            if bool(feature[VALIDATION_FIELDS[0]]):
+                feature[VALIDATION_FIELDS[1]] = feature[field] - feature[VALIDATION_FIELDS[0]]
+                feature[VALIDATION_FIELDS[2]] = math.pow(feature[VALIDATION_FIELDS[1]], 2)
+                layer.updateFeature(feature)
+            feedback.setProgress(int(index * total))
+        layer.commitChanges()
+        layer.triggerRepaint()
+
+        return layer
+
+    @staticmethod
+    def updateRmseField(layer, estimatedField, rmse, percentualRmse, feedback):
+
+        total = 100.0 / layer.featureCount() if layer.featureCount() else 0
+        layer.startEditing()
+
+        for index, feature in enumerate(layer.getFeatures()):
+            if isinstance(feature[estimatedField], QVariant):
+                pass
+            else:
+                feature[VALIDATION_FIELDS[3]] = rmse
+                feature[VALIDATION_FIELDS[4]] = percentualRmse
+                layer.updateFeature(feature)
+            feedback.setProgress(int(index * total))
+
+        layer.commitChanges()
+        layer.triggerRepaint()
+
+        return layer
+
+    @staticmethod
+    def deleteFeatures(layer):
+        with edit(layer):
+            for feature in layer.getFeatures():
+                layer.deleteFeature(feature.id())
+
+    @staticmethod
+    def updateOutputLayer(originalLayer, modifiedLayer):
+        provider = originalLayer.dataProvider()
+        originalLayer.selectAll()
+        originalLayer.startEditing()
+        originalLayer.deleteSelectedFeatures()
+        featureList = [feature for feature in modifiedLayer.getFeatures()]
+        provider.addFeatures(featureList)
+        originalLayer.commitChanges()
+        originalLayer.triggerRepaint()
+        originalLayer.invertSelection()
+
+    @staticmethod
+    def _updateOutputLayer(originalLayer, modifiedLayer):
+        with edit(originalLayer):
+            # Delete all features in the originalLayer
+            for feature in originalLayer.getFeatures():
+                originalLayer.deleteFeature(feature.id())
+
+            # Use addFeatures with a generator expression
+            provider = originalLayer.dataProvider()
+            provider.addFeatures(feature for feature in modifiedLayer.getFeatures())
+
+        # Trigger repaint outside the editing block
+        originalLayer.triggerRepaint()

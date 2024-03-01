@@ -36,7 +36,7 @@ from ..constants import QGIS_TOC_GROUPS
 from ..services.layer_service import LayerService
 from ..services.message_service import UserFeedback
 from ..services.system_service import SystemService
-from ..tools.algorithm_runner import AlgorithmRunner
+from ..algorithms.algorithm_runner import AlgorithmRunner
 from ...gui.settings.options_settings_dlg import OptionsSettingsPage
 
 iface: QgisInterface
@@ -51,7 +51,6 @@ class TreatmentTask(QgsTask):
         self.polygonBuilder = self.taskParameters['polygonBuilder']
         self.project = project
         self.filePath = self.project.homePath()
-        self.userFeedback = UserFeedback()
         self.context = QgsProcessingContext()
         self.layerService = LayerService()
         self.systemService = SystemService()
@@ -61,6 +60,7 @@ class TreatmentTask(QgsTask):
     def run(self):
 
         try:
+            self.userFeedback = UserFeedback(message='Creating treatment polygons...', title='Lallemand')
             layer = self.taskParameters['layer']
             layerName = layer.name()
 
@@ -74,17 +74,16 @@ class TreatmentTask(QgsTask):
                                                                                 feedback=self.userFeedback,
                                                                                 outputLayer=self.polygonBuilder['Polygones_traitement'])
 
-                self.layerService.loadShapeFile(QGIS_TOC_GROUPS[0], self.polygonBuilder['Polygones_traitement'])
+                treatment = self.layerService.loadShapeFile(QGIS_TOC_GROUPS[0], self.polygonBuilder['Polygones_traitement'])
+                self.layerService.createBoundaryLayerSymbology(treatment)
 
                 if self.taskParameters['boundary']:
                     boundaryLayerName = f'{layerName}_contour'
                     boundaryLayer = f"{self.filePath}/00_Data/00_Raw_Files/{boundaryLayerName}.shp"
-                    # TODO verify if file already exists
-                    # if not self.systemService.fileExist(treatmentLayer, task=True):
+
                     AlgorithmRunner.runDissolvePolygons(treatmentPolygons, feedback=self.userFeedback, outputLayer=boundaryLayer)
-                    self.layerService.loadShapeFile(QGIS_TOC_GROUPS[0], boundaryLayer)
-                    # else:
-                    #     raise FileExistsException(f'Sampling file {boundaryLayerName} already exists.')
+                    contourLayer = self.layerService.loadShapeFile(QGIS_TOC_GROUPS[0], boundaryLayer)
+                    self.layerService.createBoundaryLayerSymbology(contourLayer)
 
                 if self.reproject['reproject']:
                     epsg = self.reproject['epsg']
@@ -93,15 +92,12 @@ class TreatmentTask(QgsTask):
                         fileName = self.systemService.extractFileName(toReprojectFilePath)
                         reprojectedName = f"{fileName}_{self.reproject['operations'][1]}"
                         outputLayerFilePath = f"{self.filePath}/00_Data/01_Reproject/{reprojectedName}.shp"
-                        # TODO verify if file already exists
-                        # if not self.systemService.fileExist(outputLayerFilePath, task=True):
 
                         AlgorithmRunner.runReprojectLayer(toReprojectFilePath, epsg, self.reproject['operations'][3],
                                                           feedback=self.userFeedback, outputLayer=outputLayerFilePath)
-                        self.layerService.loadShapeFile(QGIS_TOC_GROUPS[1], outputLayerFilePath)
+                        reprojectedLayer = self.layerService.loadShapeFile(QGIS_TOC_GROUPS[1], outputLayerFilePath)
+                        self.layerService.createBoundaryLayerSymbology(reprojectedLayer)
 
-                        # else:
-                        #     raise FileExistsException(f'Sampling file {reprojectedName} already exists.')
             else:
                 raise FileExistsException(f'Sampling file {treatmentLayer} already exists.')
 
