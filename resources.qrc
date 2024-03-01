@@ -21,5 +21,7 @@
         <file>icons/load_layout.png</file>
         <file>icons/sample.png</file>
         <file>icons/dropper.png</file>
+        <file>icons/error_compensation.png</file>
+        <file>icons/gain_surface.png</file>
     </qresource>
 </RCC>
