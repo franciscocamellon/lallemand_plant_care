@@ -26,16 +26,12 @@ from qgis.PyQt.QtCore import pyqtSlot
 from qgis.PyQt.QtWidgets import QWidget
 from qgis.core import QgsMapLayer
 
-from .filter.filtering_dlg import FilteringPoints
 from .geostatistics_trial.geostatistics_trial import GeostatisticsTrial
 from .kriging.kriging_dlg import OrdinaryKriging
 from .layer_manager.load_files_dlg import LoadFiles
 from .lpc_team.farmer_manager import FarmerManager
 from .lpc_team.lpc_team_manager import RegisterLpcTeam
-from .report.report_dlg import StatisticsReport
 from .toolbar.toolbar_form_base import Ui_Form
-from .treatment.treatment_polygons_dlg import TreatmentPolygons
-from .validation.validation_dlg import SamplingValidation
 from ..core.algorithms.algorithm_runner import AlgorithmRunner
 from ..core.constants import QGIS_TOC_GROUPS
 from ..core.services.layer_service import LayerService
