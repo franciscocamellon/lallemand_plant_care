@@ -40,6 +40,7 @@ from qgis.core import (QgsProject,
 QgsProcessingParameterCrs,
                        QgsProcessingMultiStepFeedback)
 
+from ..help.algorithms_help import ProcessingAlgorithmHelpCreator
 from ...algorithms.algorithm_runner import AlgorithmRunner
 from ...constants import QGIS_TOC_GROUPS
 from ...services.layer_service import LayerService
@@ -79,7 +80,7 @@ class FilteringHarvesterPointsProcessingAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterVectorLayer(
                 self.HARVESTER_POINTS_LAYER,
-                self.tr('Harvester Points Layer'),
+                self.tr('Harvester points layer'),
                 [QgsProcessing.TypeVectorPoint],
                 optional=False
             )
@@ -94,7 +95,7 @@ class FilteringHarvesterPointsProcessingAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterField(
                 self.ID_FIELD,
-                self.tr('ID Field'),
+                self.tr('ID field'),
                 parentLayerParameterName=self.HARVESTER_POINTS_LAYER,
                 type=QgsProcessingParameterField.Numeric,
                 allowMultiple=False,
@@ -105,7 +106,7 @@ class FilteringHarvesterPointsProcessingAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterField(
                 self.YIELD_FIELD,
-                self.tr('Yield Field'),
+                self.tr('Yield field'),
                 parentLayerParameterName=self.HARVESTER_POINTS_LAYER,
                 type=QgsProcessingParameterField.Numeric,
                 allowMultiple=False,
@@ -116,7 +117,7 @@ class FilteringHarvesterPointsProcessingAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterVectorLayer(
                 self.TREATMENT_POLYGONS,
-                self.tr('Treatment Polygons Layer'),
+                self.tr('Treatment polygons layer'),
                 [QgsProcessing.TypeVectorPolygon],
                 optional=False
             )
@@ -125,7 +126,7 @@ class FilteringHarvesterPointsProcessingAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterField(
                 self.TREATMENT_ID_FIELD,
-                self.tr('Treatment Identifier Field'),
+                self.tr('Treatment identifier field'),
                 parentLayerParameterName=self.TREATMENT_POLYGONS,
                 type=QgsProcessingParameterField.Any,
                 allowMultiple=False,
@@ -136,7 +137,7 @@ class FilteringHarvesterPointsProcessingAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterVectorLayer(
                 self.BOUNDARY_POLYGON,
-                self.tr('Contour Polygon Layer'),
+                self.tr('Contour polygon layer'),
                 [QgsProcessing.TypeVectorPolygon],
                 optional=False
             )
@@ -145,7 +146,7 @@ class FilteringHarvesterPointsProcessingAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterEnum(
                 self.TARGET_PROJECTION,
-                self.tr('Target Projection'),
+                self.tr('Target projection'),
                 options=['Lambert93', 'UTM'],
                 allowMultiple=False
             )
@@ -177,15 +178,17 @@ class FilteringHarvesterPointsProcessingAlgorithm(QgsProcessingAlgorithm):
         dateColumn = self.parameterAsEnums(parameters, self.DATE_COLUMN, context)
 
         multiFeedback = QgsProcessingMultiStepFeedback(3, feedback)
-        multiFeedback.pushInfo(self.tr(f'Initializing filter...'))
+        multiFeedback.pushInfo(self.tr(f'Initializing filter...\n'))
 
         filePath = self.project.homePath()
         filterParameters = self.getYieldFilteringParameters(boundaryLayer, treatmentLayer, treatmentIdField[0],
                                                             harvesterLayer, idField[0], yieldField[0],
                                                             targetProjection[0], dateColumn[0], filePath)
 
+
         output = AlgorithmRunner().runYieldMapFiltering(filterParameters, context=context, feedback=feedback)
 
+        multiFeedback.pushInfo(self.tr(f'Selecting features...\n'))
         filteredFeatures = self.layerService.getFeaturesByRequest(output,
                                                                   "\"Biais_rendement\"='F - Pas de biais'")
         yieldMapVector = self.layerService.createMemoryVectorLayer(output.wkbType(), 'Yield_Map',
@@ -194,20 +197,24 @@ class FilteringHarvesterPointsProcessingAlgorithm(QgsProcessingAlgorithm):
                                                                    features=filteredFeatures)
 
         self.layerService.saveVectorLayer(yieldMapVector, os.path.join(filePath, '00_Data', '00_Raw_Files', 'Yield_Map.shp'))
+        multiFeedback.pushInfo(self.tr(f'Loading layer...\n'))
         self.layerService.loadShapeFile(QGIS_TOC_GROUPS[0], os.path.join(filePath, '00_Data', '00_Raw_Files', 'Yield_Map.shp'))
 
         if reproject:
             crsOperations = self.layerService.getSuggestedCrs(harvesterLayer)
             outputReprojectLayer = os.path.join(filePath, '00_Data', '01_Reproject', 'T1_T2_total.shp')
+            multiFeedback.pushInfo(self.tr(f'Reprojecting layer...\n'))
             AlgorithmRunner.runReprojectLayer(yieldMapVector, crsOperations[2], crsOperations[3],
                                               context=context, feedback=feedback,
                                               outputLayer=outputReprojectLayer)
 
             reprojectedLoadedLayer = self.layerService.loadShapeFile(QGIS_TOC_GROUPS[2], outputReprojectLayer)
+            multiFeedback.pushInfo(self.tr(f'Applying symbology...\n'))
             self.layerService.applySymbology(reprojectedLoadedLayer, yieldField[0])
 
             yieldHistogramPath = os.path.join(filePath, '05_Results', '01_Histograms')
 
+            multiFeedback.pushInfo(self.tr(f'Exporting histogram...\n'))
             yieldStatisticsTable = self.getHistogramParameters(yieldMapVector, yieldField[0])
             self.layerService.populateFrequencyHistogram(yieldMapVector, yieldField[0],
                                                          yieldStatisticsTable,
@@ -294,7 +301,7 @@ class FilteringHarvesterPointsProcessingAlgorithm(QgsProcessingAlgorithm):
         should provide a basic description about what the algorithm does and the
         parameters and outputs associated with it..
         """
-        return self.tr("Example algorithm short description")
+        return ProcessingAlgorithmHelpCreator.shortHelpString(self.name())
 
     def tr(self, string):
         """

@@ -33,6 +33,7 @@ from qgis.core import (QgsProject,
                        QgsProcessingParameterVectorLayer
                        )
 
+from ..help.algorithms_help import ProcessingAlgorithmHelpCreator
 from ...constants import COMPOSER_LAYERS
 from ...services.composer_service import ComposerService
 from ...services.layer_service import LayerService
@@ -152,7 +153,7 @@ class LoadComposerTemplatesAlgorithm(QgsProcessingAlgorithm):
         should provide a basic description about what the algorithm does and the
         parameters and outputs associated with it..
         """
-        return self.tr("Example algorithm short description")
+        return ProcessingAlgorithmHelpCreator.shortHelpString(self.name())
 
     def tr(self, string):
         """

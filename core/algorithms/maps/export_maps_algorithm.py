@@ -34,6 +34,7 @@ from qgis.core import (QgsProject,
                        QgsProcessingParameterNumber,
                        )
 
+from ..help.algorithms_help import ProcessingAlgorithmHelpCreator
 from ...services.composer_service import ComposerService
 from ...services.message_service import MessageService
 
@@ -75,7 +76,7 @@ class ExportMapsProcessingAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterFile(
                 self.OUTPUT,
-                self.tr('Output folder where to save maps'),
+                self.tr('Output folder'),
                 QgsProcessingParameterFile.Folder
             )
         )
@@ -155,7 +156,7 @@ class ExportMapsProcessingAlgorithm(QgsProcessingAlgorithm):
         should provide a basic description about what the algorithm does and the
         parameters and outputs associated with it..
         """
-        return self.tr("Example algorithm short description")
+        return ProcessingAlgorithmHelpCreator.shortHelpString(self.name())
 
     def tr(self, string):
         """

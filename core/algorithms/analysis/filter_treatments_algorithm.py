@@ -39,6 +39,7 @@ QgsProcessingParameterBoolean,
                        QgsProcessingParameterVectorLayer,
                        QgsProcessingMultiStepFeedback)
 
+from ..help.algorithms_help import ProcessingAlgorithmHelpCreator
 from ....gui.settings.options_settings_dlg import OptionsSettingsPage
 from ..algorithm_runner import AlgorithmRunner
 from ...constants import VALIDATION_FIELDS, QGIS_TOC_GROUPS
@@ -71,7 +72,7 @@ class FilterTreatmentProcessingAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterVectorLayer(
                 self.YIELD_FILTERED_LAYER,
-                self.tr('Validation Points Layer'),
+                self.tr('Yield layer (T1 and T2)'),
                 [QgsProcessing.TypeVectorPoint],
                 optional=False
             )
@@ -91,7 +92,7 @@ class FilterTreatmentProcessingAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterEnum(
                 self.TREATMENT_NAMES,
-                self.tr('Treatment Names'),
+                self.tr('Treatment names'),
                 options=[treatment for treatment in self.treatmentList[0]],
                 allowMultiple=True
             )
@@ -100,14 +101,14 @@ class FilterTreatmentProcessingAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterFeatureSink(
                 self.T1_OUTPUT,
-                self.tr('T1 Output layer')
+                self.tr('T1 layer output folder')
             )
         )
 
         self.addParameter(
             QgsProcessingParameterFeatureSink(
                 self.T2_OUTPUT,
-                self.tr('T2 Output layer')
+                self.tr('T2 layer output folder')
             )
         )
 
@@ -202,7 +203,7 @@ class FilterTreatmentProcessingAlgorithm(QgsProcessingAlgorithm):
         should provide a basic description about what the algorithm does and the
         parameters and outputs associated with it..
         """
-        return self.tr("Example algorithm short description")
+        return ProcessingAlgorithmHelpCreator.shortHelpString(self.name())
 
     def tr(self, string):
         """

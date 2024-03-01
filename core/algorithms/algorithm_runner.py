@@ -191,7 +191,8 @@ class AlgorithmRunner(QObject):
         dialog.show()
         dialog.exec_()
 
-    def runExportMaps(self, project):
+    @staticmethod
+    def runExportMaps(project):
         parameters = {
             'LAYOUTS': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
             'RESOLUTION': 150,
@@ -205,6 +206,13 @@ class AlgorithmRunner(QObject):
     def runCreateReport(parameters, project):
         parameters['OUTPUT'] = os.path.join(project.homePath(), '05_Results')
         dialog = createAlgorithmDialog('lpc:createreport', parameters)
+        dialog.show()
+        dialog.exec_()
+
+    @staticmethod
+    def runCreatePresentation(parameters, project):
+        parameters['OUTPUT'] = os.path.join(project.homePath(), '05_Results')
+        dialog = createAlgorithmDialog('lpc:createpresentation', parameters)
         dialog.show()
         dialog.exec_()
 
@@ -229,5 +237,30 @@ class AlgorithmRunner(QObject):
         parameters['CRS'] = QgsCoordinateReferenceSystem(epsg)
 
         dialog = createAlgorithmDialog('lpc:treatmentpolygonsbuilder', parameters)
+        dialog.show()
+        dialog.exec_()
+
+    @staticmethod
+    def runHarvesterFilter(parameters=None):
+
+        dialog = createAlgorithmDialog('lpc:filteringharvesterpoints', parameters)
+        dialog.show()
+        dialog.exec_()
+
+    @staticmethod
+    def runErrorCompensation(parameters):
+        dialog = createAlgorithmDialog('lpc:calculateerrorcompensation', parameters)
+        dialog.show()
+        dialog.exec_()
+
+    @staticmethod
+    def runGainSurface(parameters):
+        dialog = createAlgorithmDialog('lpc:creategainsurface', parameters)
+        dialog.show()
+        dialog.exec_()
+
+    @staticmethod
+    def runCalculateError(parameters):
+        dialog = createAlgorithmDialog('lpc:calculateerror', parameters)
         dialog.show()
         dialog.exec_()

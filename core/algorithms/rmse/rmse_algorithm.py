@@ -31,6 +31,7 @@ from qgis.core import (QgsProject,
                        QgsProcessingParameterVectorLayer)
 
 from ..algorithm_runner import AlgorithmRunner
+from ..help.algorithms_help import ProcessingAlgorithmHelpCreator
 from ...services.layer_service import LayerService
 from ...services.system_service import SystemService
 
@@ -58,7 +59,7 @@ class RMSEProcessingAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterVectorLayer(
                 self.VALIDATION_LAYER,
-                self.tr('Validation Points Layer'),
+                self.tr('Validation points layer'),
                 [QgsProcessing.TypeVectorPoint],
                 optional=False
             )
@@ -149,7 +150,7 @@ class RMSEProcessingAlgorithm(QgsProcessingAlgorithm):
         should provide a basic description about what the algorithm does and the
         parameters and outputs associated with it..
         """
-        return self.tr("Example algorithm short description")
+        return ProcessingAlgorithmHelpCreator.shortHelpString(self.name())
 
     def tr(self, string):
         """

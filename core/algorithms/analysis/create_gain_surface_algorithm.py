@@ -36,6 +36,7 @@ QgsProcessingParameterRasterLayer,
                        QgsProcessingMultiStepFeedback)
 
 from ..algorithm_runner import AlgorithmRunner
+from ..help.algorithms_help import ProcessingAlgorithmHelpCreator
 from ...constants import QGIS_TOC_GROUPS
 from ...services.layer_service import LayerService
 from ...services.system_service import SystemService
@@ -174,7 +175,7 @@ class GainSurfaceProcessingAlgorithm(QgsProcessingAlgorithm):
         should provide a basic description about what the algorithm does and the
         parameters and outputs associated with it..
         """
-        return self.tr("Example algorithm short description")
+        return ProcessingAlgorithmHelpCreator.shortHelpString(self.name())
 
     def tr(self, string):
         """

@@ -33,6 +33,7 @@ from qgis.core import (QgsProject,
 
 
 from ..algorithm_runner import AlgorithmRunner
+from ..help.algorithms_help import ProcessingAlgorithmHelpCreator
 from ...constants import VALIDATION_FIELDS
 from ...services.layer_service import LayerService
 from ...services.system_service import SystemService
@@ -157,7 +158,7 @@ class CalculateErrorProcessingAlgorithm(QgsProcessingAlgorithm):
         should provide a basic description about what the algorithm does and the
         parameters and outputs associated with it..
         """
-        return self.tr("Example algorithm short description")
+        return ProcessingAlgorithmHelpCreator.shortHelpString(self.name())
 
     def tr(self, string):
         """

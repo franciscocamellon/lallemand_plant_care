@@ -65,6 +65,9 @@ class ToolbarManager(QWidget, Ui_Form):
         self.mapsPushButton.clicked.connect(self.composer)
         self.exportMapPushButton.clicked.connect(self.exportMaps)
         self.samplingPushButton.clicked.connect(self.sampling)
+        self.errorCompensationPushButton.clicked.connect(self.errorCompensation)
+        self.gainSurfacePushButton.clicked.connect(self.gainSurface)
+        self.presentationPushButton.clicked.connect(self.getPresentation)
 
     def unload(self):
         pass
@@ -140,13 +143,23 @@ class ToolbarManager(QWidget, Ui_Form):
             self.algRunner.runTreatmentPolygons(epsg, reproject, parameters)
 
     def filtering(self):
+
         project = self.layerService.checkForSavedProject()
+        layers = project.mapLayers().values()
+        harvesterLayer = self.layerService.filterByLayerName(list(layers),
+                                                             ['GPS', 'T1', 'T2', 'Gain', 'Yield'],
+                                                             inverse=True)
         if project:
-            dlg = FilteringPoints(self.iface, project)
-            dlg.show()
-            result = dlg.exec_()
-            if result:
-                pass
+            parameters = {
+                'HARVESTER_POINTS_LAYER': harvesterLayer[0],
+                'REPROJECT': True,
+                'ID_FIELD': '',
+                'YIELD_FIELD': '',
+                'TREATMENT_POLYGONS': '',
+                'TREATMENT_ID_FIELD': '',
+                'BOUNDARY_POLYGON': '',
+                'TARGET_PROJECTION': 0, 'DATE_COLUMN': 0}
+            self.algRunner.runHarvesterFilter(parameters)
 
     def ordinaryKriging(self):
         project = self.layerService.checkForSavedProject()
@@ -160,11 +173,34 @@ class ToolbarManager(QWidget, Ui_Form):
     def validation(self):
         project = self.layerService.checkForSavedProject()
         if project:
-            dlg = SamplingValidation(self.iface, project)
-            dlg.show()
-            result = dlg.exec_()
-            if result:
-                pass
+            parameters = {
+                'GRID': '',
+                'VALIDATION_FIELD': '',
+                'VALIDATION_LAYER': ''
+            }
+            self.algRunner.runCalculateError(parameters)
+
+    def errorCompensation(self):
+        project = self.layerService.checkForSavedProject()
+        if project:
+            parameters = {
+                'POINTS': True,
+                'T1_80_RASTER': '',
+                'T1_ERROR_RASTER': '',
+                'T2_80_RASTER': '',
+                'T2_ERROR_RASTER': ''
+            }
+            self.algRunner.runErrorCompensation(parameters)
+
+    def gainSurface(self):
+        project = self.layerService.checkForSavedProject()
+        if project:
+            parameters = {
+                'POINTS': True,
+                'T1_RASTER': '',
+                'T2_RASTER': ''
+            }
+            self.algRunner.runGainSurface(parameters)
 
     def clearTreeView(self):
         project = self.layerService.checkForSavedProject()
@@ -187,12 +223,17 @@ class ToolbarManager(QWidget, Ui_Form):
     def getReport(self):
         project = self.layerService.checkForSavedProject()
         if project:
-            # StatisticsReport(self.iface, project).runReport()
-            dlg = StatisticsReport(self.iface, project)
-            dlg.show()
-            result = dlg.exec_()
-            if result:
-                pass
+            parameters = {
+                'GAIN_POINTS': '',
+                'OUTPUT': '',
+                'T1_LAYER': '',
+                'T1_SURFACE': '',
+                'T2_LAYER': '',
+                'T2_SURFACE': '',
+                'TRIAL_NAME': '',
+                'YIELD': ''
+            }
+            self.algRunner.runCreateReport(parameters, project)
 
     def composer(self):
         project = self.layerService.checkForSavedProject()
@@ -208,3 +249,19 @@ class ToolbarManager(QWidget, Ui_Form):
         project = self.layerService.checkForSavedProject()
         if project:
             self.algRunner.runCreateSampleLayers()
+
+    def getPresentation(self):
+        project = self.layerService.checkForSavedProject()
+        if project:
+            parameters = {
+                'GAIN_POINTS': '',
+                'OUTPUT': '',
+                'T1_SURFACE': '',
+                'T1_VALIDATION': '',
+                'T2_SURFACE': '',
+                'T2_VALIDATION': '',
+                'TRIAL_NAME': '',
+                'YIELD_FIELD': ''
+            }
+            self.algRunner.runCreatePresentation(parameters, project)
+

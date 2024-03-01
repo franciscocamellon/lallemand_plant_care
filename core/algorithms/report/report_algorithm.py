@@ -29,6 +29,7 @@ from qgis.core import (QgsProject, QgsProcessing,
                        QgsProcessingParameterVectorLayer,
                        QgsProcessingParameterFile)
 
+from ..help.algorithms_help import ProcessingAlgorithmHelpCreator
 from ....gui.wrappers.trial_name_wrapper import ParameterTrialName
 from ...constants import FETCH_ONE_TRIAL, FETCH_ONE_FARMER, FETCH_ONE_CROP
 from ...factories.postgres_factory import PostgresFactory
@@ -72,7 +73,7 @@ class ReportProcessingAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterVectorLayer(
                 self.YIELD,
-                self.tr('Yield layer'),
+                self.tr('Yield layer (T1 and T2)'),
                 [QgsProcessing.TypeVectorPoint],
                 optional=False
             )
@@ -81,7 +82,7 @@ class ReportProcessingAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterVectorLayer(
                 self.T1_LAYER,
-                self.tr('T1 layer'),
+                self.tr('T1 total points layer'),
                 [QgsProcessing.TypeVectorPoint],
                 optional=False
             )
@@ -90,7 +91,7 @@ class ReportProcessingAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterVectorLayer(
                 self.T2_LAYER,
-                self.tr('T2 layer'),
+                self.tr('T2 total points layer'),
                 [QgsProcessing.TypeVectorPoint],
                 optional=False
             )
@@ -126,7 +127,7 @@ class ReportProcessingAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterFile(
                 self.OUTPUT,
-                self.tr('Output folder where to save report'),
+                self.tr('Output folder'),
                 QgsProcessingParameterFile.Folder
             )
         )
@@ -264,7 +265,7 @@ class ReportProcessingAlgorithm(QgsProcessingAlgorithm):
         should provide a basic description about what the algorithm does and the
         parameters and outputs associated with it..
         """
-        return self.tr("Example algorithm short description")
+        return ProcessingAlgorithmHelpCreator.shortHelpString(self.name())
 
     def tr(self, string):
         """

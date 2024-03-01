@@ -33,6 +33,7 @@ from qgis.core import (QgsProject, QgsProcessingParameterField,
                        QgsProcessingParameterCrs,
                        QgsProcessingMultiStepFeedback)
 
+from ..help.algorithms_help import ProcessingAlgorithmHelpCreator
 from ...algorithms.algorithm_runner import AlgorithmRunner
 from ...constants import QGIS_TOC_GROUPS
 from ...services.layer_service import LayerService
@@ -71,7 +72,7 @@ class TreatmentPolygonsBuilderProcessingAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(
             ParameterFilteredLayer(
                 self.GPS_POINTS_LAYER,
-                description="GPS Points Layer",
+                description="GPS points layer",
                 optional=False
             )
         )
@@ -93,7 +94,7 @@ class TreatmentPolygonsBuilderProcessingAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterField(
                 self.SORTING_FIELD,
-                self.tr('Sorting Variable'),
+                self.tr('Sorting variable'),
                 parentLayerParameterName=self.GPS_POINTS_LAYER,
                 type=QgsProcessingParameterField.Any,
                 allowMultiple=False,
@@ -113,7 +114,7 @@ class TreatmentPolygonsBuilderProcessingAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterNumber(
                 self.BORDER_SIZE,
-                self.tr('Border Size'),
+                self.tr('Border size'),
                 type=QgsProcessingParameterNumber.Double,
                 optional=False,
                 minValue=0.0
@@ -122,7 +123,7 @@ class TreatmentPolygonsBuilderProcessingAlgorithm(QgsProcessingAlgorithm):
 
         self.addParameter(
             QgsProcessingParameterBoolean(
-                self.BOUNDARY, self.tr("Create Boundary Polygon")
+                self.BOUNDARY, self.tr("Create boundary polygon")
             )
         )
 
@@ -224,7 +225,7 @@ class TreatmentPolygonsBuilderProcessingAlgorithm(QgsProcessingAlgorithm):
         should provide a basic description about what the algorithm does and the
         parameters and outputs associated with it..
         """
-        return self.tr("Example algorithm short description")
+        return ProcessingAlgorithmHelpCreator.shortHelpString(self.name())
 
     def tr(self, string):
         """

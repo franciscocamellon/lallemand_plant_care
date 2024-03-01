@@ -34,6 +34,7 @@ from qgis.core import (QgsProject,
                        QgsProcessingParameterFile,
                        QgsProcessingParameterDefinition)
 
+from ..help.algorithms_help import ProcessingAlgorithmHelpCreator
 from ...constants import FETCH_ALL_TRIAL, FETCH_ONE_TRIAL, DIRECTORY_STRUCTURE
 from ...factories.postgres_factory import PostgresFactory
 from ...services.plot_service import PlotterService
@@ -77,7 +78,7 @@ class PresentationProcessingAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterVectorLayer(
                 self.T1_SURFACE,
-                self.tr('T1 Surface points layer'),
+                self.tr('T1 surface points layer'),
                 [QgsProcessing.TypeVectorPoint],
                 optional=False
             )
@@ -86,7 +87,7 @@ class PresentationProcessingAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterVectorLayer(
                 self.T2_SURFACE,
-                self.tr('T2 Surface points layer'),
+                self.tr('T2 surface points layer'),
                 [QgsProcessing.TypeVectorPoint],
                 optional=False
             )
@@ -106,7 +107,7 @@ class PresentationProcessingAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterVectorLayer(
                 self.T1_VALIDATION,
-                self.tr('T1 Validation Layer'),
+                self.tr('T1 validation layer'),
                 [QgsProcessing.TypeVectorPoint],
                 optional=False
             )
@@ -115,7 +116,7 @@ class PresentationProcessingAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterVectorLayer(
                 self.T2_VALIDATION,
-                self.tr('T2 Validation Layer'),
+                self.tr('T2 validation layer'),
                 [QgsProcessing.TypeVectorPoint],
                 optional=False
             )
@@ -133,7 +134,7 @@ class PresentationProcessingAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterFile(
                 self.OUTPUT,
-                self.tr('Output folder where to save report'),
+                self.tr('Output folder'),
                 QgsProcessingParameterFile.Folder
             )
         )
@@ -276,7 +277,7 @@ class PresentationProcessingAlgorithm(QgsProcessingAlgorithm):
         should provide a basic description about what the algorithm does and the
         parameters and outputs associated with it..
         """
-        return self.tr("Example algorithm short description")
+        return ProcessingAlgorithmHelpCreator.shortHelpString(self.name())
 
     def tr(self, string):
         """
@@ -334,7 +335,7 @@ class ParameterTrialName(QgsProcessingParameterDefinition):
 
     def metadata(self):
         return {
-            "widget_wrapper": "lallemand_plant_care.core.provider.algorithms.report_algorithm.TrialNameWidgetWrapper"
+            "widget_wrapper": "lallemand_plant_care.core.algorithms.report.presentation_algorithm.TrialNameWidgetWrapper"
         }
 
     def valueAsPythonString(self, value, context):
