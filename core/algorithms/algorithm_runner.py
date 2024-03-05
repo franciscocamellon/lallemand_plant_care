@@ -231,10 +231,10 @@ class AlgorithmRunner(QObject):
         dialog.exec_()
 
     @staticmethod
-    def runTreatmentPolygons(epsg, reproject, parameters=None):
+    def runTreatmentPolygons(epsg, parameters=None):
 
-        parameters['REPROJECT'] = reproject
         parameters['CRS'] = QgsCoordinateReferenceSystem(epsg)
+        print(parameters)
 
         dialog = createAlgorithmDialog('lpc:treatmentpolygonsbuilder', parameters)
         dialog.show()
