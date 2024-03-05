@@ -203,15 +203,15 @@ class AlgorithmRunner(QObject):
         dialog.exec_()
 
     @staticmethod
-    def runCreateReport(parameters, project):
-        parameters['OUTPUT'] = os.path.join(project.homePath(), '05_Results')
+    def runCreateReport(parameters):
+
         dialog = createAlgorithmDialog('lpc:createreport', parameters)
         dialog.show()
         dialog.exec_()
 
     @staticmethod
-    def runCreatePresentation(parameters, project):
-        parameters['OUTPUT'] = os.path.join(project.homePath(), '05_Results')
+    def runCreatePresentation(parameters):
+
         dialog = createAlgorithmDialog('lpc:createpresentation', parameters)
         dialog.show()
         dialog.exec_()

@@ -128,7 +128,9 @@ class ErrorCompensationProcessingAlgorithm(QgsProcessingAlgorithm):
             finalSurface = self.algRunner.runRasterCalculator(parameter, context=context, feedback=feedback)
 
             if exportPoints:
-                surfacePointsPath = os.path.join(filePath, '03_Error_Compensation', f'{finalSurface.name()}_Points.shp')
+                rasterName = finalSurface.name().split('_')
+                surfacePointsName = f"{rasterName[0]}_{rasterName[1]}_Points.shp"
+                surfacePointsPath = os.path.join(filePath, '03_Error_Compensation', surfacePointsName)
                 surfacePointsParameters = self.getYieldPointsParameters(finalSurface, 'yield', surfacePointsPath)
 
                 finalSurfacePoints = self.algRunner.runPixelsToPoints(surfacePointsParameters,

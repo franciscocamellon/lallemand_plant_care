@@ -40,6 +40,7 @@ from qgis.core import (QgsProject,
 QgsProcessingParameterCrs,
                        QgsProcessingMultiStepFeedback)
 
+from ....gui.wrappers.filtering_wrapper import ParameterFiltering
 from ..help.algorithms_help import ProcessingAlgorithmHelpCreator
 from ...algorithms.algorithm_runner import AlgorithmRunner
 from ...constants import QGIS_TOC_GROUPS
@@ -68,7 +69,6 @@ class FilteringHarvesterPointsProcessingAlgorithm(QgsProcessingAlgorithm):
         self.algRunner = AlgorithmRunner()
         self.systemService = SystemService()
         self.treatmentSettings = OptionsSettingsPage()
-
         self.treatmentList: Optional[list] = None
 
     def initAlgorithm(self, config=None):
@@ -78,10 +78,9 @@ class FilteringHarvesterPointsProcessingAlgorithm(QgsProcessingAlgorithm):
         """
 
         self.addParameter(
-            QgsProcessingParameterVectorLayer(
+            ParameterFiltering(
                 self.HARVESTER_POINTS_LAYER,
-                self.tr('Harvester points layer'),
-                [QgsProcessing.TypeVectorPoint],
+                description=self.tr('Harvester points layer'),
                 optional=False
             )
         )
@@ -148,7 +147,8 @@ class FilteringHarvesterPointsProcessingAlgorithm(QgsProcessingAlgorithm):
                 self.TARGET_PROJECTION,
                 self.tr('Target projection'),
                 options=['Lambert93', 'UTM'],
-                allowMultiple=False
+                allowMultiple=False,
+                defaultValue=0
             )
         )
 
@@ -157,17 +157,21 @@ class FilteringHarvesterPointsProcessingAlgorithm(QgsProcessingAlgorithm):
                 self.DATE_COLUMN,
                 self.tr('Date column'),
                 options=['Yes', 'No'],
-                allowMultiple=False
+                allowMultiple=False,
+                defaultValue=0
             )
         )
 
+    def parameterAsFilteredLayer(self, parameters, name, context):
+        return parameters[name]
 
     def processAlgorithm(self, parameters, context, feedback):
         """
         Here is where the processing itself takes place.
         """
 
-        harvesterLayer = self.parameterAsVectorLayer(parameters, self.HARVESTER_POINTS_LAYER, context)
+        # harvesterLayer = self.parameterAsVectorLayer(parameters, self.HARVESTER_POINTS_LAYER, context)
+        harvesterLayer = self.parameterAsFilteredLayer(parameters, self.HARVESTER_POINTS_LAYER, context)
         reproject = self.parameterAsBool(parameters, self.REPROJECT, context)
         idField = self.parameterAsFields(parameters, self.ID_FIELD, context)
         yieldField = self.parameterAsFields(parameters, self.YIELD_FIELD, context)

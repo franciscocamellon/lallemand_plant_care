@@ -40,10 +40,14 @@ from ...services.system_service import SystemService
 
 
 class CalculateErrorProcessingAlgorithm(QgsProcessingAlgorithm):
-    GRID = 'GRID'
-    VALIDATION_LAYER = 'VALIDATION_LAYER'
-    VALIDATION_FIELD = 'VALIDATION_FIELD'
-    OUTPUT = 'OUTPUT'
+    T1_RASTER = 'T1_RASTER'
+    T2_RASTER = 'T2_RASTER'
+    T1_VALIDATION_LAYER = 'T1_VALIDATION_LAYER'
+    T2_VALIDATION_LAYER = 'T2_VALIDATION_LAYER'
+    T1_VALIDATION_FIELD = 'T1_VALIDATION_FIELD'
+    T2_VALIDATION_FIELD = 'T2_VALIDATION_FIELD'
+    T1_OUTPUT = 'T1_OUTPUT'
+    T2_OUTPUT = 'T2_OUTPUT'
 
     def __init__(self):
         super().__init__()
@@ -60,16 +64,16 @@ class CalculateErrorProcessingAlgorithm(QgsProcessingAlgorithm):
 
         self.addParameter(
             QgsProcessingParameterRasterLayer(
-                self.GRID,
-                self.tr('Ordinary Kriging Raster'),
+                self.T1_RASTER,
+                self.tr('T1 Kriging Raster'),
                 [QgsProcessing.TypeRaster]
             )
         )
 
         self.addParameter(
             QgsProcessingParameterVectorLayer(
-                self.VALIDATION_LAYER,
-                self.tr('Validation Points Layer'),
+                self.T1_VALIDATION_LAYER,
+                self.tr('T1 validation Points Layer'),
                 [QgsProcessing.TypeVectorPoint],
                 optional=False
             )
@@ -77,9 +81,37 @@ class CalculateErrorProcessingAlgorithm(QgsProcessingAlgorithm):
 
         self.addParameter(
             QgsProcessingParameterField(
-                self.VALIDATION_FIELD,
-                self.tr('Field to evaluate'),
-                parentLayerParameterName=self.VALIDATION_LAYER,
+                self.T1_VALIDATION_FIELD,
+                self.tr('T1 field to evaluate'),
+                parentLayerParameterName=self.T1_VALIDATION_LAYER,
+                type=QgsProcessingParameterField.Any,
+                allowMultiple=False,
+                optional=False
+            )
+        )
+
+        self.addParameter(
+            QgsProcessingParameterRasterLayer(
+                self.T2_RASTER,
+                self.tr('T2 Kriging Raster'),
+                [QgsProcessing.TypeRaster]
+            )
+        )
+
+        self.addParameter(
+            QgsProcessingParameterVectorLayer(
+                self.T2_VALIDATION_LAYER,
+                self.tr('T2 Validation Points Layer'),
+                [QgsProcessing.TypeVectorPoint],
+                optional=False
+            )
+        )
+
+        self.addParameter(
+            QgsProcessingParameterField(
+                self.T2_VALIDATION_FIELD,
+                self.tr('T2 Field to evaluate'),
+                parentLayerParameterName=self.T2_VALIDATION_LAYER,
                 type=QgsProcessingParameterField.Any,
                 allowMultiple=False,
                 optional=False
@@ -88,7 +120,14 @@ class CalculateErrorProcessingAlgorithm(QgsProcessingAlgorithm):
 
         self.addOutput(
             QgsProcessingOutputVectorLayer(
-                self.OUTPUT,
+                self.T1_OUTPUT,
+                self.tr("Original layer without empty geometries")
+            )
+        )
+
+        self.addOutput(
+            QgsProcessingOutputVectorLayer(
+                self.T2_OUTPUT,
                 self.tr("Original layer without empty geometries")
             )
         )
@@ -98,25 +137,43 @@ class CalculateErrorProcessingAlgorithm(QgsProcessingAlgorithm):
         Here is where the processing itself takes place.
         """
 
-        grid = self.parameterAsRasterLayer(parameters, self.GRID, context)
-        validationLayer = self.parameterAsVectorLayer(parameters, self.VALIDATION_LAYER, context)
-        validationField = self.parameterAsFields(parameters, self.VALIDATION_FIELD, context)
+        t1Raster = self.parameterAsRasterLayer(parameters, self.T1_RASTER, context)
+        t2Raster = self.parameterAsRasterLayer(parameters, self.T2_RASTER, context)
+        t1ValidationLayer = self.parameterAsVectorLayer(parameters, self.T1_VALIDATION_LAYER, context)
+        t2ValidationLayer = self.parameterAsVectorLayer(parameters, self.T2_VALIDATION_LAYER, context)
+        t1ValidationField = self.parameterAsFields(parameters, self.T1_VALIDATION_FIELD, context)
+        t2ValidationField = self.parameterAsFields(parameters, self.T2_VALIDATION_FIELD, context)
 
-        output = self.algRunner.runAddRasterValuesToPoints(validationLayer, [grid], context=context, feedback=feedback)
-        estimatedField = self.systemService.getFieldName(grid.name())
+        parameters = self.getParameters(t1Raster, t1ValidationLayer, t1ValidationField, t2Raster, t2ValidationLayer, t2ValidationField)
 
-        layerWithErrorValues = self.layerService.updateFeatures(output, validationField[0], estimatedField, feedback)
+        outputList = list()
 
-        rmse = self.algRunner.runRMSE(layerWithErrorValues, validationField[0], VALIDATION_FIELDS[2], context=context, feedback=feedback)
+        for raster, values in parameters.items():
 
-        layerWithRmse = self.layerService.updateRmseField(layerWithErrorValues, estimatedField, rmse['OUTPUT']['RMSE'], rmse['OUTPUT']['PERCENTUAL_RMSE'], feedback)
+            output = self.algRunner.runAddRasterValuesToPoints(values[1], [values[0]], context=context, feedback=feedback)
+            estimatedField = self.systemService.getFieldName(values[0].name())
 
-        fieldsToDelete = self.layerService.filterByFieldName(layerWithRmse, [estimatedField], inverse=False)
-        layerWithCleanFields = self.layerService.deleteFields(layerWithRmse, fieldsToDelete)
+            layerWithErrorValues = self.layerService.updateFeatures(output, values[2][0], estimatedField, feedback)
 
-        self.layerService.updateOutputLayer(validationLayer, layerWithCleanFields)
+            rmse = self.algRunner.runRMSE(layerWithErrorValues, values[2][0], VALIDATION_FIELDS[2], context=context, feedback=feedback)
 
-        return {self.OUTPUT: validationLayer}
+            layerWithRmse = self.layerService.updateRmseField(layerWithErrorValues, estimatedField, rmse['OUTPUT']['RMSE'], rmse['OUTPUT']['PERCENTUAL_RMSE'], feedback)
+
+            fieldsToDelete = self.layerService.filterByFieldName(layerWithRmse, [estimatedField], inverse=False)
+            layerWithCleanFields = self.layerService.deleteFields(layerWithRmse, fieldsToDelete)
+
+            self.layerService.updateOutputLayer(values[1], layerWithCleanFields)
+
+            outputList.append(layerWithCleanFields)
+
+        return {self.T1_OUTPUT: outputList[0], self.T2_OUTPUT: outputList[1]}
+
+    @staticmethod
+    def getParameters(t1Raster, t1ValidationLayer, t1ValidationField, t2Raster, t2ValidationLayer, t2ValidationField):
+        return {
+            'T1': [t1Raster, t1ValidationLayer, t1ValidationField],
+            'T2': [t2Raster, t2ValidationLayer, t2ValidationField]
+                }
 
     def name(self):
         """

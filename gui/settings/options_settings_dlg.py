@@ -98,6 +98,8 @@ class OptionsSettingsPage(QgsOptionsPageWidget, Ui_Form):
         }
 
     def saveTreatmentPolygonsSettings(self):
+        self.settings.setValue('LPC/boucle_rang', self.boucleRadioButton.isChecked())
+        self.settings.setValue('LPC/ligne_parcelle', self.ligneRadioButton.isChecked())
         self.settings.setValue('LPC/odd_polygons', self.oddPolygonsNameLineEdit.text())
         self.settings.setValue('LPC/even_polygons', self.evenPolygonsNameLineEdit.text())
         self.settings.setValue('LPC/border_size', self.sizeBorderSpinBox.value())
@@ -105,10 +107,12 @@ class OptionsSettingsPage(QgsOptionsPageWidget, Ui_Form):
         self.settings.setValue('LPC/sous_echantillonnage', self.sousEchantillonnageSpinBox.value())
 
     def loadTreatmentPolygonsSettings(self):
-        self.oddPolygonsNameLineEdit.setText(self.settings.value('LPC/odd_polygons', self.treatment[0]))
-        self.evenPolygonsNameLineEdit.setText(self.settings.value('LPC/even_polygons', self.treatment[1]))
-        self.sizeBorderSpinBox.setValue(float(self.settings.value('LPC/border_size', self.treatment[2])))
-        self.largeurCoupeSpinBox.setValue(float(self.settings.value('LPC/largeur_coupe', self.treatment[3])))
+        self.boucleRadioButton.setChecked(bool(self.settings.value('LPC/boucle_rang', self.treatment[0])))
+        self.ligneRadioButton.setChecked(bool(self.settings.value('LPC/ligne_parcelle', self.treatment[1])))
+        self.oddPolygonsNameLineEdit.setText(self.settings.value('LPC/odd_polygons', self.treatment[2]))
+        self.evenPolygonsNameLineEdit.setText(self.settings.value('LPC/even_polygons', self.treatment[3]))
+        self.sizeBorderSpinBox.setValue(float(self.settings.value('LPC/border_size', self.treatment[4])))
+        self.largeurCoupeSpinBox.setValue(float(self.settings.value('LPC/largeur_coupe', self.treatment[5])))
         self.sousEchantillonnageSpinBox.setValue(
             float(self.settings.value('LPC/sous_echantillonnage', self.treatment[4])))
 
@@ -117,7 +121,8 @@ class OptionsSettingsPage(QgsOptionsPageWidget, Ui_Form):
             [self.settings.value('LPC/odd_polygons'), self.settings.value('LPC/even_polygons')],
             self.settings.value('LPC/largeur_coupe'),
             self.settings.value('LPC/sous_echantillonnage'),
-            self.settings.value('LPC/border_size')
+            self.settings.value('LPC/border_size'),
+            [self.settings.value('LPC/boucle_rang'), self.settings.value('LPC/ligne_parcelle')]
         )
 
     def saveKrigingSettings(self):

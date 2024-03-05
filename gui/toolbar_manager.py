@@ -26,12 +26,16 @@ from qgis.PyQt.QtCore import pyqtSlot
 from qgis.PyQt.QtWidgets import QWidget
 from qgis.core import QgsMapLayer
 
+from .filter.filtering_harvester_points import FilteringHarvesterPoints
 from .geostatistics_trial.geostatistics_trial import GeostatisticsTrial
 from .kriging.kriging_dlg import OrdinaryKriging
 from .layer_manager.load_files_dlg import LoadFiles
 from .lpc_team.farmer_manager import FarmerManager
 from .lpc_team.lpc_team_manager import RegisterLpcTeam
+from .report.analysis_report import AnalysisReport
 from .toolbar.toolbar_form_base import Ui_Form
+from .treatment.treatment_polygons import TreatmentPolygons
+from .validation.sampling_layers_validation import SamplingLayersValidation
 from ..core.algorithms.algorithm_runner import AlgorithmRunner
 from ..core.constants import QGIS_TOC_GROUPS
 from ..core.services.layer_service import LayerService
@@ -118,44 +122,13 @@ class ToolbarManager(QWidget, Ui_Form):
 
     def treatments(self):
         project = self.layerService.checkForSavedProject()
-
         if project:
-            layer = project.mapLayersByName('GPS_points')[0]
-            epsg = str()
-            reproject: bool() = None
-            parameters = {'GPS_POINTS_LAYER': layer,
-                          'REPROJECT': '',
-                          'CRS': '',
-                          'SORTING_FIELD': 'ID',
-                          'METHOD': 1,
-                          'BORDER_SIZE': 10,
-                          'BOUNDARY': True}
-
-            if layer and layer.crs().isGeographic():
-                crsOperations = self.layerService.getSuggestedCrs(layer)
-                reproject = True
-                epsg = crsOperations[2]
-
-            self.algRunner.runTreatmentPolygons(epsg, reproject, parameters)
+            TreatmentPolygons(project).runTreatmentPolygons()
 
     def filtering(self):
-
         project = self.layerService.checkForSavedProject()
-        layers = project.mapLayers().values()
-        harvesterLayer = self.layerService.filterByLayerName(list(layers),
-                                                             ['GPS', 'T1', 'T2', 'Gain', 'Yield'],
-                                                             inverse=True)
         if project:
-            parameters = {
-                'HARVESTER_POINTS_LAYER': harvesterLayer[0],
-                'REPROJECT': True,
-                'ID_FIELD': '',
-                'YIELD_FIELD': '',
-                'TREATMENT_POLYGONS': '',
-                'TREATMENT_ID_FIELD': '',
-                'BOUNDARY_POLYGON': '',
-                'TARGET_PROJECTION': 0, 'DATE_COLUMN': 0}
-            self.algRunner.runHarvesterFilter(parameters)
+            FilteringHarvesterPoints(project).runHarvesterFilter()
 
     def ordinaryKriging(self):
         project = self.layerService.checkForSavedProject()
@@ -169,34 +142,17 @@ class ToolbarManager(QWidget, Ui_Form):
     def validation(self):
         project = self.layerService.checkForSavedProject()
         if project:
-            parameters = {
-                'GRID': '',
-                'VALIDATION_FIELD': '',
-                'VALIDATION_LAYER': ''
-            }
-            self.algRunner.runCalculateError(parameters)
+            SamplingLayersValidation(project).runCalculateError()
 
     def errorCompensation(self):
         project = self.layerService.checkForSavedProject()
         if project:
-            parameters = {
-                'POINTS': True,
-                'T1_80_RASTER': '',
-                'T1_ERROR_RASTER': '',
-                'T2_80_RASTER': '',
-                'T2_ERROR_RASTER': ''
-            }
-            self.algRunner.runErrorCompensation(parameters)
+            SamplingLayersValidation(project).runErrorCompensation()
 
     def gainSurface(self):
         project = self.layerService.checkForSavedProject()
         if project:
-            parameters = {
-                'POINTS': True,
-                'T1_RASTER': '',
-                'T2_RASTER': ''
-            }
-            self.algRunner.runGainSurface(parameters)
+            SamplingLayersValidation(project).runGainSurface()
 
     def clearTreeView(self):
         project = self.layerService.checkForSavedProject()
@@ -219,17 +175,12 @@ class ToolbarManager(QWidget, Ui_Form):
     def getReport(self):
         project = self.layerService.checkForSavedProject()
         if project:
-            parameters = {
-                'GAIN_POINTS': '',
-                'OUTPUT': '',
-                'T1_LAYER': '',
-                'T1_SURFACE': '',
-                'T2_LAYER': '',
-                'T2_SURFACE': '',
-                'TRIAL_NAME': '',
-                'YIELD': ''
-            }
-            self.algRunner.runCreateReport(parameters, project)
+            AnalysisReport(project).runCreateReport()
+
+    def getPresentation(self):
+        project = self.layerService.checkForSavedProject()
+        if project:
+            AnalysisReport(project).runCreatePresentation()
 
     def composer(self):
         project = self.layerService.checkForSavedProject()
@@ -245,19 +196,3 @@ class ToolbarManager(QWidget, Ui_Form):
         project = self.layerService.checkForSavedProject()
         if project:
             self.algRunner.runCreateSampleLayers()
-
-    def getPresentation(self):
-        project = self.layerService.checkForSavedProject()
-        if project:
-            parameters = {
-                'GAIN_POINTS': '',
-                'OUTPUT': '',
-                'T1_SURFACE': '',
-                'T1_VALIDATION': '',
-                'T2_SURFACE': '',
-                'T2_VALIDATION': '',
-                'TRIAL_NAME': '',
-                'YIELD_FIELD': ''
-            }
-            self.algRunner.runCreatePresentation(parameters, project)
-

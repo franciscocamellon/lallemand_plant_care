@@ -15,7 +15,7 @@ SAMPLING_LAYER_NAMES = ['T1_total', 'T1_80_perc', 'T1_20_perc', 'T2_total', 'T2_
 
 DEFAULT_SETTINGS = {
     'SERVER': ['BD_GEOSTAT_LPC', 'localhost', '5432', 'postgres', 'postgres'],
-    'TREATMENT': ['T1', 'T2', 10.0, 0.0, 1.0],
+    'TREATMENT': [False, True, 'T1', 'T2', 10.0, 0.0, 1.0],
     'KRIGING': ['VRYIELDMAS;VRYIELD', 1.5, 1.5],
     'HISTOGRAM': [30, '#636efa', '#000000'],
     'SYMBOLOGY': [4, '#bfbcbc', '#ffff00', '#55ff00', '#267300']

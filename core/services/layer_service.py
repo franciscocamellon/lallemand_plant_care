@@ -549,13 +549,6 @@ class LayerService:
 
     @staticmethod
     def extractValueFromRaster(raster, feature, fieldName):
-        """
-        Extracts a value from a raster at the location of a feature's geometry point.
-        :param raster: The raster layer from which to extract the value.
-        :param feature: The feature for which the value is extracted.
-        :param fieldName: The name of the field where the extracted value will be stored.
-        :returns: The updated feature with the extracted value.
-        """
         geometry = feature.geometry()
         observation_point = geometry.asPoint()
         x, y = observation_point.x(), observation_point.y()
@@ -574,6 +567,7 @@ class LayerService:
         numberClasses = int(self.symbologySettings[0])
         classes = self.calculateVectorClasses(minValue, maxValue, numberClasses)
         colors = self.symbologySettings[1]
+        colors.reverse()
 
         rendererInterval = list()
         for index in range(4):
@@ -584,6 +578,7 @@ class LayerService:
 
         renderer = QgsGraduatedSymbolRenderer(fieldName, rendererInterval)
         renderer.setMode(QgsGraduatedSymbolRenderer.EqualInterval)
+        colors.reverse()
         return renderer
 
     def createBoundaryLayerSymbology(self, layer):
