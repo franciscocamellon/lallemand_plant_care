@@ -43,9 +43,10 @@ class SamplingLayersValidation(QObject):
         self.layers = self.project.instance().mapLayers()
 
     def verifyLoadedLayer(self, layerName):
-        layer = self.project.mapLayersByName(layerName)
+        layer = self.project.mapLayersByName(layerName)[0]
         if not layer:
             self.messageService.warningMessage('Filtering points', f'There is no {layerName} layer loaded!')
+            return None
         return layer
 
     def getFields(self, layer, fieldNames):
@@ -63,18 +64,18 @@ class SamplingLayersValidation(QObject):
     def runCalculateError(self):
         t1ValidationLayer = self.verifyLoadedLayer('T1_validation')
         t2ValidationLayer = self.verifyLoadedLayer('T2_validation')
-        t1Field = self.getFields(t1ValidationLayer[0], self.kriging[0].split(';'))
-        t2Field = self.getFields(t2ValidationLayer[0], self.kriging[0].split(';'))
+        t1Field = self.getFields(t1ValidationLayer, self.kriging[0].split(';'))
+        t2Field = self.getFields(t2ValidationLayer, self.kriging[0].split(';'))
 
         t1Raster = self.getRasterLayers(['1_Krig_T1_80_perc_'])
         t2Raster = self.getRasterLayers(['1_Krig_T2_80_perc_'])
 
         parameters = {
             'T1_RASTER': t1Raster[0],
-            'T1_VALIDATION_LAYER': t1ValidationLayer[0],
+            'T1_VALIDATION_LAYER': t1ValidationLayer,
             'T1_VALIDATION_FIELD': t1Field[0].name(),
             'T2_RASTER': t2Raster[0],
-            'T2_VALIDATION_LAYER': t2ValidationLayer[0],
+            'T2_VALIDATION_LAYER': t2ValidationLayer,
             'T2_VALIDATION_FIELD': t2Field[0].name()
         }
 

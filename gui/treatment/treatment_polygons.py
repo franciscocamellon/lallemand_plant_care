@@ -42,34 +42,29 @@ class TreatmentPolygons(QObject):
         self.settings = OptionsSettingsPage().getTreatmentPolygonsSettings()
 
     def verifyLoadedLayer(self, layerName):
-        layer = self.project.mapLayersByName(layerName)
+        layer = self.project.mapLayersByName(layerName)[0]
         if not layer:
             self.messageService.warningMessage('Filtering points', f'There is no {layerName} layer loaded!')
+            return None
         return layer
 
     def runTreatmentPolygons(self):
         reproject: bool() = None
         epsg: str = ''
-        print('method', self.settings[4][1])
         method = 1 if self.settings[4][1] else 0
-        print('method', method)
-
         layer = self.verifyLoadedLayer('GPS_points')
 
-
-        if layer[0].crs().isGeographic():
-            crsOperations = self.layerService.getSuggestedCrs(layer[0])
+        if layer and layer.crs().isGeographic():
+            crsOperations = self.layerService.getSuggestedCrs(layer)
             reproject = True
             epsg = crsOperations[2]
 
-        parameters = {'GPS_POINTS_LAYER': layer[0],
+        parameters = {'GPS_POINTS_LAYER': layer,
                       'REPROJECT': reproject,
                       'CRS': '',
                       'SORTING_FIELD': 'ID',
                       'METHOD': method,
                       'BORDER_SIZE': float(self.settings[3]),
                       'BOUNDARY': True}
-
-
 
         self.algRunner.runTreatmentPolygons(epsg, parameters)
