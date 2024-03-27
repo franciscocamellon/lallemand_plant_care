@@ -97,6 +97,27 @@ class WidgetService:
                 tableWidget.setItem(rowIdx, colIdx, item)
 
     @staticmethod
+    def populateSqliteTable(result, tableWidget):
+        tableWidget.clearContents()
+
+        if not result:
+            tableWidget.setRowCount(1)
+            return
+
+        tableWidget.setRowCount(len(result))
+        keys = result[0]
+        tableWidget.setColumnCount(len(keys))
+
+        for rowIdx, row in enumerate(result):
+            for colIdx, key in enumerate(keys):
+                value = row[colIdx]
+                if isinstance(value, datetime.datetime):
+                    value = value.strftime("%d/%m/%Y") if value else ""
+
+                item = QtWidgets.QTableWidgetItem(str(value))
+                tableWidget.setItem(rowIdx, colIdx, item)
+
+    @staticmethod
     def enableWidget(widget, state, checkBox=False):
         if state == 0:
             widget.setEnabled(False)

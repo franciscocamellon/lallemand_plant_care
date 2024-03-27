@@ -27,7 +27,7 @@ from qgis.PyQt.QtWidgets import QHeaderView
 
 from .ui_farmer_manager import Ui_FarmerDialog
 from ...core.constants import *
-from ...core.factories.postgres_factory import PostgresFactory
+from ...core.factories.sqlite_factory import SqliteFactory
 from ...core.services.message_service import MessageService
 from ...core.services.system_service import SystemService
 from ...core.services.widget_service import WidgetService
@@ -39,7 +39,7 @@ class FarmerManager(QtWidgets.QDialog, Ui_FarmerDialog):
         """Constructor."""
         super(FarmerManager, self).__init__()
         self.setupUi(self)
-        self.postgresFactory = PostgresFactory()
+        self.postgresFactory = SqliteFactory()
         self.setWindowTitle("Farmer and Crop Management")
         self.setFarmerWidget()
         self.setCropWidget()
@@ -78,9 +78,9 @@ class FarmerManager(QtWidgets.QDialog, Ui_FarmerDialog):
             self.farmerFirstNameLineEdit.setText(data[1])
             self.farmerLastNameLineEdit.setText(data[2])
             self.farmerAddressLineEdit.setText(data[3])
-            self.farmerTown.setText(data[4])
-            self.farmerCountry.setText(data[5])
-            self.farmerZipCode.setText(data[6])
+            self.farmerTown.setText(data[5])
+            self.farmerCountry.setText(data[6])
+            self.farmerZipCode.setText(data[4])
             self.farmerAddPushButton.setText('Update')
         else:
             MessageService().messageBox('Updating data', 'No data selected.', 5, 1)
@@ -133,6 +133,7 @@ class FarmerManager(QtWidgets.QDialog, Ui_FarmerDialog):
                 data = self.prepareCropData()
                 self.cropAddPushButton.setText('Add')
                 self.registerCropGroupBox.setTitle('Add crop')
+                self.cropIDLabel.setText('noid')
             else:
                 sql = INSERT_CROP_SQL
                 data = self.prepareCropData()
@@ -150,6 +151,7 @@ class FarmerManager(QtWidgets.QDialog, Ui_FarmerDialog):
                 data = self.prepareFarmerData()
                 self.farmerAddPushButton.setText('Add')
                 self.farmerGroupBox.setTitle('Add farmer')
+                self.farmerIDLabel.setText('noid')
             else:
                 sql = INSERT_FARMER_SQL
                 data = self.prepareFarmerData()
@@ -190,12 +192,12 @@ class FarmerManager(QtWidgets.QDialog, Ui_FarmerDialog):
     def loadCropData(self):
         result = self.postgresFactory.getSqlExecutor(FETCH_ALL_CROP)
 
-        WidgetService().populateTable(result, self.cropTableWidget)
+        WidgetService().populateSqliteTable(result, self.cropTableWidget)
 
     def loadFarmerData(self):
         result = self.postgresFactory.getSqlExecutor(FETCH_ALL_FARMER)
 
-        WidgetService().populateTable(result, self.farmerTableWidget)
+        WidgetService().populateSqliteTable(result, self.farmerTableWidget)
 
     def deleteFarmer(self):
         selectedData = WidgetService().getSelectedData(self.farmerTableWidget, 9, 'Deleting data')

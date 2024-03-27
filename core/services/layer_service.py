@@ -86,6 +86,12 @@ class LayerService:
         return convertedLayerType
 
     @staticmethod
+    def getSqlitePath():
+        currentDirectory = os.path.dirname(__file__)
+        parentDirectory = os.path.join(currentDirectory, '..')
+        return os.path.join(parentDirectory, 'resources', 'BD_GEOSTAT_LPC.sqlite')
+
+    @staticmethod
     def _getWorldZonesPath():
         currentDirectory = os.path.dirname(__file__)
         parentDirectory = os.path.join(currentDirectory, '..')

@@ -27,8 +27,8 @@ from qgis.PyQt.QtCore import QSettings
 from qgis.PyQt.QtGui import QIcon, QColor
 from qgis.gui import QgsOptionsWidgetFactory, QgsOptionsPageWidget
 
-from ...core.constants import DEFAULT_SETTINGS
 from .options_settings_dlg_base import Ui_Form
+from ...core.constants import DEFAULT_SETTINGS
 
 SETTINGS_KEY = "LPC/postgresConnection"
 
@@ -50,7 +50,6 @@ class OptionsSettingsPage(QgsOptionsPageWidget, Ui_Form):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setupUi(self)
-        print(os.path.join(os.path.dirname(__file__), 'BD_GEOSTAT_LPC.sqlite'))
         self.settings = QSettings()
         self.server = DEFAULT_SETTINGS['SERVER']
         self.treatment = DEFAULT_SETTINGS['TREATMENT']
@@ -82,7 +81,7 @@ class OptionsSettingsPage(QgsOptionsPageWidget, Ui_Form):
         self.settings.setValue('LPC/sqlite', self.sqliteFileWidget.filePath())
 
     def loadSqliteSettings(self):
-        sqlitePath = os.path.join(os.path.dirname(__file__), 'BD_GEOSTAT_LPC.sqlite')
+        sqlitePath = self.getSqlitePath()
         self.sqliteFileWidget.setFilePath(sqlitePath)
 
     def getSqliteSettings(self):
@@ -195,3 +194,9 @@ class OptionsSettingsPage(QgsOptionsPageWidget, Ui_Form):
              QColor(self.settings.value('LPC/symbology_third_color')),
              QColor(self.settings.value('LPC/symbology_fourth_color'))]
         )
+
+    @staticmethod
+    def getSqlitePath():
+        currentDirectory = os.path.dirname(__file__)
+        parentDirectory = os.path.join(currentDirectory, '..')
+        return os.path.join(':plugins/lallemand_plant_care/core', 'resources', 'BD_GEOSTAT_LPC.sqlite')

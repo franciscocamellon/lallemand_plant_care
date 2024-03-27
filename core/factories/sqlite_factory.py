@@ -27,12 +27,14 @@ import sqlite3
 import logging
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
+from ..services.layer_service import LayerService
 from ...gui.settings.options_settings_dlg import OptionsSettingsPage
 
 
 class SqliteFactory:
     def __init__(self):
         super(SqliteFactory, self).__init__()
+        self.layerService = LayerService()
         self._initializeLogging()
         # self.connection = self.openConnection()
 
@@ -41,13 +43,9 @@ class SqliteFactory:
         logging.basicConfig(filename=os.path.join(os.path.dirname(__file__), 'sqlite_log.log'), level=logging.ERROR)
 
     def openConnection(self):
-        sqliteDatabase = OptionsSettingsPage().getSqliteSettings()
-        with sqlite3.connect(
-            database=sqliteDatabase
-        ) as connection:
-            connection.isolation_level = 'DEFERRED'
-            connection.autocommit = sqlite3.LEGACY_TRANSACTION_CONTROL
-        return connection
+        sqliteDatabase = self.layerService.getSqlitePath()
+        # sqliteDatabase = OptionsSettingsPage().getSqliteSettings()
+        return sqlite3.connect(database=sqliteDatabase)
 
     def fetchDataToCombobox(self, combobox, query, displayColumns, idColumn, concatSeparator=' '):
         try:
@@ -71,10 +69,10 @@ class SqliteFactory:
     def getSqlExecutor(self, sql):
         try:
             connection = self.openConnection()
-            with connection.cursor() as curs:
-                curs.execute(sql)
-                result = curs.fetchall()
-            return result
+            curs = connection.cursor()
+            result = curs.execute(sql)
+
+            return result.fetchall()
 
         except sqlite3.Error as e:
             error_message = f"Error executing SQL: {e}"
@@ -84,11 +82,13 @@ class SqliteFactory:
     def postSqlExecutor(self, sql, data=None):
         try:
             connection = self.openConnection()
-            with connection.cursor() as curs:
-                if data:
-                    curs.execute(sql, data)
-                else:
-                    curs.execute(sql)
+            curs = connection.cursor()
+            if data:
+                curs.execute(sql, data)
+                connection.commit()
+            else:
+                curs.execute(sql)
+                connection.commit()
             return True
 
         except sqlite3.Error as e:

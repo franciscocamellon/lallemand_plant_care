@@ -120,3 +120,22 @@ ERROR:root:Error executing SQL: invalid input syntax for type double precision: 
 LINE 1: ...l, id_contour, create_date) VALUES ('ssdadasass', 'sadadasa'...
                                                              ^
 
+ERROR:root:Error executing SQL: no such table: lpc_team
+ERROR:root:Error executing SQL: no such table: lpc_team
+ERROR:root:Error executing SQL: no such table: lpc_team
+ERROR:root:Error executing SQL: no such table: lpc_team
+ERROR:root:Error executing SQL: near "%": syntax error
+ERROR:root:Error executing SQL: near "%": syntax error
+ERROR:root:Error executing SQL: table lpc_team has 5 columns but 3 values were supplied
+ERROR:root:Error executing SQL: Incorrect number of bindings supplied. The current statement uses 5, and there are 3 supplied.
+ERROR:root:Error executing SQL: Incorrect number of bindings supplied. The current statement uses 5, and there are 3 supplied.
+ERROR:root:Error executing SQL: table lpc_team has 5 columns but 4 values were supplied
+ERROR:root:Error executing SQL: Incorrect number of bindings supplied. The current statement uses 3, and there are 4 supplied.
+ERROR:root:Error executing SQL: no such table: lpc_team
+ERROR:root:Error executing SQL: no such table: geostatistics.crop_trial
+ERROR:root:Error executing SQL: no such table: geostatistics.crop_trial
+ERROR:root:Error executing SQL: no such table: geostatistics.crop_trial
+ERROR:root:Error executing SQL: no such table: geostatistics.crop_trial
+ERROR:root:Error executing SQL: no such table: geostatistics.crop_trial
+ERROR:root:Error executing SQL: no such table: geostatistics.crop_trial
+ERROR:root:Error executing SQL: Incorrect number of bindings supplied. The current statement uses 6, and there are 7 supplied.

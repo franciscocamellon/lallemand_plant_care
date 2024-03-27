@@ -27,7 +27,7 @@ from qgis.PyQt.QtWidgets import QHeaderView
 
 from .ui_lpc_team_manager import Ui_LpcTeamManagerDialog
 from ...core.constants import FETCH_ALL_TEAM, DELETE_TEAM_SQL, UPDATE_TEAM_SQL, INSERT_TEAM_SQL
-from ...core.factories.postgres_factory import PostgresFactory
+from ...core.factories.sqlite_factory import SqliteFactory
 from ...core.services.message_service import MessageService
 from ...core.services.system_service import SystemService
 from ...core.services.widget_service import WidgetService
@@ -39,7 +39,7 @@ class RegisterLpcTeam(QtWidgets.QDialog, Ui_LpcTeamManagerDialog):
         """Constructor."""
         super(RegisterLpcTeam, self).__init__()
         self.setupUi(self)
-        self.postgresFactory = PostgresFactory()
+        self.postgresFactory = SqliteFactory()
         self.setWindowTitle("LPC Team Management")
         self.tableWidget.setHorizontalHeaderLabels(['Id', "First name", "Last name", "Create date"])
         self.tableWidget.setColumnHidden(0, True)
@@ -59,6 +59,7 @@ class RegisterLpcTeam(QtWidgets.QDialog, Ui_LpcTeamManagerDialog):
             data = self.prepareTeamData()
             self.lpcTeamAddPushButton.setText('Add')
             self.addGroupBox.setTitle('Add professional')
+            self.lpcTeamIDLabel.setText('noid')
         else:
             sql = INSERT_TEAM_SQL
             data = self.prepareTeamData()
@@ -85,7 +86,7 @@ class RegisterLpcTeam(QtWidgets.QDialog, Ui_LpcTeamManagerDialog):
 
     def loadData(self):
         result = self.postgresFactory.getSqlExecutor(FETCH_ALL_TEAM)
-        WidgetService().populateTable(result, self.tableWidget)
+        WidgetService().populateSqliteTable(result, self.tableWidget)
 
     def deleteTeamMember(self):
         selectedData = WidgetService().getSelectedData(self.tableWidget, 5, 'Deleting data')
