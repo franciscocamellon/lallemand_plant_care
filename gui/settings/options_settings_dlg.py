@@ -21,6 +21,7 @@
  *                                                                         *
  ***************************************************************************/
 """
+import os
 
 from qgis.PyQt.QtCore import QSettings
 from qgis.PyQt.QtGui import QIcon, QColor
@@ -49,6 +50,7 @@ class OptionsSettingsPage(QgsOptionsPageWidget, Ui_Form):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setupUi(self)
+        print(os.path.join(os.path.dirname(__file__), 'BD_GEOSTAT_LPC.sqlite'))
         self.settings = QSettings()
         self.server = DEFAULT_SETTINGS['SERVER']
         self.treatment = DEFAULT_SETTINGS['TREATMENT']
@@ -66,6 +68,7 @@ class OptionsSettingsPage(QgsOptionsPageWidget, Ui_Form):
         self.saveKrigingSettings()
         self.saveHistogramSettings()
         self.saveSymbologySettings()
+        self.saveSqliteSettings()
 
     def loadSettings(self):
         self.loadServerSettings()
@@ -73,6 +76,17 @@ class OptionsSettingsPage(QgsOptionsPageWidget, Ui_Form):
         self.loadKrigingSettings()
         self.loadHistogramSettings()
         self.loadSymbologySettings()
+        self.loadSqliteSettings()
+
+    def saveSqliteSettings(self):
+        self.settings.setValue('LPC/sqlite', self.sqliteFileWidget.filePath())
+
+    def loadSqliteSettings(self):
+        sqlitePath = os.path.join(os.path.dirname(__file__), 'BD_GEOSTAT_LPC.sqlite')
+        self.sqliteFileWidget.setFilePath(sqlitePath)
+
+    def getSqliteSettings(self):
+        return self.settings.value('LPC/sqlite')
 
     def saveServerSettings(self):
         self.settings.setValue('LPC/database', self.databaseNameLineEdit.text())
