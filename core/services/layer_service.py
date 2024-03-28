@@ -386,7 +386,7 @@ class LayerService:
 
         except Exception as load_file_exception:
             errorMessage = f'Error loading shape file: {str(load_file_exception)}'
-            self.messageService.messageBox('Loading file', errorMessage, 5, 1)
+            # self.messageService.messageBox('Loading file', errorMessage, 5, 1)
             self.messageService.logMessage(f'Loading shapefile: {errorMessage}: FAILED', 2)
 
     def createMemoryVectorLayer(self, wkbType, layerName, crs, fields=None, features=None):

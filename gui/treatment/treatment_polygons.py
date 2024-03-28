@@ -51,7 +51,8 @@ class TreatmentPolygons(QObject):
     def runTreatmentPolygons(self):
         reproject: bool() = None
         epsg: str = ''
-        method = 1 if self.settings[4][1] else 0
+        # method = 1 if self.settings[4][1] else 0
+        print(self.settings[4][1])
         layer = self.verifyLoadedLayer('GPS_points')
 
         if layer and layer.crs().isGeographic():
@@ -63,7 +64,7 @@ class TreatmentPolygons(QObject):
                       'REPROJECT': reproject,
                       'CRS': '',
                       'SORTING_FIELD': 'ID',
-                      'METHOD': method,
+                      'METHOD': 1,
                       'BORDER_SIZE': float(self.settings[3]),
                       'BOUNDARY': True}
 
