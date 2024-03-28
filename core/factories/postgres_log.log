@@ -139,3 +139,50 @@ ERROR:root:Error executing SQL: no such table: geostatistics.crop_trial
 ERROR:root:Error executing SQL: no such table: geostatistics.crop_trial
 ERROR:root:Error executing SQL: no such table: geostatistics.crop_trial
 ERROR:root:Error executing SQL: Incorrect number of bindings supplied. The current statement uses 6, and there are 7 supplied.
+ERROR:root:Error executing SQL: relation "lpc_team" does not exist
+LINE 1: ...st_name, last_name, create_date, update_date FROM lpc_team W...
+                                                             ^
+
+ERROR:root:Error executing SQL: relation "farmer" does not exist
+LINE 1: SELECT * FROM farmer WHERE id = '81c8fdef-7cf6-4d78-a69b-889...
+                      ^
+
+ERROR:root:Error executing SQL: relation "crop_trial" does not exist
+LINE 1: SELECT * FROM crop_trial WHERE id = '03fbe366-c21b-44cf-9d63...
+                      ^
+
+ERROR:root:Error executing SQL: relation "lpc_team" does not exist
+LINE 1: ...st_name, last_name, create_date, update_date FROM lpc_team W...
+                                                             ^
+
+ERROR:root:Error executing SQL: relation "farmer" does not exist
+LINE 1: SELECT * FROM farmer WHERE id = '81c8fdef-7cf6-4d78-a69b-889...
+                      ^
+
+ERROR:root:Error executing SQL: relation "crop_trial" does not exist
+LINE 1: SELECT * FROM crop_trial WHERE id = '03fbe366-c21b-44cf-9d63...
+                      ^
+
+ERROR:root:Error executing SQL: relation "geostatistic_trial" does not exist
+LINE 5:     geostatistic_trial gt
+            ^
+
+ERROR:root:Error executing SQL: relation "geostatistic_trial" does not exist
+LINE 5:     geostatistic_trial gt
+            ^
+
+ERROR:root:Error executing SQL: no such table: domains.yes_or_not
+ERROR:root:Error executing SQL: no such table: domains.yes_or_not
+ERROR:root:Error executing SQL: no such table: domains.yes_or_not
+ERROR:root:Error executing SQL: no such table: domains.yes_or_not
+ERROR:root:Error executing SQL: no such table: domains.yes_or_not
+ERROR:root:Error executing SQL: no such table: domains.yes_or_not
+ERROR:root:Error executing SQL: no such table: domains.yes_or_not
+ERROR:root:Error executing SQL: no such table: domains.yes_or_not
+ERROR:root:Error executing SQL: no such table: domains.yes_or_not
+ERROR:root:Error executing SQL: no such table: domains.yes_or_not
+ERROR:root:Error executing SQL: no such table: domains.yes_or_not
+ERROR:root:Error executing SQL: no such table: domains.yes_or_not
+ERROR:root:Error executing SQL: no such table: domains.yes_or_not
+ERROR:root:Error executing SQL: no such table: domains.yes_or_not
+ERROR:root:Error executing SQL: no such table: domains.yes_or_not

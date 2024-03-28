@@ -50,7 +50,7 @@ class SqliteFactory:
     def fetchDataToCombobox(self, combobox, query, displayColumns, idColumn, concatSeparator=' '):
         try:
             combobox.clear()
-            result = self.getSqlExecutor(query)
+            result = self.getSqlExecutor(query, dictionary=True)
 
             for row in result:
                 displayValue = concatSeparator.join([str(row[column]) for column in displayColumns])
@@ -62,15 +62,17 @@ class SqliteFactory:
             errorMessage = f"Error executing SQL query: {str(e)}"
             return False, errorMessage
 
-    def fetchOne(self, baseSql, objectId):
+    def fetchOne(self, baseSql, objectId, dictionary=False):
         objectSql = baseSql.format(objectId)
-        return self.getSqlExecutor(objectSql)
+        return self.getSqlExecutor(objectSql, dictionary=dictionary)
 
-    def getSqlExecutor(self, sql):
+    def getSqlExecutor(self, sql, dictionary=False):
         try:
             connection = self.openConnection()
-            curs = connection.cursor()
-            result = curs.execute(sql)
+            if dictionary:
+                connection.row_factory = sqlite3.Row
+            cursor = connection.cursor()
+            result = cursor.execute(sql)
 
             return result.fetchall()
 

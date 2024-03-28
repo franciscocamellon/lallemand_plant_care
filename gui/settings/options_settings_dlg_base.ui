@@ -730,7 +730,11 @@
            </spacer>
           </item>
           <item>
-           <widget class="QgsFileWidget" name="sqliteFileWidget"/>
+           <widget class="QgsFileWidget" name="sqliteFileWidget">
+            <property name="filter">
+             <string>*.sqlite</string>
+            </property>
+           </widget>
           </item>
           <item>
            <spacer name="horizontalSpacer_45">

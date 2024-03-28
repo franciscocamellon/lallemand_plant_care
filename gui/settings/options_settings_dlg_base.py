@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
-        Form.resize(927, 769)
+        Form.resize(923, 760)
         self.gridLayout = QtWidgets.QGridLayout(Form)
         self.gridLayout.setObjectName("gridLayout")
         self.mGroupBox_3 = QgsCollapsibleGroupBox(Form)
@@ -604,6 +604,7 @@ class Ui_Form(object):
         self.serverPasswordLabel.setText(_translate("Form", "Password"))
         self.serverPortLabel.setText(_translate("Form", "Port"))
         self.databaseNameLabel_3.setText(_translate("Form", "Sqlite Database"))
+        self.sqliteFileWidget.setFilter(_translate("Form", "*.sqlite"))
         self.mGroupBox_4.setTitle(_translate("Form", "Frequency histograms settings"))
         self.binsLabel.setText(_translate("Form", "Bins"))
         self.colorLabel.setText(_translate("Form", "Color"))
