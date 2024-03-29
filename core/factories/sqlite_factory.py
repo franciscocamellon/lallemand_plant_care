@@ -34,17 +34,15 @@ from ...gui.settings.options_settings_dlg import OptionsSettingsPage
 class SqliteFactory:
     def __init__(self):
         super(SqliteFactory, self).__init__()
-        self.layerService = LayerService()
         self._initializeLogging()
-        # self.connection = self.openConnection()
 
     @staticmethod
     def _initializeLogging():
         logging.basicConfig(filename=os.path.join(os.path.dirname(__file__), 'sqlite_log.log'), level=logging.ERROR)
 
-    def openConnection(self):
-        sqliteDatabase = self.layerService.getSqlitePath()
-        # sqliteDatabase = OptionsSettingsPage().getSqliteSettings()
+    @staticmethod
+    def openConnection():
+        sqliteDatabase = OptionsSettingsPage().getSqliteSettings()
         return sqlite3.connect(database=sqliteDatabase)
 
     def fetchDataToCombobox(self, combobox, query, displayColumns, idColumn, concatSeparator=' '):

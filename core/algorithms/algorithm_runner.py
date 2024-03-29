@@ -196,7 +196,7 @@ class AlgorithmRunner(QObject):
         parameters = {
             'LAYOUTS': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
             'RESOLUTION': 150,
-            'OUTPUT': os.path.join(project.homePath(), '05_Results', '03_Maps')
+            'OUTPUT': os.path.normpath(os.path.join(project.homePath(), '05_Results', '03_Maps'))
         }
         dialog = createAlgorithmDialog('lpc:exportmaps', parameters)
         dialog.show()
@@ -234,7 +234,6 @@ class AlgorithmRunner(QObject):
     def runTreatmentPolygons(epsg, parameters=None):
 
         parameters['CRS'] = QgsCoordinateReferenceSystem(epsg)
-        print(parameters)
 
         dialog = createAlgorithmDialog('lpc:treatmentpolygonsbuilder', parameters)
         dialog.show()

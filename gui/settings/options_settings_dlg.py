@@ -198,5 +198,5 @@ class OptionsSettingsPage(QgsOptionsPageWidget, Ui_Form):
     @staticmethod
     def getSqlitePath():
         currentDirectory = os.path.dirname(__file__)
-        parentDirectory = os.path.join(currentDirectory, '..')
-        return os.path.join(':plugins/lallemand_plant_care/core', 'resources', 'BD_GEOSTAT_LPC.sqlite')
+        parentDirectory = os.path.join(currentDirectory, '..', '..', 'core/resources/BD_GEOSTAT_LPC.sqlite')
+        return os.path.normpath(parentDirectory)

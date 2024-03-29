@@ -43,10 +43,11 @@ class SystemService:
 
         for file in fileList:
             if pattern.search(file):
-                print(file, pattern.search(file))
-                return os.path.join(directoryPath, file)
+                filePath = os.path.join(directoryPath, file)
+                return os.path.normpath(filePath)
 
-    def createDirectoryStructure(self, basePath):
+    @staticmethod
+    def createDirectoryStructure(basePath):
 
         for mainDirectory, subDirectories in DIRECTORY_STRUCTURE.items():
             mainDirectoryPath = os.path.join(basePath, mainDirectory)
@@ -61,7 +62,7 @@ class SystemService:
             os.makedirs(mainDirectoryPath, exist_ok=True)
 
             for subDirectory in subDirectories:
-                subDirectoryPath = os.path.join(mainDirectoryPath, subDirectory)
+                subDirectoryPath = os.path.normpath(os.path.join(mainDirectoryPath, subDirectory))
                 os.makedirs(subDirectoryPath, exist_ok=True)
 
     @staticmethod
@@ -99,8 +100,8 @@ class SystemService:
 
         for resultFile in os.listdir(sourcePath):
             if "0_Variograma" in resultFile:
-                oldFilePath = os.path.join(sourcePath, resultFile)
-                newFilePath = os.path.join(targetPath, resultFile)
+                oldFilePath = os.path.normpath(os.path.join(sourcePath, resultFile))
+                newFilePath = os.path.normpath(os.path.join(targetPath, resultFile))
                 self._copyFile(oldFilePath, newFilePath)
 
     def fileExist(self, path, task=False):

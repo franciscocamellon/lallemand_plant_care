@@ -37,6 +37,7 @@ class AnalysisReport(QObject):
         super(AnalysisReport, self).__init__()
         self.project = project
         self.filePath = self.project.homePath()
+        self.outputPath = os.path.normpath(os.path.join(self.filePath, '05_Results'))
         self.layerService = LayerService()
         self.messageService = MessageService()
         self.algRunner = AlgorithmRunner()
@@ -69,7 +70,7 @@ class AnalysisReport(QObject):
 
         parameters = {
             'GAIN_POINTS': gainPointsLayer[0],
-            'OUTPUT': os.path.join(self.filePath, '05_Results'),
+            'OUTPUT': self.outputPath,
             'T1_LAYER': t1TotalLayer[0],
             'T1_SURFACE': t1FinalLayer[0],
             'T2_LAYER': t2TotalLayer[0],
@@ -88,7 +89,7 @@ class AnalysisReport(QObject):
 
         parameters = {
             'GAIN_POINTS': gainPointsLayer[0],
-            'OUTPUT': os.path.join(self.filePath, '05_Results'),
+            'OUTPUT': self.outputPath,
             'T1_SURFACE': t1SurfaceLayer[0],
             'T1_VALIDATION': t1ValidationLayer[0],
             'T2_SURFACE': t2SurfaceLayer[0],
