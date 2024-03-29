@@ -107,11 +107,11 @@ class ExportMapsProcessingAlgorithm(QgsProcessingAlgorithm):
                 multiFeedback.pushInfo(self.tr(f'Exporting map from layout {layout.name()}.'))
 
                 if result:
-                    multiFeedback.pushInfo(self.tr('Map exported successfully!'))
+                    multiFeedback.pushInfo(self.tr('Map exported successfully!\n'))
                     self.messageService.logMessage(f'Exporting map from layout {layout.name()}: SUCCESS', 3)
                     feedback.setProgress(int(layoutId * total))
                 else:
-                    multiFeedback.reportError(self.tr('Map could not be exported!'))
+                    multiFeedback.reportError(self.tr('Map could not be exported!\n'))
                     self.messageService.logMessage(f'Exporting map from layout {layout.name()}: FAILED', 2)
 
         return {self.OUTPUT: None}
