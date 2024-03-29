@@ -39,6 +39,7 @@ from ....gui.wrappers.trial_name_wrapper import ParameterTrialName
 from ..help.algorithms_help import ProcessingAlgorithmHelpCreator
 from ...constants import FETCH_ALL_TRIAL, FETCH_ONE_TRIAL, DIRECTORY_STRUCTURE
 from ...factories.postgres_factory import PostgresFactory
+from ...factories.sqlite_factory import SqliteFactory
 from ...services.plot_service import PlotterService
 from ...services.report_service import ReportService
 from ...services.statistics_service import StatisticsService
@@ -59,7 +60,7 @@ class PresentationProcessingAlgorithm(QgsProcessingAlgorithm):
     def __init__(self):
         super().__init__()
         self.project = QgsProject.instance()
-        self.postgresFactory = PostgresFactory()
+        self.databaseFactory = SqliteFactory()
         self.plotService = PlotterService()
         self.reportService = ReportService()
         self.systemService = SystemService()
@@ -196,20 +197,13 @@ class PresentationProcessingAlgorithm(QgsProcessingAlgorithm):
             return f'RMSE = {round(RMSE, 2)}%'
         elif isinstance(RMSE, QVariant):
             RMSE.convert(38)
-            print('RMSE', type(RMSE.value()))
             return f'RMSE = {round(RMSE.value(), 2)}%'
 
 
     def getPresentationParameters(self, trialId, t1ValidationLayer, t2ValidationLayer, rootPath):
 
-        trialResult = self.postgresFactory.fetchOne(FETCH_ONE_TRIAL, trialId)
-
-        t1RmseFeature = next(t1ValidationLayer.getFeatures()) if t1ValidationLayer.featureCount() > 0 else None
-        # t1Rmse = f"{str(t1RmseFeature['%_rmse']):.2f}" if t1RmseFeature is not None else "N/A"
+        trialResult = self.databaseFactory.fetchOne(FETCH_ONE_TRIAL, trialId, dictionary=True)
         t1Rmse = self.getRMSE(t1ValidationLayer)
-        # t2Rmse = "RMSE = {:.2f}%".format(float(t2RmseFeature['%_rmse']))
-
-        t2RmseFeature = next(t2ValidationLayer.getFeatures()) if t2ValidationLayer.featureCount() > 0 else None
         t2Rmse = self.getRMSE(t2ValidationLayer)
 
         histogramPath = os.path.join(rootPath, DIRECTORY_STRUCTURE['05_Results'][0])

@@ -186,3 +186,16 @@ ERROR:root:Error executing SQL: no such table: domains.yes_or_not
 ERROR:root:Error executing SQL: no such table: domains.yes_or_not
 ERROR:root:Error executing SQL: no such table: domains.yes_or_not
 ERROR:root:Error executing SQL: no such table: domains.yes_or_not
+ERROR:root:Error executing SQL: relation "geostatistic_trial" does not exist
+LINE 5:     geostatistic_trial gt
+            ^
+
+ERROR:root:Error executing SQL: relation "geostatistic_trial" does not exist
+LINE 1: SELECT * FROM geostatistic_trial WHERE id = '1';
+                      ^
+
+ERROR:root:Error executing SQL: relation "geostatistic_trial" does not exist
+LINE 1: SELECT * FROM geostatistic_trial WHERE id = '1';
+                      ^
+
+ERROR:root:Error executing SQL: unable to open database file

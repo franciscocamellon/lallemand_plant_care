@@ -48,17 +48,18 @@ class LoadComposerTemplatesAlgorithm(QgsProcessingAlgorithm):
 
     def __init__(self):
         super().__init__()
+        self.project = QgsProject.instance()
         self.layerService = LayerService()
         self.messageService = MessageService()
+        self.layers = self.project.instance().mapLayers().values()
+        self.filteredLayers = self.layerService.filterByLayerName(list(self.layers), COMPOSER_LAYERS, inverse=True)
 
     def initAlgorithm(self, config=None):
 
-        self.project = QgsProject.instance()
+        # layers = self.project.instance().mapLayers().values()
+        # contour = self.layerService.filterByLayerName(list(layers), ['_contour_'], inverse=True)
 
-        layers = self.project.instance().mapLayers().values()
-        contour = self.layerService.filterByLayerName(list(layers), ['_contour_'], inverse=True)
-
-        self.filteredLayers = self.layerService.filterByLayerName(list(layers), COMPOSER_LAYERS, inverse=True)
+        # self.filteredLayers = self.layerService.filterByLayerName(list(layers), COMPOSER_LAYERS, inverse=True)
         self.addParameter(
             QgsProcessingParameterEnum(
                 self.INPUT_LAYERS,
@@ -95,6 +96,10 @@ class LoadComposerTemplatesAlgorithm(QgsProcessingAlgorithm):
         else:
             for layer, layoutPath in layerLayoutMapping.items():
 
+                if multiFeedback.isCanceled():
+                    self.messageService.criticalMessageBar('Loading templates', 'operation aborted by the user!')
+                    break
+
                 if os.path.isfile(layoutPath):
                     layout = composerService.createLayout(trialBoundsLayer)
                     composerService.loadLayoutFromTemplate(layout, layoutPath)
@@ -103,12 +108,12 @@ class LoadComposerTemplatesAlgorithm(QgsProcessingAlgorithm):
                     result = self.project.layoutManager().addLayout(layout)
                     multiFeedback.pushInfo(self.tr(f'Loading layout {layout.name()}.'))
                     if result:
-                        multiFeedback.pushInfo(self.tr('Map exported successfully!'))
+                        multiFeedback.pushInfo(self.tr('Layout template loaded successfully!\n'))
                         self.messageService.logMessage(f'Loading layout {layout.name()}: SUCCESS', 3)
                         progressIndex = list(layerLayoutMapping.keys()).index(layer)
                         feedback.setProgress(int(progressIndex * progressPerFeature))
                     else:
-                        multiFeedback.reportError(self.tr(f'Layout {layout.name()} could not be loaded!'))
+                        multiFeedback.reportError(self.tr(f'Layout {layout.name()} could not be loaded!\n'))
                         self.messageService.logMessage(f'Loading layout {layout.name()}: FAILED', 2)
 
         return {self.OUTPUT: None}
