@@ -196,22 +196,22 @@ class AlgorithmRunner(QObject):
         parameters = {
             'LAYOUTS': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
             'RESOLUTION': 150,
-            'OUTPUT': os.path.join(project.homePath(), '05_Results', '03_Maps')
+            'OUTPUT': os.path.normpath(os.path.join(project.homePath(), '05_Results', '03_Maps'))
         }
         dialog = createAlgorithmDialog('lpc:exportmaps', parameters)
         dialog.show()
         dialog.exec_()
 
     @staticmethod
-    def runCreateReport(parameters, project):
-        parameters['OUTPUT'] = os.path.join(project.homePath(), '05_Results')
+    def runCreateReport(parameters):
+
         dialog = createAlgorithmDialog('lpc:createreport', parameters)
         dialog.show()
         dialog.exec_()
 
     @staticmethod
-    def runCreatePresentation(parameters, project):
-        parameters['OUTPUT'] = os.path.join(project.homePath(), '05_Results')
+    def runCreatePresentation(parameters):
+
         dialog = createAlgorithmDialog('lpc:createpresentation', parameters)
         dialog.show()
         dialog.exec_()
@@ -231,9 +231,8 @@ class AlgorithmRunner(QObject):
         dialog.exec_()
 
     @staticmethod
-    def runTreatmentPolygons(epsg, reproject, parameters=None):
+    def runTreatmentPolygons(epsg, parameters=None):
 
-        parameters['REPROJECT'] = reproject
         parameters['CRS'] = QgsCoordinateReferenceSystem(epsg)
 
         dialog = createAlgorithmDialog('lpc:treatmentpolygonsbuilder', parameters)

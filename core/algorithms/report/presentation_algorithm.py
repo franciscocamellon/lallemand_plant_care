@@ -25,6 +25,7 @@ import os.path
 
 from processing.gui.wrappers import WidgetWrapper
 from qgis.PyQt import QtWidgets
+from qgis.PyQt.Qt import QVariant
 from qgis.PyQt.QtCore import QCoreApplication
 from qgis.core import (QgsProject,
                        QgsProcessing,
@@ -38,6 +39,7 @@ from ....gui.wrappers.trial_name_wrapper import ParameterTrialName
 from ..help.algorithms_help import ProcessingAlgorithmHelpCreator
 from ...constants import FETCH_ALL_TRIAL, FETCH_ONE_TRIAL, DIRECTORY_STRUCTURE
 from ...factories.postgres_factory import PostgresFactory
+from ...factories.sqlite_factory import SqliteFactory
 from ...services.plot_service import PlotterService
 from ...services.report_service import ReportService
 from ...services.statistics_service import StatisticsService
@@ -58,7 +60,7 @@ class PresentationProcessingAlgorithm(QgsProcessingAlgorithm):
     def __init__(self):
         super().__init__()
         self.project = QgsProject.instance()
-        self.postgresFactory = PostgresFactory()
+        self.databaseFactory = SqliteFactory()
         self.plotService = PlotterService()
         self.reportService = ReportService()
         self.systemService = SystemService()
@@ -188,12 +190,21 @@ class PresentationProcessingAlgorithm(QgsProcessingAlgorithm):
 
         return f'{pValue:.2f}', anovaStatsList
 
+    def getRMSE(self, layer):
+        firstFeature = next(layer.getFeatures()) if layer.featureCount() > 0 else None
+        RMSE = firstFeature['%_rmse']
+        if isinstance(RMSE, float):
+            return f'RMSE = {round(RMSE, 2)}%'
+        elif isinstance(RMSE, QVariant):
+            RMSE.convert(38)
+            return f'RMSE = {round(RMSE.value(), 2)}%'
+
+
     def getPresentationParameters(self, trialId, t1ValidationLayer, t2ValidationLayer, rootPath):
 
-        trialResult = self.postgresFactory.fetchOne(FETCH_ONE_TRIAL, trialId)
-
-        t1Rmse = next(t1ValidationLayer.getFeatures()) if t1ValidationLayer.featureCount() > 0 else None
-        t2Rmse = next(t2ValidationLayer.getFeatures()) if t2ValidationLayer.featureCount() > 0 else None
+        trialResult = self.databaseFactory.fetchOne(FETCH_ONE_TRIAL, trialId, dictionary=True)
+        t1Rmse = self.getRMSE(t1ValidationLayer)
+        t2Rmse = self.getRMSE(t2ValidationLayer)
 
         histogramPath = os.path.join(rootPath, DIRECTORY_STRUCTURE['05_Results'][0])
         variogramPath = os.path.join(rootPath, DIRECTORY_STRUCTURE['05_Results'][1])
@@ -222,14 +233,15 @@ class PresentationProcessingAlgorithm(QgsProcessingAlgorithm):
                 11: self.systemService.filterByFileName(mapsPath, ['07_Model_T1']),
                 12: self.systemService.filterByFileName(variogramPath, ['0_Variograma_T1_80_perc_']),
                 13: self.systemService.filterByFileName(histogramPath, ['T1_80_perc_H']),
-                15: f"RMSE = {t1Rmse['%_rmse']:.2f}%"},
-
+                15: t1Rmse
+            },
             7: {
                 10: self.systemService.filterByFileName(mapsPath, ['05_T2_Sample_for_model_generation']),
                 11: self.systemService.filterByFileName(mapsPath, ['08_Model_T2']),
                 12: self.systemService.filterByFileName(variogramPath, ['0_Variograma_T2_80_perc_']),
                 13: self.systemService.filterByFileName(histogramPath, ['T2_80_perc_H']),
-                15: f"RMSE = {t2Rmse['%_rmse']:.2f}%"},
+                15: t2Rmse
+            },
             8: {
                 10: self.systemService.filterByFileName(mapsPath, ['11_Yield_gain_using_T2']),
                 11: self.systemService.filterByFileName(rootPath, ['Yield_Gain_Histogram']),

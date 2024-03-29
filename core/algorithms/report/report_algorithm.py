@@ -33,6 +33,7 @@ from ..help.algorithms_help import ProcessingAlgorithmHelpCreator
 from ....gui.wrappers.trial_name_wrapper import ParameterTrialName
 from ...constants import FETCH_ONE_TRIAL, FETCH_ONE_FARMER, FETCH_ONE_CROP
 from ...factories.postgres_factory import PostgresFactory
+from ...factories.sqlite_factory import SqliteFactory
 from ...services.layer_service import LayerService
 from ...services.report_service import ReportService
 from ...services.statistics_service import StatisticsService
@@ -52,7 +53,7 @@ class ReportProcessingAlgorithm(QgsProcessingAlgorithm):
     def __init__(self):
         super().__init__()
         self.layerService = LayerService()
-        self.postgresFactory = PostgresFactory()
+        self.databaseFactory = SqliteFactory()
         self.project = QgsProject.instance()
         self.reportService = ReportService()
         self.systemService = SystemService()
@@ -157,9 +158,9 @@ class ReportProcessingAlgorithm(QgsProcessingAlgorithm):
         return {self.OUTPUT: None}
 
     def getReportData(self):
-        trialResult = self.postgresFactory.fetchOne(FETCH_ONE_TRIAL, self.trialId)
-        farmerResult = self.postgresFactory.fetchOne(FETCH_ONE_FARMER, trialResult[0]['farmer'])
-        cropResult = self.postgresFactory.fetchOne(FETCH_ONE_CROP, trialResult[0]['crop_trial'])
+        trialResult = self.databaseFactory.fetchOne(FETCH_ONE_TRIAL, self.trialId, dictionary=True)
+        farmerResult = self.databaseFactory.fetchOne(FETCH_ONE_FARMER, trialResult[0]['farmer'], dictionary=True)
+        cropResult = self.databaseFactory.fetchOne(FETCH_ONE_CROP, trialResult[0]['crop_trial'], dictionary=True)
 
         t1Mean = self.statisticsService.calculateMean(self.t1SurfaceLayer, 'yield')
         t2Mean = self.statisticsService.calculateMean(self.t2SurfaceLayer, 'yield')

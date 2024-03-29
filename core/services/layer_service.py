@@ -86,6 +86,12 @@ class LayerService:
         return convertedLayerType
 
     @staticmethod
+    def getSqlitePath():
+        currentDirectory = os.path.dirname(__file__)
+        parentDirectory = os.path.join(currentDirectory, '..')
+        return os.path.join(parentDirectory, 'resources', 'BD_GEOSTAT_LPC.sqlite')
+
+    @staticmethod
     def _getWorldZonesPath():
         currentDirectory = os.path.dirname(__file__)
         parentDirectory = os.path.join(currentDirectory, '..')
@@ -380,7 +386,7 @@ class LayerService:
 
         except Exception as load_file_exception:
             errorMessage = f'Error loading shape file: {str(load_file_exception)}'
-            self.messageService.messageBox('Loading file', errorMessage, 5, 1)
+            # self.messageService.messageBox('Loading file', errorMessage, 5, 1)
             self.messageService.logMessage(f'Loading shapefile: {errorMessage}: FAILED', 2)
 
     def createMemoryVectorLayer(self, wkbType, layerName, crs, fields=None, features=None):
@@ -549,13 +555,6 @@ class LayerService:
 
     @staticmethod
     def extractValueFromRaster(raster, feature, fieldName):
-        """
-        Extracts a value from a raster at the location of a feature's geometry point.
-        :param raster: The raster layer from which to extract the value.
-        :param feature: The feature for which the value is extracted.
-        :param fieldName: The name of the field where the extracted value will be stored.
-        :returns: The updated feature with the extracted value.
-        """
         geometry = feature.geometry()
         observation_point = geometry.asPoint()
         x, y = observation_point.x(), observation_point.y()
@@ -574,6 +573,7 @@ class LayerService:
         numberClasses = int(self.symbologySettings[0])
         classes = self.calculateVectorClasses(minValue, maxValue, numberClasses)
         colors = self.symbologySettings[1]
+        colors.reverse()
 
         rendererInterval = list()
         for index in range(4):
@@ -584,6 +584,7 @@ class LayerService:
 
         renderer = QgsGraduatedSymbolRenderer(fieldName, rendererInterval)
         renderer.setMode(QgsGraduatedSymbolRenderer.EqualInterval)
+        colors.reverse()
         return renderer
 
     def createBoundaryLayerSymbology(self, layer):

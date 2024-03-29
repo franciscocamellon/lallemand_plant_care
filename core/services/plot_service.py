@@ -125,8 +125,6 @@ class PlotterService:
         plt.close()
 
     def createGainStatisticsTable(self, pValue, statsData, anovaData, exportPng=False, path=None):
-        print(statsData)
-        print(anovaData)
         fig = plt.figure(figsize=(5, 2.7))
 
         ax1 = fig.add_subplot(1, 2, 1)

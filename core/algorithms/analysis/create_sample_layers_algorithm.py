@@ -132,15 +132,15 @@ class CreateSampleLayersProcessingAlgorithm(QgsProcessingAlgorithm):
                 middlePath = os.path.join('00_Data', '02_Sampling') if key == 'SAMPLE_OUTPUT' else '02_Validation'
                 samplePath = os.path.join(filePath, middlePath, f'{treatment}_{treatmentSuffix}.shp')
 
-                self.layerService.saveVectorLayer(sampleLayer, samplePath)
-
-
                 if key == 'SAMPLE_OUTPUT':
+                    self.layerService.saveVectorLayer(sampleLayer, samplePath)
                     percentualLayer = self.layerService.loadShapeFile(group, samplePath)
                     self.algRunner.runHistogramFromAttribute(percentualLayer, yieldField[0], histogramPath, context,
                                                              feedback)
                     self.layerService.applySymbology(percentualLayer, yieldField[0])
                 else:
+                    validationLayer = self.layerService.createValidationVectorLayer(sampleLayer)
+                    self.layerService.saveVectorLayer(validationLayer, samplePath)
                     self.layerService.loadShapeFile(group, samplePath)
 
         return {self.OUTPUT: None}

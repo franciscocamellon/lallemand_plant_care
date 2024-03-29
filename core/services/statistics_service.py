@@ -139,5 +139,5 @@ class StatisticsService:
             # 'intervalStrings':'',
             # 'interval_area_percentage'
             # 'interval_total'
-        print(results)
+
         return results

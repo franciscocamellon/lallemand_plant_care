@@ -28,6 +28,7 @@ from qgis.core import (QgsProcessingParameterDefinition)
 
 from ...core.constants import FETCH_ALL_TRIAL
 from ...core.factories.postgres_factory import PostgresFactory
+from ...core.factories.sqlite_factory import SqliteFactory
 
 
 class TrialNameWidgetWrapper(WidgetWrapper):
@@ -36,8 +37,9 @@ class TrialNameWidgetWrapper(WidgetWrapper):
 
     def createWidget(self):
         self.trialComboBox = QtWidgets.QComboBox()
-        PostgresFactory().fetchDataToCombobox(self.trialComboBox, FETCH_ALL_TRIAL, ['field_name'], 'id')
+        SqliteFactory().fetchDataToCombobox(self.trialComboBox, FETCH_ALL_TRIAL, ['field_name'], 'id')
         self.trialComboBox.dialogType = self.dialogType
+        self.trialComboBox.setEditable(True)
         return self.trialComboBox
 
     def parentLayerChanged(self, layer=None):

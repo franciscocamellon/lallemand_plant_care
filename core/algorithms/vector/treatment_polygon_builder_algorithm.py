@@ -168,10 +168,6 @@ class TreatmentPolygonsBuilderProcessingAlgorithm(QgsProcessingAlgorithm):
 
         if reproject:
             crsOperations = self.layerService.getSuggestedCrs(gpsLayer)
-            # [57, '22S', 'EPSG:31982', '+proj=pipeline +step +proj=unitconvert +xy_in=deg +xy_out=rad +step +proj=utm +zone=22 +south +ellps=GRS80']
-            # print(crsOperations)
-            # crs = QgsCoordinateReferenceSystem(crsOperations[2])
-            # epsg = self.reproject['epsg']
             toReproject = [treatmentPath, boundaryLayer]
             for toReprojectFilePath in toReproject:
                 fileName = self.systemService.extractFileName(toReprojectFilePath)

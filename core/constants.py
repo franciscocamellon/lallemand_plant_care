@@ -15,7 +15,7 @@ SAMPLING_LAYER_NAMES = ['T1_total', 'T1_80_perc', 'T1_20_perc', 'T2_total', 'T2_
 
 DEFAULT_SETTINGS = {
     'SERVER': ['BD_GEOSTAT_LPC', 'localhost', '5432', 'postgres', 'postgres'],
-    'TREATMENT': ['T1', 'T2', 10.0, 0.0, 1.0],
+    'TREATMENT': [False, True, 'T1', 'T2', 10.0, 0.0, 1.0],
     'KRIGING': ['VRYIELDMAS;VRYIELD', 1.5, 1.5],
     'HISTOGRAM': [30, '#636efa', '#000000'],
     'SYMBOLOGY': [4, '#bfbcbc', '#ffff00', '#55ff00', '#267300']
@@ -51,50 +51,48 @@ GEOSTATISTIC_TRIAL = ['Id', "Field name", "Area", "Irrigated", "Soil type", "LPC
                       "Contour",
                       "Create date", "Update date"]
 
-FETCH_ALL_DOMAIN = "SELECT * FROM domains.yes_or_not;"
+FETCH_ALL_DOMAIN = "SELECT * FROM yes_or_not_domain;"
 
-FETCH_ALL_TEAM = "SELECT * FROM geostatistics.lpc_team;"
-FETCH_ONE_TEAM = "SELECT * FROM geostatistics.lpc_team WHERE id = '{}';"
+FETCH_ALL_TEAM = "SELECT id, first_name, last_name, create_date, update_date FROM lpc_team;"
+FETCH_ONE_TEAM = "SELECT id, first_name, last_name, create_date, update_date FROM lpc_team WHERE id = '{}';"
 
-FETCH_ALL_CROP = "SELECT * FROM geostatistics.crop_trial;"
-FETCH_ONE_CROP = "SELECT * FROM geostatistics.crop_trial WHERE id = '{}';"
+FETCH_ALL_CROP = "SELECT * FROM crop_trial;"
+FETCH_ONE_CROP = "SELECT * FROM crop_trial WHERE id = '{}';"
 
-FETCH_ALL_FARMER = "SELECT * FROM geostatistics.farmer;"
-FETCH_ONE_FARMER = "SELECT * FROM geostatistics.farmer WHERE id = '{}';"
+FETCH_ALL_FARMER = "SELECT * FROM farmer;"
+FETCH_ONE_FARMER = "SELECT * FROM farmer WHERE id = '{}';"
 
 FETCH_ALL_TRIAL = """
 SELECT
-    gt.id, gt.field_name, gt.field_area, yn.description, gt.field_soil, gt.lpc_team, gt.farmer, gt.crop_trial, gt.id_contour, gt.create_date, gt.update_date
+    gt.id, gt.field_name, gt.field_area, gt.field_soil, gt.lpc_team, gt.farmer, gt.crop_trial, gt.id_contour, gt.create_date, gt.update_date
 FROM
-    geostatistics.geostatistic_trial gt
-JOIN
-    domains.yes_or_not yn ON gt.field_irrigation = yn.code
+    geostatistic_trial gt
 """
-FETCH_ONE_TRIAL = "SELECT * FROM geostatistics.geostatistic_trial WHERE id = '{}';"
+FETCH_ONE_TRIAL = "SELECT * FROM geostatistic_trial WHERE id = '{}';"
 
-INSERT_CROP_SQL = "INSERT INTO geostatistics.crop_trial (crop_name, sowing_date, harvest_date, variety, inter_ro_cm, " \
-                  "create_date) VALUES (%s, %s, %s, %s, %s, %s);"
-UPDATE_CROP_SQL = "UPDATE geostatistics.crop_trial SET crop_name = %s, " \
-                  "sowing_date = %s, harvest_date = %s, variety = %s, inter_ro_cm = %s, update_date = %s WHERE id = %s;"
-DELETE_CROP_SQL = "DELETE FROM geostatistics.crop_trial WHERE id = '{}';"
+INSERT_CROP_SQL = "INSERT INTO crop_trial (crop_name, sowing_date, harvest_date, variety, inter_ro_cm, " \
+                  "create_date) VALUES (?, ?, ?, ?, ?, ?);"
+UPDATE_CROP_SQL = "UPDATE crop_trial SET crop_name = ?, " \
+                  "sowing_date = ?, harvest_date = ?, variety = ?, inter_ro_cm = ?, update_date = ? WHERE id = ?;"
+DELETE_CROP_SQL = "DELETE FROM crop_trial WHERE id = '{}';"
 
-INSERT_FARMER_SQL = "INSERT INTO geostatistics.farmer (first_name, last_name, address, zipcode, town, country," \
-                    "create_date) VALUES (%s, %s, %s, %s, %s, %s, %s);"
-UPDATE_FARMER_SQL = "UPDATE geostatistics.farmer SET first_name = %s, " \
-                    "last_name = %s, address = %s, zipcode = %s, town = %s, country = %s, update_date = %s WHERE id = %s;"
-DELETE_FARMER_SQL = "DELETE FROM geostatistics.farmer WHERE id = '{}';"
+INSERT_FARMER_SQL = "INSERT INTO farmer (first_name, last_name, address, zipcode, town, country," \
+                    "create_date) VALUES (?, ?, ?, ?, ?, ?, ?);"
+UPDATE_FARMER_SQL = "UPDATE farmer SET first_name = ?, " \
+                    "last_name = ?, address = ?, zipcode = ?, town = ?, country = ?, update_date = ? WHERE id = ?;"
+DELETE_FARMER_SQL = "DELETE FROM farmer WHERE id = '{}';"
 
-INSERT_TRIAL_SQL = "INSERT INTO geostatistics.geostatistic_trial (field_name, field_area, field_irrigation, " \
-                   "field_soil, lpc_team, farmer, crop_trial, id_contour, create_date) VALUES (%s, %s, %s, %s, %s, " \
-                   "%s, %s, %s, %s);"
-UPDATE_TRIAL_SQL = "UPDATE geostatistics.geostatistic_trial SET field_name = %s, field_area = %s, field_irrigation = " \
-                   "%s, field_soil = %s, lpc_team = %s, farmer = %s, crop_trial = %s, id_contour = %s, update_date = " \
-                   "%s WHERE id = %s;"
-DELETE_TRIAL_SQL = "DELETE FROM geostatistics.geostatistic_trial WHERE id = '{}';"
+INSERT_TRIAL_SQL = "INSERT INTO geostatistic_trial (field_name, field_area, field_irrigation, " \
+                   "field_soil, lpc_team, farmer, crop_trial, id_contour, create_date) VALUES (?, ?, ?, ?, ?, " \
+                   "?, ?, ?, ?);"
+UPDATE_TRIAL_SQL = "UPDATE geostatistic_trial SET field_name = ?, field_area = ?, field_irrigation = " \
+                   "?, field_soil = ?, lpc_team = ?, farmer = ?, crop_trial = ?, id_contour = ?, update_date = " \
+                   "? WHERE id = ?;"
+DELETE_TRIAL_SQL = "DELETE FROM geostatistic_trial WHERE id = '{}';"
 
-INSERT_TEAM_SQL = "INSERT INTO geostatistics.lpc_team (first_name, last_name, create_date) VALUES (%s, %s, %s);"
-UPDATE_TEAM_SQL = "UPDATE geostatistics.lpc_team SET first_name = %s, last_name = %s,  update_date = %s WHERE id = %s;"
-DELETE_TEAM_SQL = "DELETE FROM geostatistics.lpc_team WHERE id = '{}';"
+INSERT_TEAM_SQL = "INSERT INTO lpc_team (first_name, last_name, create_date) VALUES (?, ?, ?);"
+UPDATE_TEAM_SQL = "UPDATE lpc_team SET first_name = ?, last_name = ?,  update_date = ? WHERE id = ?;"
+DELETE_TEAM_SQL = "DELETE FROM lpc_team WHERE id = '{}';"
 
 VALIDATION_FIELDS = ['estimated', 'error', 'sqr_error', 'rmse', '%_rmse']
 
