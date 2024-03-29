@@ -25,8 +25,9 @@
 from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtWidgets import QHeaderView
 
-from .ui_lpc_team_manager import Ui_LpcTeamManagerDialog
-from ...core.constants import FETCH_ALL_TEAM, DELETE_TEAM_SQL, UPDATE_TEAM_SQL, INSERT_TEAM_SQL
+from .team_manager_dlg_base import Ui_LpcTeamManagerDialog
+from ...core.constants import FETCH_ALL_TEAM, DELETE_TEAM_SQL, UPDATE_TEAM_SQL, INSERT_TEAM_SQL, FETCH_ONE_TEAM, \
+    FETCH_ONE_TRIAL, FETCH_TRIAL_TEAM
 from ...core.factories.sqlite_factory import SqliteFactory
 from ...core.services.message_service import MessageService
 from ...core.services.system_service import SystemService
@@ -39,17 +40,26 @@ class RegisterLpcTeam(QtWidgets.QDialog, Ui_LpcTeamManagerDialog):
         """Constructor."""
         super(RegisterLpcTeam, self).__init__()
         self.setupUi(self)
-        self.postgresFactory = SqliteFactory()
+        self.databaseFactory = SqliteFactory()
+        self.widgetService = WidgetService()
+        self.messageService = MessageService()
         self.setWindowTitle("LPC Team Management")
         self.tableWidget.setHorizontalHeaderLabels(['Id', "First name", "Last name", "Create date"])
         self.tableWidget.setColumnHidden(0, True)
         self.tableWidget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.lpcTeamIDLabel.hide()
-        self.lpcTeamAddPushButton.clicked.connect(self.register)
+        self.lpcTeamAddPushButton.clicked.connect(self.validateEntries)
         self.deletePushButton.clicked.connect(self.deleteTeamMember)
         self.editPushButton.clicked.connect(self.updateTeamWidget)
         self.loadData()
+
+    def validateEntries(self):
+        if self.lpcTeamFirstNameLineEdit.text() == '' or self.lpcTeamLastNameLineEdit.text() == '':
+            self.messageService.criticalMessage('LPC Team Management', 'There are empty fields!')
+            return
+
+        self.register()
 
     def register(self):
         buttonType = self.lpcTeamAddPushButton.text()
@@ -64,13 +74,13 @@ class RegisterLpcTeam(QtWidgets.QDialog, Ui_LpcTeamManagerDialog):
             sql = INSERT_TEAM_SQL
             data = self.prepareTeamData()
 
-        result = self.postgresFactory.postSqlExecutor(sql, data)
+        result = self.databaseFactory.postSqlExecutor(sql, data)
 
         self.loadData()
         self.lpcTeamLastNameLineEdit.clear()
         self.lpcTeamFirstNameLineEdit.clear()
 
-        MessageService().resultMessage(result, 'LPC Team Management', 'Data saved successfully!')
+        self.messageService.resultMessage(result, 'LPC Team Management', 'Data saved successfully!')
 
     def prepareTeamData(self):
 
@@ -85,7 +95,7 @@ class RegisterLpcTeam(QtWidgets.QDialog, Ui_LpcTeamManagerDialog):
         return tuple(trialData)
 
     def loadData(self):
-        result = self.postgresFactory.getSqlExecutor(FETCH_ALL_TEAM)
+        result = self.databaseFactory.getSqlExecutor(FETCH_ALL_TEAM)
         WidgetService().populateSqliteTable(result, self.tableWidget)
 
     def deleteTeamMember(self):
@@ -93,7 +103,13 @@ class RegisterLpcTeam(QtWidgets.QDialog, Ui_LpcTeamManagerDialog):
 
         if selectedData:
             currentRow, data = selectedData
-            result = self.postgresFactory.postSqlExecutor(DELETE_TEAM_SQL.format(data[0]))
+            trial = self.databaseFactory.fetchOne(FETCH_TRIAL_TEAM, data[0], dictionary=True)
+
+            if len(trial) > 0:
+                MessageService().messageBox('Deleting data', 'There is a trial related to this professional.', 5, 1)
+                return
+
+            result = self.databaseFactory.postSqlExecutor(DELETE_TEAM_SQL.format(data[0]))
             self.loadData()
             MessageService().resultMessage(result, 'Deleting data', 'Data deleted successfully!')
         else:

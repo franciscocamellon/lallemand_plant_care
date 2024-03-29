@@ -173,8 +173,10 @@ class WidgetService:
     def validateEmpty(self, lineEdit):
         if lineEdit.text().strip():
             self._setBackgroundColor(lineEdit, Qt.white)
+            return True
         else:
             self._setBackgroundColor(lineEdit, Qt.pink)
+            return False
 
     def updateGui(self, mapLayerComboBox, crsSelectionWidget, warningLabel, crsLabel):
         crsInfo = ''

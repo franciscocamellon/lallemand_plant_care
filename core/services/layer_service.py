@@ -21,6 +21,7 @@
  *                                                                         *
  ***************************************************************************/
 """
+import logging
 import math
 import os
 import random
@@ -73,6 +74,11 @@ class LayerService:
         self.settings = OptionsSettingsPage()
         self.krigingSettings = self.settings.getKrigingSettings()
         self.symbologySettings = self.settings.getSymbologySettings()
+        self._initializeLogging()
+
+    @staticmethod
+    def _initializeLogging():
+        logging.basicConfig(filename=os.path.join(os.path.dirname(__file__), 'log', 'layer_service_log.log'), level=logging.ERROR)
 
     @staticmethod
     def _identifyWkbType(layer):
@@ -323,7 +329,6 @@ class LayerService:
         return layer
 
     def createValidationVectorLayer(self, layer):
-        # TODO with edit(layer):
         fields = self.krigingSettings[0]
         fieldsList = fields.split(';')
         fieldsList.append('1Krig')
@@ -359,6 +364,7 @@ class LayerService:
             else:
                 self.messageService.warningMessage("Project Save", "Project not saved.")
                 self.messageService.logMessage(f'Checking for saved project: Project not saved. FAILED', 2)
+                logging.error('checkForSavedProject: Project not saved by the user')
                 return False
 
     def loadShapeFile(self, groupName, file_path):
@@ -388,6 +394,7 @@ class LayerService:
             errorMessage = f'Error loading shape file: {str(load_file_exception)}'
             # self.messageService.messageBox('Loading file', errorMessage, 5, 1)
             self.messageService.logMessage(f'Loading shapefile: {errorMessage}: FAILED', 2)
+            logging.error(f'loadShapeFile: {errorMessage}')
 
     def createMemoryVectorLayer(self, wkbType, layerName, crs, fields=None, features=None):
         geometry = self._getGeometryFromWkbType(wkbType)
@@ -407,14 +414,16 @@ class LayerService:
 
             if not layer.isValid():
                 self.messageService.logMessage(f'Creating memory layer: Layer is not valid!: FAILED', 2)
+                logging.error(f'createMemoryVectorLayer: Layer is not valid!')
                 raise Exception('Layer is not valid.')
 
             return layer
 
         except Exception as createLayerException:
             errorMessage = f'Error creating layer {layerName} -> {str(createLayerException)}'
-            self.messageService.messageBox('Loading file', errorMessage, 5, 1)
+            # self.messageService.messageBox('Loading file', errorMessage, 5, 1)
             self.messageService.logMessage(f'Creating memory layer: {errorMessage}: FAILED', 2)
+            logging.error(f'createMemoryVectorLayer: {errorMessage}')
             return None
 
     def createVectorLayer(self, layerName, filePath, useDefaultCrs=True):
@@ -428,6 +437,7 @@ class LayerService:
             layer = QgsVectorLayer(filePath, layerName, "ogr")
 
             if not layer.isValid():
+                logging.error(f'createVectorLayer: Layer is not valid.')
                 raise Exception('Layer is not valid.')
 
             if crs is not None:
@@ -437,8 +447,9 @@ class LayerService:
 
         except Exception as createLayerException:
             errorMessage = f'Error creating layer {layerName} -> {str(createLayerException)}'
-            self.messageService.messageBox('Loading file', errorMessage, 5, 1)
+            # self.messageService.messageBox('Loading file', errorMessage, 5, 1)
             self.messageService.logMessage(f'Creating vector layer: {errorMessage}: FAILED', 2)
+            logging.error(f'createVectorLayer: {errorMessage}')
             return None
 
     def convertFeatureCrs(self, layer, target_crs, feedback=None):
@@ -447,9 +458,11 @@ class LayerService:
         provider = transformedLayer.dataProvider()
         try:
             if not layer.isValid():
+                logging.error(f'convertFeatureCrs: Invalid layer for CRS conversion.')
                 raise Exception('Invalid layer for CRS conversion.')
 
             if target_crs is None:
+                logging.error(f'convertFeatureCrs: Target CRS is not specified.')
                 raise Exception('Target CRS is not specified.')
 
             source_crs = layer.crs()
@@ -471,8 +484,9 @@ class LayerService:
 
         except Exception as e:
             errorMessage = f'Error converting layer CRS: {str(e)}'
-            self.messageService.messageBox('Loading file', errorMessage, 5, 1)
+            # self.messageService.messageBox('Loading file', errorMessage, 5, 1)
             self.messageService.logMessage(f'Converting feature CRS: {errorMessage}: FAILED', 2)
+            logging.error(f'convertFeatureCrs: {errorMessage}')
             return False
 
     def createLayerTreeGroup(self, project, groupName):
@@ -490,8 +504,9 @@ class LayerService:
 
         except Exception as group_exception:
             errorMessage = f'Error creating layer tree group: {str(group_exception)}'
-            self.messageService.messageBox('Loading file', errorMessage, 5, 1)
+            # self.messageService.messageBox('Loading file', errorMessage, 5, 1)
             self.messageService.logMessage(f'Creating layer group: {errorMessage}: FAILED', 2)
+            logging.error(f'createLayerTreeGroup: {errorMessage}')
             return None
 
     def getSuggestedCrs(self, layer):
@@ -501,6 +516,7 @@ class LayerService:
 
         if not layer.isValid():
             self.messageService.logMessage(f'getSuggestedCrs: Layer not valid!: FAILED', 2)
+            logging.error(f'getSuggestedCrs: Layer not valid!')
         else:
 
             layer_extent = layer.extent()
@@ -513,8 +529,9 @@ class LayerService:
                 if polygon_geometry.contains(centroid):
                     return feature.attributes()
             else:
-                errorMsg = 'Centroid is not within any polygon in world zones layer'
-                self.messageService.logMessage(f'getSuggestedCrs: {errorMsg}: FAILED', 2)
+                errorMessage = 'Centroid is not within any polygon in world zones layer'
+                self.messageService.logMessage(f'getSuggestedCrs: {errorMessage}: FAILED', 2)
+                logging.error(f'getSuggestedCrs: {errorMessage}')
 
     def saveVectorLayer(self, layer, outputPath):
         writerOptions = QgsVectorFileWriter.SaveVectorOptions()
@@ -534,8 +551,9 @@ class LayerService:
                 pass
 
         except Exception as layerException:
-            self.messageService.criticalMessage('Saving file', f'An error occurred: {str(layerException)}')
+            # self.messageService.criticalMessage('Saving file', f'An error occurred: {str(layerException)}')
             self.messageService.logMessage(f'saveVectorLayer: {str(layerException)}: FAILED', 2)
+            logging.error(f'saveVectorLayer: {str(layerException)}')
 
     @staticmethod
     def getLoadedVectorLayers(layers, geographic=False):

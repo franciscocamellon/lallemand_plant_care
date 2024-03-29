@@ -124,7 +124,8 @@ class PlotterService:
             plt.savefig(outputPath, transparent=True, dpi=300, bbox_inches='tight')
         plt.close()
 
-    def createGainStatisticsTable(self, pValue, statsData, anovaData, exportPng=False, path=None):
+    @staticmethod
+    def createGainStatisticsTable(pValue, statsData, anovaData, exportPng=False, path=None):
         fig = plt.figure(figsize=(5, 2.7))
 
         ax1 = fig.add_subplot(1, 2, 1)
@@ -163,7 +164,8 @@ class PlotterService:
             plt.savefig(outputPath, dpi=300, bbox_inches='tight')
         plt.close()
 
-    def yieldFrequencyHistogram(self, values, labels, exportPng=False, path=None):
+    @staticmethod
+    def yieldFrequencyHistogram(values, labels, exportPng=False, path=None):
         colors = ['#bfbcbc', '#ffff00', '#55ff00', '#267300']
         plt.figure()
         plt.hist(values, bins=12, histtype='bar', color=colors, edgecolor='black', label=labels, rwidth=1)

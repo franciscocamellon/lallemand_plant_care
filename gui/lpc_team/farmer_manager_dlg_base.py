@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# OptionsSettingsForm implementation generated from reading ui file 'farmer_manager.ui'
+# OptionsSettingsForm implementation generated from reading ui file 'farmer_manager_dlg_base.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #

@@ -30,8 +30,8 @@ from .filter.filtering_harvester_points import FilteringHarvesterPoints
 from .geostatistics_trial.geostatistics_trial import GeostatisticsTrial
 from .kriging.kriging_dlg import OrdinaryKriging
 from .layer_manager.load_files_dlg import LoadFiles
-from .lpc_team.farmer_manager import FarmerManager
-from .lpc_team.lpc_team_manager import RegisterLpcTeam
+from .lpc_team.farmer_manager_dlg import FarmerManager
+from .lpc_team.team_manager_dlg import RegisterLpcTeam
 from .report.analysis_report import AnalysisReport
 from .toolbar.toolbar_form_base import Ui_Form
 from .treatment.treatment_polygons import TreatmentPolygons

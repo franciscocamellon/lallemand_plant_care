@@ -53,8 +53,7 @@ GEOSTATISTIC_TRIAL = ['Id', "Field name", "Area", "Irrigated", "Soil type", "LPC
 
 FETCH_ALL_DOMAIN = "SELECT * FROM yes_or_not_domain;"
 
-FETCH_ALL_TEAM = "SELECT id, first_name, last_name, create_date, update_date FROM lpc_team;"
-FETCH_ONE_TEAM = "SELECT id, first_name, last_name, create_date, update_date FROM lpc_team WHERE id = '{}';"
+
 
 FETCH_ALL_CROP = "SELECT * FROM crop_trial;"
 FETCH_ONE_CROP = "SELECT * FROM crop_trial WHERE id = '{}';"
@@ -62,13 +61,7 @@ FETCH_ONE_CROP = "SELECT * FROM crop_trial WHERE id = '{}';"
 FETCH_ALL_FARMER = "SELECT * FROM farmer;"
 FETCH_ONE_FARMER = "SELECT * FROM farmer WHERE id = '{}';"
 
-FETCH_ALL_TRIAL = """
-SELECT
-    gt.id, gt.field_name, gt.field_area, gt.field_soil, gt.lpc_team, gt.farmer, gt.crop_trial, gt.id_contour, gt.create_date, gt.update_date
-FROM
-    geostatistic_trial gt
-"""
-FETCH_ONE_TRIAL = "SELECT * FROM geostatistic_trial WHERE id = '{}';"
+
 
 INSERT_CROP_SQL = "INSERT INTO crop_trial (crop_name, sowing_date, harvest_date, variety, inter_ro_cm, " \
                   "create_date) VALUES (?, ?, ?, ?, ?, ?);"
@@ -82,14 +75,24 @@ UPDATE_FARMER_SQL = "UPDATE farmer SET first_name = ?, " \
                     "last_name = ?, address = ?, zipcode = ?, town = ?, country = ?, update_date = ? WHERE id = ?;"
 DELETE_FARMER_SQL = "DELETE FROM farmer WHERE id = '{}';"
 
+FETCH_ALL_TRIAL = """
+                SELECT
+                    gt.id, gt.field_name, gt.field_area, gt.field_soil, gt.lpc_team, gt.farmer, gt.crop_trial, gt.id_contour, gt.create_date, gt.update_date
+                FROM
+                    geostatistic_trial gt
+                """
+FETCH_ONE_TRIAL = "SELECT * FROM geostatistic_trial WHERE id = '{}';"
+FETCH_TRIAL_TEAM = "SELECT * FROM geostatistic_trial WHERE lpc_team_id = '{}';"
 INSERT_TRIAL_SQL = "INSERT INTO geostatistic_trial (field_name, field_area, field_irrigation, " \
-                   "field_soil, lpc_team, farmer, crop_trial, id_contour, create_date) VALUES (?, ?, ?, ?, ?, " \
+                   "field_soil, lpc_team_id, farmer_id, crop_trial_id, id_contour, create_date) VALUES (?, ?, ?, ?, ?, " \
                    "?, ?, ?, ?);"
 UPDATE_TRIAL_SQL = "UPDATE geostatistic_trial SET field_name = ?, field_area = ?, field_irrigation = " \
-                   "?, field_soil = ?, lpc_team = ?, farmer = ?, crop_trial = ?, id_contour = ?, update_date = " \
-                   "? WHERE id = ?;"
+                   "?, field_soil = ?, lpc_team_id = ?, farmer_id = ?, crop_trial_id = ?, id_contour = ?, " \
+                   "update_date = ? WHERE id = ?;"
 DELETE_TRIAL_SQL = "DELETE FROM geostatistic_trial WHERE id = '{}';"
 
+FETCH_ALL_TEAM = "SELECT id, first_name, last_name, create_date, update_date FROM lpc_team;"
+FETCH_ONE_TEAM = "SELECT id, first_name, last_name, create_date, update_date FROM lpc_team WHERE id = '{}';"
 INSERT_TEAM_SQL = "INSERT INTO lpc_team (first_name, last_name, create_date) VALUES (?, ?, ?);"
 UPDATE_TEAM_SQL = "UPDATE lpc_team SET first_name = ?, last_name = ?,  update_date = ? WHERE id = ?;"
 DELETE_TEAM_SQL = "DELETE FROM lpc_team WHERE id = '{}';"

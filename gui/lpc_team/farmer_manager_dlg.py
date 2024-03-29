@@ -25,7 +25,7 @@
 from qgis.PyQt import QtWidgets, QtCore
 from qgis.PyQt.QtWidgets import QHeaderView
 
-from .ui_farmer_manager import Ui_FarmerDialog
+from .farmer_manager_dlg_base import Ui_FarmerDialog
 from ...core.constants import *
 from ...core.factories.sqlite_factory import SqliteFactory
 from ...core.services.message_service import MessageService

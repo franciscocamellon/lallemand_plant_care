@@ -21,6 +21,7 @@
  *                                                                         *
  ***************************************************************************/
 """
+import logging
 import os
 import re
 from collections import OrderedDict
@@ -42,6 +43,7 @@ from qgis.core import (
 )
 
 from .layer_service import LayerService
+from .message_service import MessageService
 from ..constants import REFERENCE_POINTS, COMPOSER_LAYOUTS, QGIS_TOC_GROUPS
 
 
@@ -49,12 +51,19 @@ class ComposerService:
 
     def __init__(self, project):
         self.project = project
+        self.messageService = MessageService()
         self.extent = ''
         self.crs = ''
         self.fontName = 'Times new Roman'
         self.filePath = self.project.homePath()
         self.layerService = LayerService()
         self._hideGroupsOnLegend(project)
+        self._initializeLogging()
+
+    @staticmethod
+    def _initializeLogging():
+        logging.basicConfig(filename=os.path.join(os.path.dirname(__file__), 'log', 'composer_service_log.log'),
+                            level=logging.ERROR)
 
     @staticmethod
     def _setLayoutPageSize(layout, width, height):
@@ -314,5 +323,6 @@ class ComposerService:
             return result == QgsLayoutExporter.Success
         except Exception as exporterException:
             # TODO log this error
+            self.messageService.logMessage(f'createLayoutExporter: {str(exporterException)}: FAILED', 2)
             print(f"An error occurred: {str(exporterException)}")
             return False

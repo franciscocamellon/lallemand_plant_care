@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# OptionsSettingsForm implementation generated from reading ui file 'lpc_team_manager.ui'
+# OptionsSettingsForm implementation generated from reading ui file 'team_manager_dlg_base.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -9,10 +9,16 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-
+from PyQt5.QtCore import QRegExp
+from PyQt5.QtGui import QRegExpValidator
 
 class Ui_LpcTeamManagerDialog(object):
     def setupUi(self, LpcTeamManagerDialog):
+
+        # regexp = QRegExp(r'^[a-zA-Z]*$')
+        regexp = QRegExp(r'^\w+( \w+)*$')
+        validator = QRegExpValidator(regexp)
+
         LpcTeamManagerDialog.setObjectName("LpcTeamManagerDialog")
         LpcTeamManagerDialog.resize(715, 285)
         LpcTeamManagerDialog.setMinimumSize(QtCore.QSize(715, 285))
@@ -97,11 +103,14 @@ class Ui_LpcTeamManagerDialog(object):
         self.horizontalLayout_4.setContentsMargins(5, -1, -1, -1)
         self.horizontalLayout_4.setSpacing(10)
         self.horizontalLayout_4.setObjectName("horizontalLayout_4")
+
         self.lpcTeamFirstNameLineEdit = QtWidgets.QLineEdit(self.addGroupBox)
         self.lpcTeamFirstNameLineEdit.setMinimumSize(QtCore.QSize(0, 23))
         self.lpcTeamFirstNameLineEdit.setStyleSheet("font: 8pt \"MS Shell Dlg 2\";")
+        self.lpcTeamFirstNameLineEdit.setValidator(validator)
         self.lpcTeamFirstNameLineEdit.setObjectName("lpcTeamFirstNameLineEdit")
         self.horizontalLayout_4.addWidget(self.lpcTeamFirstNameLineEdit)
+
         self.lpcTeamLastNameLineEdit = QtWidgets.QLineEdit(self.addGroupBox)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -110,6 +119,7 @@ class Ui_LpcTeamManagerDialog(object):
         self.lpcTeamLastNameLineEdit.setSizePolicy(sizePolicy)
         self.lpcTeamLastNameLineEdit.setMinimumSize(QtCore.QSize(0, 23))
         self.lpcTeamLastNameLineEdit.setStyleSheet("font: 8pt \"MS Shell Dlg 2\";")
+        self.lpcTeamLastNameLineEdit.setValidator(validator)
         self.lpcTeamLastNameLineEdit.setObjectName("lpcTeamLastNameLineEdit")
         self.horizontalLayout_4.addWidget(self.lpcTeamLastNameLineEdit)
         self.verticalLayout.addLayout(self.horizontalLayout_4)
