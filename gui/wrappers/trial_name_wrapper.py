@@ -37,7 +37,7 @@ class TrialNameWidgetWrapper(WidgetWrapper):
 
     def createWidget(self):
         self.trialComboBox = QtWidgets.QComboBox()
-        SqliteFactory().fetchDataToCombobox(self.trialComboBox, FETCH_ALL_TRIAL, ['field_name'], 'id')
+        SqliteFactory().fetchDataToCombobox(self.trialComboBox, 'SELECT * FROM geostatistic_trial', ['field_name'], 'id')
         self.trialComboBox.dialogType = self.dialogType
         self.trialComboBox.setEditable(True)
         return self.trialComboBox
