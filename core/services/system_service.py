@@ -23,6 +23,7 @@
 """
 import os
 import datetime
+import re
 import shutil
 
 from .message_service import MessageService
@@ -32,12 +33,21 @@ from ..constants import DIRECTORY_STRUCTURE
 class SystemService:
 
     def __init__(self):
-        """
-        Constructor for the SystemService class.
-        """
         self.messageService = MessageService()
 
-    def createDirectoryStructure(self, basePath):
+    @staticmethod
+    def filterByFileName(directoryPath, filterString):
+        fileList = os.listdir(directoryPath)
+        regexPattern = '|'.join(map(re.escape, filterString))
+        pattern = re.compile(regexPattern)
+
+        for file in fileList:
+            if pattern.search(file):
+                filePath = os.path.join(directoryPath, file)
+                return os.path.normpath(filePath)
+
+    @staticmethod
+    def createDirectoryStructure(basePath):
 
         for mainDirectory, subDirectories in DIRECTORY_STRUCTURE.items():
             mainDirectoryPath = os.path.join(basePath, mainDirectory)
@@ -52,7 +62,7 @@ class SystemService:
             os.makedirs(mainDirectoryPath, exist_ok=True)
 
             for subDirectory in subDirectories:
-                subDirectoryPath = os.path.join(mainDirectoryPath, subDirectory)
+                subDirectoryPath = os.path.normpath(os.path.join(mainDirectoryPath, subDirectory))
                 os.makedirs(subDirectoryPath, exist_ok=True)
 
     @staticmethod
@@ -81,8 +91,18 @@ class SystemService:
             return f'{mainDirectory}/'
 
     @staticmethod
-    def copyFile(source, target):
+    def _copyFile(source, target):
         shutil.copyfile(source, target)
+
+    def copyVariogram(self, sourcePath, targetPath):
+        if not os.path.exists(targetPath):
+            os.makedirs(targetPath)
+
+        for resultFile in os.listdir(sourcePath):
+            if "0_Variograma" in resultFile:
+                oldFilePath = os.path.normpath(os.path.join(sourcePath, resultFile))
+                newFilePath = os.path.normpath(os.path.join(targetPath, resultFile))
+                self._copyFile(oldFilePath, newFilePath)
 
     def fileExist(self, path, task=False):
         if os.path.isfile(path):
@@ -93,3 +113,7 @@ class SystemService:
                 return self.messageService.standardButtonMessage('Load trial files',
                                                                  [f'{file} already exist!', 'Overwrite?'],
                                                                  4, [5, 6])
+
+    def getFieldName(self, string):
+        underscoreReplacedString = string.replace('_', '')
+        return underscoreReplacedString[0:11]

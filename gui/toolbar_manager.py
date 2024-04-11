@@ -24,15 +24,20 @@
 
 from qgis.PyQt.QtCore import pyqtSlot
 from qgis.PyQt.QtWidgets import QWidget
+from qgis.core import QgsMapLayer
 
-from .filter.filtering_dlg import FilteringPoints
-from .kriging.kriging_dlg import OrdinaryKriging
-from .treatment.treatment_polygons_dlg import TreatmentPolygons
+from .filter.filtering_harvester_points import FilteringHarvesterPoints
 from .geostatistics_trial.geostatistics_trial import GeostatisticsTrial
+from .kriging.kriging_dlg import OrdinaryKriging
 from .layer_manager.load_files_dlg import LoadFiles
-from .lpc_team.farmer_manager import FarmerManager
-from .lpc_team.lpc_team_manager import RegisterLpcTeam
+from .lpc_team.farmer_manager_dlg import FarmerManager
+from .lpc_team.team_manager_dlg import RegisterLpcTeam
+from .report.analysis_report import AnalysisReport
 from .toolbar.toolbar_form_base import Ui_Form
+from .treatment.treatment_polygons import TreatmentPolygons
+from .validation.sampling_layers_validation import SamplingLayersValidation
+from ..core.algorithms.algorithm_runner import AlgorithmRunner
+from ..core.constants import QGIS_TOC_GROUPS
 from ..core.services.layer_service import LayerService
 
 
@@ -43,10 +48,10 @@ class ToolbarManager(QWidget, Ui_Form):
         self.setupUi(self)
         self.iface = iface
         self.toolbar = toolbar
+        self.actions = list()
         self.layerService = LayerService()
+        self.algRunner = AlgorithmRunner()
         self.splitter.hide()
-        self.settingsPushButton.hide()
-        self.reportPushButton.hide()
         self.createTrialPushButton.clicked.connect(self.createTrialProject)
         self.loadFilePushButton.clicked.connect(self.loadFiles)
         self.lpcTeamPushButton.clicked.connect(self.manageLpcTeam)
@@ -54,14 +59,18 @@ class ToolbarManager(QWidget, Ui_Form):
         self.treatmentPushButton.clicked.connect(self.treatments)
         self.filterPushButton.clicked.connect(self.filtering)
         self.krigingPushButton.clicked.connect(self.ordinaryKriging)
+        self.samplingValidationPushButton.clicked.connect(self.validation)
+        self.clearStructurePushButton.clicked.connect(self.clearTreeView)
+        self.reportPushButton.clicked.connect(self.getReport)
+        self.mapsPushButton.clicked.connect(self.composer)
+        self.exportMapPushButton.clicked.connect(self.exportMaps)
+        self.samplingPushButton.clicked.connect(self.sampling)
+        self.errorCompensationPushButton.clicked.connect(self.errorCompensation)
+        self.gainSurfacePushButton.clicked.connect(self.gainSurface)
+        self.presentationPushButton.clicked.connect(self.getPresentation)
 
-    @staticmethod
-    def initGui():
-        return True
-
-    @staticmethod
-    def unload():
-        return True
+    def unload(self):
+        pass
 
     @pyqtSlot(bool, name="on_showToolbarPushButton_toggled")
     def toggleToolbar(self, toggled=None):
@@ -114,20 +123,12 @@ class ToolbarManager(QWidget, Ui_Form):
     def treatments(self):
         project = self.layerService.checkForSavedProject()
         if project:
-            dlg = TreatmentPolygons(project)
-            dlg.show()
-            result = dlg.exec_()
-            if result:
-                pass
+            TreatmentPolygons(project).runTreatmentPolygons()
 
     def filtering(self):
         project = self.layerService.checkForSavedProject()
         if project:
-            dlg = FilteringPoints(self.iface, project)
-            dlg.show()
-            result = dlg.exec_()
-            if result:
-                pass
+            FilteringHarvesterPoints(project).runHarvesterFilter()
 
     def ordinaryKriging(self):
         project = self.layerService.checkForSavedProject()
@@ -137,3 +138,61 @@ class ToolbarManager(QWidget, Ui_Form):
             result = dlg.exec_()
             if result:
                 pass
+
+    def validation(self):
+        project = self.layerService.checkForSavedProject()
+        if project:
+            SamplingLayersValidation(project).runCalculateError()
+
+    def errorCompensation(self):
+        project = self.layerService.checkForSavedProject()
+        if project:
+            SamplingLayersValidation(project).runErrorCompensation()
+
+    def gainSurface(self):
+        project = self.layerService.checkForSavedProject()
+        if project:
+            SamplingLayersValidation(project).runGainSurface()
+
+    def clearTreeView(self):
+        project = self.layerService.checkForSavedProject()
+        root = project.layerTreeRoot()
+        if project:
+            for index, layer in enumerate(self.iface.mapCanvas().layers()):
+                if layer.type() == QgsMapLayer.RasterLayer:
+                    layer_node = root.findLayer(layer.id())
+
+                    if 'validation' in layer.name().split('_'):
+                        self.layerService.applySymbology(layer, '', raster=True)
+                        self.layerService.addMapLayer(layer, QGIS_TOC_GROUPS[5])
+                    else:
+                        self.layerService.applySymbology(layer, '', raster=True)
+                        self.layerService.addMapLayer(layer, QGIS_TOC_GROUPS[3])
+
+                    parent = layer_node.parent()
+                    parent.removeChildNode(layer_node)
+
+    def getReport(self):
+        project = self.layerService.checkForSavedProject()
+        if project:
+            AnalysisReport(project).runCreateReport()
+
+    def getPresentation(self):
+        project = self.layerService.checkForSavedProject()
+        if project:
+            AnalysisReport(project).runCreatePresentation()
+
+    def composer(self):
+        project = self.layerService.checkForSavedProject()
+        if project:
+            self.algRunner.runLoadComposerTemplates(project)
+
+    def exportMaps(self):
+        project = self.layerService.checkForSavedProject()
+        if project:
+            self.algRunner.runExportMaps(project)
+
+    def sampling(self):
+        project = self.layerService.checkForSavedProject()
+        if project:
+            self.algRunner.runCreateSampleLayers()

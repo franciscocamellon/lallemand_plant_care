@@ -24,13 +24,13 @@
 from qgis.PyQt import QtWidgets
 from qgis.core import QgsProject, QgsCoordinateReferenceSystem
 
-from ...core.services.message_service import UserFeedback
 from .load_files_dlg_base import Ui_LoadFilesDialogBase
-from ...core.constants import QGIS_TOC_GROUPS, POLYGONS_BUILDER_METHODS
+from ...core.constants import QGIS_TOC_GROUPS
 from ...core.services.layer_service import LayerService
+from ...core.services.message_service import UserFeedback
 from ...core.services.system_service import SystemService
 from ...core.services.widget_service import WidgetService
-from ...core.tools.algorithm_runner import AlgorithmRunner
+from ...core.algorithms.algorithm_runner import AlgorithmRunner
 
 
 class LoadFiles(QtWidgets.QDialog, Ui_LoadFilesDialogBase):
@@ -74,6 +74,8 @@ class LoadFiles(QtWidgets.QDialog, Ui_LoadFilesDialogBase):
     def loadPoints(self):
         filePath = self.project.homePath()
         epsg = self.suggestedCrsSelectionWidget.crs()
+
+        self.layerService.createLayersTreeGroup(self.project)
 
         if self.reprojectCheckBox.isChecked():
 

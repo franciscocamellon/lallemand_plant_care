@@ -28,6 +28,7 @@ from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtWidgets import QHeaderView
 from qgis.core import QgsProject
 
+from ...core.factories.sqlite_factory import SqliteFactory
 from .ui_geostatistics_trial import Ui_Dialog
 from ...core.constants import *
 from ...core.factories.postgres_factory import PostgresFactory
@@ -45,7 +46,7 @@ class GeostatisticsTrial(QtWidgets.QDialog, Ui_Dialog):
         self.setWindowTitle("Geostatistics Trial Information")
         self.project = ''
         self.layer_services = LayerService()
-        self.postgresFactory = PostgresFactory()
+        self.databaseFactory = SqliteFactory()
         self.setTrialWidget()
         self.loadTrialData()
         self.fetchDomain()
@@ -111,11 +112,12 @@ class GeostatisticsTrial(QtWidgets.QDialog, Ui_Dialog):
             data = self.prepareTrialData()
             self.trialAddPushButton.setText('Add')
             self.geostatisticsTrialGroupBox.setTitle('Add crop')
+            self.trialIDLabel.setText('noid')
         else:
             sql = INSERT_TRIAL_SQL
             data = self.prepareTrialData()
 
-        result = self.postgresFactory.postSqlExecutor(sql, data)
+        result = self.databaseFactory.postSqlExecutor(sql, data)
         self.loadTrialData()
         self.clearTrialWidget()
         MessageService().resultMessage(result, 'Trial management', 'Data saved successfully!')
@@ -125,7 +127,7 @@ class GeostatisticsTrial(QtWidgets.QDialog, Ui_Dialog):
 
         if selectedData:
             currentRow, data = selectedData
-            result = self.postgresFactory.postSqlExecutor(DELETE_TRIAL_SQL.format(data[0]))
+            result = self.databaseFactory.postSqlExecutor(DELETE_TRIAL_SQL.format(data[0]))
             self.loadTrialData()
             MessageService().resultMessage(result, 'Deleting data', 'Data deleted successfully!')
         else:
@@ -140,7 +142,7 @@ class GeostatisticsTrial(QtWidgets.QDialog, Ui_Dialog):
         trialData = [
             self.trialFieldNameLineEdit.text(),
             self.trialFieldAreaLineEdit.text(),
-            irrigated,
+            self.trialIrrigatedComboBox.currentText(),
             self.trialSoilTypeLineEdit.text(),
             teamId,
             farmerId,
@@ -154,45 +156,54 @@ class GeostatisticsTrial(QtWidgets.QDialog, Ui_Dialog):
         return tuple(trialData)
 
     def loadTrialData(self):
-        result = self.postgresFactory.getSqlExecutor(FETCH_ALL_TRIAL)
-
+        result = self.databaseFactory.getSqlExecutor("SELECT * FROM geostatistic_trial", dictionary=True)
         if len(result) > 0:
             self.tableDataFormatter(result)
         else:
-            WidgetService().populateTable(result, self.trialTableWidget)
+            WidgetService().populateSqliteTable(result, self.trialTableWidget)
 
     def tableDataFormatter(self, result):
+        result_list = list()
         for row in result:
-            lpcTeamName = self.postgresFactory.fetchOne(FETCH_ONE_TEAM, row['lpc_team'])
-            farmer = self.postgresFactory.fetchOne(FETCH_ONE_FARMER, row['farmer'])
-            crop = self.postgresFactory.fetchOne(FETCH_ONE_CROP, row['crop_trial'])
+            lpcTeamName = self.databaseFactory.fetchOne(FETCH_ONE_TEAM, row['lpc_team_id'], dictionary=True)
+            farmer = self.databaseFactory.fetchOne(FETCH_ONE_FARMER, row['farmer_id'], dictionary=True)
+            crop = self.databaseFactory.fetchOne(FETCH_ONE_CROP, row['crop_trial_id'], dictionary=True)
+            new_result = dict()
+            new_result['id'] = row['id']
+            new_result['field_name'] = row['field_name']
+            new_result['field_area'] = row['field_area']
+            new_result['field_irrigation'] = row['field_irrigation']
+            new_result['field_soil'] = row['field_soil']
+            new_result['lpc_team'] = f"{lpcTeamName[0]['first_name']} {lpcTeamName[0]['last_name']}"
+            new_result['farmer'] = f"{farmer[0]['first_name']} {farmer[0]['last_name']}"
+            new_result['crop_trial'] = f"{crop[0]['crop_name']} - {crop[0]['variety']}"
+            new_result['id_contour'] = row['id_contour']
+            new_result['create_date'] = row['create_date']
+            new_result['update_date'] = row['update_date']
+            result_list.append(new_result)
 
-            row['lpc_team'] = f"{lpcTeamName[0]['first_name']} {lpcTeamName[0]['last_name']}"
-            row['farmer'] = f"{farmer[0]['first_name']} {farmer[0]['last_name']}"
-            row['crop_trial'] = f"{crop[0]['crop_name']} - {crop[0]['variety']}"
-
-        WidgetService().populateTable(result, self.trialTableWidget)
+        WidgetService().populateTable(result_list, self.trialTableWidget)
 
     def fetchDomain(self):
-        comboboxData = self.postgresFactory.fetchDataToCombobox(self.trialIrrigatedComboBox, FETCH_ALL_DOMAIN,
+        comboboxData = self.databaseFactory.fetchDataToCombobox(self.trialIrrigatedComboBox, FETCH_ALL_DOMAIN,
                                                                 ['description'], 'code')
         if not comboboxData[0]:
             MessageService().messageBox('QGIS project', comboboxData[1], 5, 1)
 
     def fetchLpcTeam(self):
-        comboboxData = self.postgresFactory.fetchDataToCombobox(self.lpcTeamComboBox, FETCH_ALL_TEAM,
+        comboboxData = self.databaseFactory.fetchDataToCombobox(self.lpcTeamComboBox, FETCH_ALL_TEAM,
                                                                 ['first_name', 'last_name'], 'id')
         if not comboboxData[0]:
             MessageService().messageBox('QGIS project', comboboxData[1], 5, 1)
 
     def fetchCropData(self):
-        comboboxData = self.postgresFactory.fetchDataToCombobox(self.cropFieldComboBox, FETCH_ALL_CROP,
+        comboboxData = self.databaseFactory.fetchDataToCombobox(self.cropFieldComboBox, FETCH_ALL_CROP,
                                                                 ['crop_name', 'variety'], 'id', ' - ')
         if not comboboxData[0]:
             MessageService().messageBox('QGIS project', comboboxData[1], 5, 1)
 
     def fetchFarmerData(self):
-        comboboxData = self.postgresFactory.fetchDataToCombobox(self.farmerComboBox, FETCH_ALL_FARMER,
+        comboboxData = self.databaseFactory.fetchDataToCombobox(self.farmerComboBox, FETCH_ALL_FARMER,
                                                                 ['first_name', 'last_name'], 'id')
         if not comboboxData[0]:
             MessageService().messageBox('QGIS project', comboboxData[1], 5, 1)

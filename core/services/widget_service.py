@@ -41,6 +41,23 @@ class WidgetService:
         self.layerService = LayerService()
 
     @staticmethod
+    def _setTextColor(lineEdit, color):
+        palette = lineEdit.palette()
+        palette.setColor(QPalette.Text, QColor(color))
+        lineEdit.setPalette(palette)
+
+    @staticmethod
+    def _setBackgroundColor(lineEdit, color):
+        palette = lineEdit.palette()
+        palette.setColor(QPalette.Base, QColor(color))
+        lineEdit.setPalette(palette)
+
+    @staticmethod
+    def floatValidator(widget):
+        floatValidator = QDoubleValidator()
+        widget.setValidator(floatValidator)
+
+    @staticmethod
     def getSelectedData(tableWidget, totalColumns, msgTitle):
         currentRow = tableWidget.currentRow()
         selectedItems = tableWidget.selectedItems()
@@ -73,6 +90,27 @@ class WidgetService:
         for rowIdx, row in enumerate(result):
             for colIdx, key in enumerate(keys):
                 value = row[key]
+                if isinstance(value, datetime.datetime):
+                    value = value.strftime("%d/%m/%Y") if value else ""
+
+                item = QtWidgets.QTableWidgetItem(str(value))
+                tableWidget.setItem(rowIdx, colIdx, item)
+
+    @staticmethod
+    def populateSqliteTable(result, tableWidget):
+        tableWidget.clearContents()
+
+        if not result:
+            tableWidget.setRowCount(1)
+            return
+
+        tableWidget.setRowCount(len(result))
+        keys = result[0]
+        tableWidget.setColumnCount(len(keys))
+
+        for rowIdx, row in enumerate(result):
+            for colIdx, key in enumerate(keys):
+                value = row[colIdx]
                 if isinstance(value, datetime.datetime):
                     value = value.strftime("%d/%m/%Y") if value else ""
 
@@ -135,25 +173,10 @@ class WidgetService:
     def validateEmpty(self, lineEdit):
         if lineEdit.text().strip():
             self._setBackgroundColor(lineEdit, Qt.white)
+            return True
         else:
             self._setBackgroundColor(lineEdit, Qt.pink)
-
-    @staticmethod
-    def floatValidator(widget):
-        floatValidator = QDoubleValidator()
-        widget.setValidator(floatValidator)
-
-    @staticmethod
-    def _setTextColor(lineEdit, color):
-        palette = lineEdit.palette()
-        palette.setColor(QPalette.Text, QColor(color))
-        lineEdit.setPalette(palette)
-
-    @staticmethod
-    def _setBackgroundColor(lineEdit, color):
-        palette = lineEdit.palette()
-        palette.setColor(QPalette.Base, QColor(color))
-        lineEdit.setPalette(palette)
+            return False
 
     def updateGui(self, mapLayerComboBox, crsSelectionWidget, warningLabel, crsLabel):
         crsInfo = ''

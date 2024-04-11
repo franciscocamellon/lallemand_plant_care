@@ -36,28 +36,27 @@ class PostgresFactory:
         super(PostgresFactory, self).__init__()
         self.settings = OptionsSettingsPage().getServerSettings()
         self._initializeLogging()
-        self.connection = self.openConnection()
+        # self.connection = self.openConnection()
 
     @staticmethod
     def _initializeLogging():
         logging.basicConfig(filename=os.path.join(os.path.dirname(__file__), 'postgres_log.log'), level=logging.ERROR)
 
     def openConnection(self):
-        connection = psycopg2.connect(
+        with psycopg2.connect(
             database=self.settings['database'],
             user=self.settings['user'],
             password=self.settings['password'],
             host=self.settings['host'],
             port=self.settings['port']
-        )
-        connection.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-        connection.autocommit = True
+        ) as connection:
+            connection.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+            connection.autocommit = True
         return connection
 
     def fetchDataToCombobox(self, combobox, query, displayColumns, idColumn, concatSeparator=' '):
         try:
             combobox.clear()
-            # connection = self.openConnection()
             result = self.getSqlExecutor(query)
 
             for row in result:
@@ -72,12 +71,12 @@ class PostgresFactory:
 
     def fetchOne(self, baseSql, objectId):
         objectSql = baseSql.format(objectId)
-        # connection = self.openConnection()
         return self.getSqlExecutor(objectSql)
 
     def getSqlExecutor(self, sql):
         try:
-            with self.connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as curs:
+            connection = self.openConnection()
+            with connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as curs:
                 curs.execute(sql)
                 result = curs.fetchall()
             return result
@@ -89,7 +88,8 @@ class PostgresFactory:
 
     def postSqlExecutor(self, sql, data=None):
         try:
-            with self.connection.cursor() as curs:
+            connection = self.openConnection()
+            with connection.cursor() as curs:
                 if data:
                     curs.execute(sql, data)
                 else:

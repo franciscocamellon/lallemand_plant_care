@@ -23,13 +23,14 @@
 """
 import os.path
 
-from qgis.core import QgsProject
+from qgis.core import QgsProject, QgsApplication
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 
+from .core.algorithms.lallemand_plant_care_provider import LPCAlgorithmProvider
 from .gui.toolbar_manager import ToolbarManager
-from .gui.settings.options_settings_dlg import OptionsSettingsFactory, OptionsSettingsPage
+from .gui.settings.options_settings_dlg import OptionsSettingsFactory
 # Initialize Qt resources from file resources.py
 from .resources import *
 
@@ -72,8 +73,7 @@ class LallemandPlantCare:
         self.toolbar = None
         self.toolbar_widget = None
         self.optionsFactory = None
-        self.gui_manager = None
-        self.main_widget = None
+        self.provider = None
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -163,8 +163,13 @@ class LallemandPlantCare:
 
         return action
 
+    def initProcessing(self):
+        self.provider = LPCAlgorithmProvider()
+        QgsApplication.processingRegistry().addProvider(self.provider)
+
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
+        self.initProcessing()
 
         self.optionsFactory = OptionsSettingsFactory()
         self.optionsFactory.setTitle('Lallemand Plant Care Settings')
@@ -181,7 +186,7 @@ class LallemandPlantCare:
 
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
-
+        QgsApplication.processingRegistry().removeProvider(self.provider)
         self.toolbar_widget.unload()
 
         for action in self.actions:
