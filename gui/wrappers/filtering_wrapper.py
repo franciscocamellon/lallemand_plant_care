@@ -36,7 +36,7 @@ class FilteringWidgetWrapper(WidgetWrapper):
         layerService = LayerService()
         self.layerComboBox = QgsMapLayerComboBox()
         layers = QgsProject.instance().mapLayers()
-        treatmentLayer = layerService.filterByLayerName(list(layers.values()), ['1_Krig_', 'GPS', 'T1', 'T2', 'Gain', 'Yield'], inverse=True)
+        treatmentLayer = layerService.filterByLayerName(list(layers.values()), ['1_Krig_', 'GPS', 'T1', 'T2', 'Gain'], inverse=True)
 
         self.layerComboBox.setFilters(QgsMapLayerProxyModel.PointLayer)
         self.layerComboBox.setExceptedLayerList(treatmentLayer)

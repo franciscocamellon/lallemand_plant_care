@@ -75,7 +75,7 @@ class FilteringHarvesterPoints(QObject):
     def getHarvesterLayers(self):
         layers = self.project.mapLayers().values()
         harvesterLayer = self.layerService.filterByLayerName(list(layers),
-                                                             ['1_Krig_', 'GPS', 'T1', 'T2', 'Gain', 'Yield'],
+                                                             ['1_Krig_', 'GPS', 'T1', 'T2', 'Gain'],
                                                              inverse=False)
         if harvesterLayer:
             return sorted(harvesterLayer, key=lambda x: x.name())

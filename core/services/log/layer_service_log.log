@@ -1,2 +1,3 @@
 ERROR:root:Error executing SQL: no such column: gt.lpc_team
 ERROR:root:Error executing SQL: no such column: gt.lpc_team
+ERROR:root:checkForSavedProject: Project not saved by the user
