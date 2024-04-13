@@ -159,6 +159,7 @@ class ReportProcessingAlgorithm(QgsProcessingAlgorithm):
 
     def getReportData(self):
         trialResult = self.databaseFactory.fetchOne(FETCH_ONE_TRIAL, self.trialId, dictionary=True)
+        print(trialResult[0])
         farmerResult = self.databaseFactory.fetchOne(FETCH_ONE_FARMER, trialResult[0]['farmer'], dictionary=True)
         cropResult = self.databaseFactory.fetchOne(FETCH_ONE_CROP, trialResult[0]['crop_trial'], dictionary=True)
 

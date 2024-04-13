@@ -195,4 +195,4 @@ class ToolbarManager(QWidget, Ui_Form):
     def sampling(self):
         project = self.layerService.checkForSavedProject()
         if project:
-            self.algRunner.runCreateSampleLayers()
+            SamplingLayersValidation(project).runCreateSampleLayersParameters()
