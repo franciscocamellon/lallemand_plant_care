@@ -95,3 +95,17 @@ class SamplingLayersValidation(QObject):
             'T2_RASTER': t2Raster[0]
         }
         self.algRunner.runGainSurface(parameters)
+
+    def runCreateSampleLayersParameters(self):
+        yieldLayer = self.verifyLoadedLayer('T1_T2_total')
+        treatmentField = self.getFields(yieldLayer, ['Traitement'])
+        yieldField = self.getFields(yieldLayer, self.kriging[0].split(';'))
+
+        parameters = {
+            'YIELD_FILTERED_LAYER': yieldLayer,
+            'TREATMENT_FIELD': treatmentField[0].name(),
+            'YIELD_FIELD': yieldField[0].name(),
+            'OUTPUT': 'TEMPORARY_OUTPUT'
+        }
+
+        self.algRunner.runCreateSampleLayers(parameters)
