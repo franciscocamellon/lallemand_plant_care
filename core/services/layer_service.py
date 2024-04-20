@@ -666,14 +666,12 @@ class LayerService:
         numberClasses = int(self.symbologySettings[0])
 
         classes = self.calculateClasses(minValue, maxValue, numberClasses)
+
         label = list()
         for index, value in enumerate(classes):
             label.append(self.createRasterClassLabels(index, classes))
 
-        # print('classes:', classes)
-        # print('classes2:', classes2)
         classes_and_labels = zip(classes, label)
-        # print('classes_labels:', list(classes_labels))
 
         colors = self.symbologySettings[1]
         colorList = self.createColorRampItemList(classes_and_labels, colors)
