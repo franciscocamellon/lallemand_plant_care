@@ -638,6 +638,16 @@ class LayerService:
         return label
 
     @staticmethod
+    def createRasterClassLabels(index, classInterval):
+        if index == 0:
+            label = f"< {classInterval[index]}"
+        elif index == 3:
+            label = f"> {classInterval[index]}"
+        else:
+            label = f"{classInterval[index]} - {classInterval[index + 1]}"
+        return label
+
+    @staticmethod
     def calculateVectorClasses(minValue, maxValue, numberClasses):
         step = (maxValue - minValue) / numberClasses
         classes = [round((maxValue - i * step), 1) for i in range(5)]
@@ -646,7 +656,7 @@ class LayerService:
     @staticmethod
     def calculateClasses(minValue, maxValue, numberClasses):
         step = (maxValue - minValue) / (numberClasses - 1)
-        classes = [round(minValue + i * step, 10) for i in range(numberClasses)]
+        classes = [round(minValue + i * step, 1) for i in range(numberClasses)]
         return classes
 
     def createRasterRenderer(self, raster):
@@ -656,8 +666,15 @@ class LayerService:
         numberClasses = int(self.symbologySettings[0])
 
         classes = self.calculateClasses(minValue, maxValue, numberClasses)
+
+        label = list()
+        for index, value in enumerate(classes):
+            label.append(self.createRasterClassLabels(index, classes))
+
+        classes_and_labels = zip(classes, label)
+
         colors = self.symbologySettings[1]
-        colorList = self.createColorRampItemList(classes, colors)
+        colorList = self.createColorRampItemList(classes_and_labels, colors)
 
         legendSettings = self.createRasterLegendSettings()
         colorRamp = self.createRasterColorRampShader(colorList, legendSettings)
@@ -673,9 +690,10 @@ class LayerService:
     def createColorRampItemList(classes, colors):
         colorItemList = list()
         rampItemDict = zip(classes, colors)
+
         for value, color in rampItemDict:
             colorItemList.append(
-                QgsColorRampShader.ColorRampItem(value, QColor(color), f'{value:.1f}'))
+                QgsColorRampShader.ColorRampItem(value[0], QColor(color), f'{value[1]}'))
         return colorItemList
 
     @staticmethod

@@ -69,6 +69,8 @@ class SamplingLayersValidation(QObject):
 
         t1Raster = self.getRasterLayers(['1_Krig_T1_80_perc_'])
         t2Raster = self.getRasterLayers(['1_Krig_T2_80_perc_'])
+        t1ErrorRaster = self.getRasterLayers(['1_Krig_T1_validation_error_'])
+        t2ErrorRaster = self.getRasterLayers(['1_Krig_T2_validation_error_'])
 
         parameters = {
             'T1_RASTER': t1Raster[0],
@@ -76,25 +78,13 @@ class SamplingLayersValidation(QObject):
             'T1_VALIDATION_FIELD': t1Field[0].name(),
             'T2_RASTER': t2Raster[0],
             'T2_VALIDATION_LAYER': t2ValidationLayer,
-            'T2_VALIDATION_FIELD': t2Field[0].name()
+            'T2_VALIDATION_FIELD': t2Field[0].name(),
+            'T1_ERROR_RASTER': t1ErrorRaster,
+            'T2_ERROR_RASTER': t2ErrorRaster,
+            'POINTS': True
         }
 
         self.algRunner.runCalculateError(parameters)
-
-    def runErrorCompensation(self):
-        t1Raster = self.getRasterLayers(['1_Krig_T1_80_perc_'])
-        t2Raster = self.getRasterLayers(['1_Krig_T2_80_perc_'])
-        t1ErrorRaster = self.getRasterLayers(['1_Krig_T1_validation_error_'])
-        t2ErrorRaster = self.getRasterLayers(['1_Krig_T2_validation_error_'])
-
-        parameters = {
-            'POINTS': True,
-            'T1_80_RASTER': t1Raster[0],
-            'T1_ERROR_RASTER': t1ErrorRaster[0],
-            'T2_80_RASTER': t2Raster[0],
-            'T2_ERROR_RASTER': t2ErrorRaster[0]
-        }
-        self.algRunner.runErrorCompensation(parameters)
 
     def runGainSurface(self):
         t1Raster = self.getRasterLayers(['T1_Final_Surface'])
@@ -105,3 +95,17 @@ class SamplingLayersValidation(QObject):
             'T2_RASTER': t2Raster[0]
         }
         self.algRunner.runGainSurface(parameters)
+
+    def runCreateSampleLayersParameters(self):
+        yieldLayer = self.verifyLoadedLayer('T1_T2_total')
+        treatmentField = self.getFields(yieldLayer, ['Traitement'])
+        yieldField = self.getFields(yieldLayer, self.kriging[0].split(';'))
+
+        parameters = {
+            'YIELD_FILTERED_LAYER': yieldLayer,
+            'TREATMENT_FIELD': treatmentField[0].name(),
+            'YIELD_FIELD': yieldField[0].name(),
+            'OUTPUT': 'TEMPORARY_OUTPUT'
+        }
+
+        self.algRunner.runCreateSampleLayers(parameters)

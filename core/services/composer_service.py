@@ -171,9 +171,22 @@ class ComposerService:
         template.setContent(open(layoutPath).read())
         layout.loadFromTemplate(template, QgsReadWriteContext())
 
-    def _setItemMapScale(self, itemMap):
-        buffer = 75
-        extent = self.extent.extent().buffered(buffer)
+    def _setItemMapScale(self, itemMap, layer):
+        layer_extent = layer.extent()  # Obtém a extensão da camada
+
+        # Calcula a largura e a altura da extensão da camada
+        width = layer_extent.width()
+        height = layer_extent.height()
+
+        # Calcula o tamanho do buffer como uma porcentagem da largura ou altura da extensão da camada
+        buffer_percentage = 0.5  # Por exemplo, 10% de buffer
+        # buffer_width = width * buffer_percentage
+        # buffer_height = height * buffer_percentage
+        #
+        # # Calcula o tamanho do buffer como a média da largura e altura do buffer
+        # buffer_size = (buffer_width + buffer_height) / 2
+        buffer_size = (width + height) / 2 * buffer_percentage
+        extent = self.extent.extent().buffered(buffer_size)
         itemMap.setExtent(extent)
         itemMap.zoomToExtent(extent)
 
@@ -223,7 +236,7 @@ class ComposerService:
         itemMap.setBackgroundColor(QColor(255, 255, 255, 0))
         itemMap.setCrs(self.crs)
 
-        self._setItemMapScale(itemMap)
+        self._setItemMapScale(itemMap, contour)
 
         itemMap.setLayers([contour, layer])
         itemMap.refresh()
@@ -292,7 +305,8 @@ class ComposerService:
         self.updateItemScaleBar(itemScaleBar, itemMap)
 
         itemLegend = layout.itemById('legend')
-        self.updateItemLegend(itemLegend, itemMap, 'Yield (kg)', layer, contour)
+        if itemLegend:
+            self.updateItemLegend(itemLegend, itemMap, 'Yield (kg)', layer, contour)
 
         self.updateCrsLabelGroup(layout, layer)
 

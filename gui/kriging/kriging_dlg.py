@@ -145,7 +145,7 @@ class OrdinaryKriging(QtWidgets.QDialog, Ui_Dialog):
         self.smartMap.reset_gui()
         smartMapDialog.lineEdit.setText(path)
         self.smartMap.path_absolute = path
-        self.smartMap.maximum_points_plugin = 5000
+        self.smartMap.maximum_points_plugin = 10000
 
         smartMapDialog.checkBox_Qgis_Raster.setChecked(True)
         smartMapDialog.checkBox_Eliminate_Outilier.setChecked(False)
