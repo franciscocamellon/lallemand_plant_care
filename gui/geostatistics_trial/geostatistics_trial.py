@@ -156,7 +156,7 @@ class GeostatisticsTrial(QtWidgets.QDialog, Ui_Dialog):
         return tuple(trialData)
 
     def loadTrialData(self):
-        result = self.databaseFactory.getSqlExecutor("SELECT * FROM geostatistic_trial", dictionary=True)
+        result = self.databaseFactory.getSqlExecutor(FETCH_ALL_TRIAL, dictionary=True)
         if len(result) > 0:
             self.tableDataFormatter(result)
         else:

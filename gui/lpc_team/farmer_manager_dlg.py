@@ -39,7 +39,7 @@ class FarmerManager(QtWidgets.QDialog, Ui_FarmerDialog):
         """Constructor."""
         super(FarmerManager, self).__init__()
         self.setupUi(self)
-        self.postgresFactory = SqliteFactory()
+        self.databaseFactory = SqliteFactory()
         self.setWindowTitle("Farmer and Crop Management")
         self.setFarmerWidget()
         self.setCropWidget()
@@ -138,7 +138,7 @@ class FarmerManager(QtWidgets.QDialog, Ui_FarmerDialog):
                 sql = INSERT_CROP_SQL
                 data = self.prepareCropData()
 
-            result = self.postgresFactory.postSqlExecutor(sql, data)
+            result = self.databaseFactory.postSqlExecutor(sql, data)
             self.loadCropData()
             self.clearCropWidget()
             MessageService().resultMessage(result, 'Crop field management', 'Data saved successfully!')
@@ -156,7 +156,7 @@ class FarmerManager(QtWidgets.QDialog, Ui_FarmerDialog):
                 sql = INSERT_FARMER_SQL
                 data = self.prepareFarmerData()
 
-            result = self.postgresFactory.postSqlExecutor(sql, data)
+            result = self.databaseFactory.postSqlExecutor(sql, data)
 
             self.loadFarmerData()
             self.clearFarmerWidget()
@@ -190,12 +190,12 @@ class FarmerManager(QtWidgets.QDialog, Ui_FarmerDialog):
         return tuple(farmerData)
 
     def loadCropData(self):
-        result = self.postgresFactory.getSqlExecutor(FETCH_ALL_CROP)
+        result = self.databaseFactory.getSqlExecutor(FETCH_ALL_CROP)
 
         WidgetService().populateSqliteTable(result, self.cropTableWidget)
 
     def loadFarmerData(self):
-        result = self.postgresFactory.getSqlExecutor(FETCH_ALL_FARMER)
+        result = self.databaseFactory.getSqlExecutor(FETCH_ALL_FARMER)
 
         WidgetService().populateSqliteTable(result, self.farmerTableWidget)
 
@@ -204,7 +204,13 @@ class FarmerManager(QtWidgets.QDialog, Ui_FarmerDialog):
 
         if selectedData:
             currentRow, data = selectedData
-            result = self.postgresFactory.postSqlExecutor(DELETE_FARMER_SQL.format(data[0]))
+            trial = self.databaseFactory.fetchOne(FETCH_TRIAL_FARMER, data[0], dictionary=True)
+
+            if len(trial) > 0:
+                MessageService().messageBox('Deleting data', 'There is a trial related to this farmer.', 5, 1)
+                return
+
+            result = self.databaseFactory.postSqlExecutor(DELETE_FARMER_SQL.format(data[0]))
             self.loadFarmerData()
             MessageService().resultMessage(result, 'Farmer management', 'Data deleted successfully!')
         else:
@@ -215,7 +221,13 @@ class FarmerManager(QtWidgets.QDialog, Ui_FarmerDialog):
 
         if selectedData:
             currentRow, data = selectedData
-            result = self.postgresFactory.postSqlExecutor(DELETE_CROP_SQL.format(data[0]))
+            trial = self.databaseFactory.fetchOne(FETCH_TRIAL_CROP, data[0], dictionary=True)
+
+            if len(trial) > 0:
+                MessageService().messageBox('Deleting data', 'There is a trial related to this crop.', 5, 1)
+                return
+
+            result = self.databaseFactory.postSqlExecutor(DELETE_CROP_SQL.format(data[0]))
             self.loadCropData()
             MessageService().resultMessage(result, 'Crop management', 'Data deleted successfully!')
         else:

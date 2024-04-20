@@ -45,6 +45,7 @@ class FilteringHarvesterPoints(QObject):
     def runHarvesterFilter(self):
 
         harvesterLayers = self.getHarvesterLayers()
+        print(harvesterLayers[0])
 
         treatmentPolygon = self.verifyLoadedLayer('GPS_points_treatment')
         contour = self.verifyLoadedLayer('GPS_points_contour')
