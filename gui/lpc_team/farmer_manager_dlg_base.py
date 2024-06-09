@@ -593,14 +593,3 @@ class Ui_FarmerDialog(object):
         self.cropEditPushButton.setText(_translate("Dialog", "  Edit"))
         self.cropDeletePushButton.setText(_translate("Dialog", "  Delete"))
         self.farmerTabWidget.setTabText(self.farmerTabWidget.indexOf(self.cropTab), _translate("Dialog", "Crop management"))
-import resources_rc
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    Dialog = QtWidgets.QDialog()
-    ui = Ui_Dialog()
-    ui.setupUi(Dialog)
-    Dialog.show()
-    sys.exit(app.exec_())
