@@ -29,7 +29,7 @@ from qgis.PyQt.QtWidgets import QHeaderView
 from qgis.core import QgsProject
 
 from ...core.factories.sqlite_factory import SqliteFactory
-from .ui_geostatistics_trial import Ui_Dialog
+from .geostatistics_trial_dlg_base import Ui_Dialog
 from ...core.constants import *
 from ...core.factories.postgres_factory import PostgresFactory
 from ...core.services.layer_service import LayerService
@@ -54,11 +54,9 @@ class GeostatisticsTrial(QtWidgets.QDialog, Ui_Dialog):
         self.fetchCropData()
         self.fetchFarmerData()
 
-        self.trialFieldNameLineEdit.editingFinished.connect(self.setQgisProjectName)
         self.trialAddPushButton.clicked.connect(self.register)
         self.trialEditPushButton.clicked.connect(self.updateTrialWidget)
         self.trialDeletePushButton.clicked.connect(self.deleteTrial)
-        self.createQgisProjectPushButton.clicked.connect(self.saveQgisProject)
 
     def setTrialWidget(self):
         self.trialTableWidget.setHorizontalHeaderLabels(GEOSTATISTIC_TRIAL)
@@ -97,11 +95,6 @@ class GeostatisticsTrial(QtWidgets.QDialog, Ui_Dialog):
         self.farmerComboBox.setCurrentIndex(0)
         self.cropFieldComboBox.setCurrentIndex(0)
 
-    def clearQgisProjectWidget(self):
-        self.qgisProjectLineEdit.clear()
-        self.trialStructureCheckBox.setChecked(False)
-        self.qgisProjectFileWidget.lineEdit().clearValue()
-
     def register(self):
         # TODO move register to the factory
         # connection = PostgresFactory().openConnection('BD_GEOSTAT_LPC')
@@ -127,9 +120,15 @@ class GeostatisticsTrial(QtWidgets.QDialog, Ui_Dialog):
 
         if selectedData:
             currentRow, data = selectedData
-            result = self.databaseFactory.postSqlExecutor(DELETE_TRIAL_SQL.format(data[0]))
-            self.loadTrialData()
-            MessageService().resultMessage(result, 'Deleting data', 'Data deleted successfully!')
+
+            reply = QtWidgets.QMessageBox.question(self, 'Confirmation', 'Are you sure you want to delete this trial?',
+                                                   QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                                                   QtWidgets.QMessageBox.No)
+
+            if reply == QtWidgets.QMessageBox.Yes:
+                result = self.databaseFactory.postSqlExecutor(DELETE_TRIAL_SQL.format(data[0]))
+                self.loadTrialData()
+                MessageService().resultMessage(result, 'Deleting data', 'Data deleted successfully!')
         else:
             MessageService().messageBox('Deleting data', 'No data selected.', 5, 1)
 
@@ -207,28 +206,3 @@ class GeostatisticsTrial(QtWidgets.QDialog, Ui_Dialog):
                                                                 ['first_name', 'last_name'], 'id')
         if not comboboxData[0]:
             MessageService().messageBox('QGIS project', comboboxData[1], 5, 1)
-
-    def setQgisProjectName(self):
-        self.qgisProjectLineEdit.clear()
-        self.qgisProjectLineEdit.setText(self.trialFieldNameLineEdit.text())
-
-    def saveQgisProject(self):
-        try:
-            self.project = QgsProject.instance()
-            if os.path.exists(self.qgisProjectFileWidget.filePath()):
-                self.project.setCrs(self.qgisProjectCrsWidget.crs())
-                self.project.write(f'{self.qgisProjectFileWidget.filePath()}/{self.qgisProjectLineEdit.text()}.qgs')
-
-                if self.trialStructureCheckBox.isChecked():
-                    SystemService().createDirectoryStructure(self.qgisProjectFileWidget.filePath())
-
-                MessageService().messageBox('QGIS project', 'Project saved successfully!', 3, 1)
-            else:
-                MessageService().messageBox('QGIS project', 'Directory does not exists!', 5, 1)
-
-        except Exception as e:
-            warningMessage = f"Error saving project: {str(e)}"
-            MessageService().messageBox('QGIS project', warningMessage, 5, 1)
-
-        finally:
-            self.clearQgisProjectWidget()
