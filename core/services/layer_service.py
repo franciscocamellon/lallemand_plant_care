@@ -78,7 +78,8 @@ class LayerService:
 
     @staticmethod
     def _initializeLogging():
-        logging.basicConfig(filename=os.path.join(os.path.dirname(__file__), 'log', 'layer_service_log.log'), level=logging.ERROR)
+        logging.basicConfig(filename=os.path.join(os.path.dirname(__file__), 'log', 'layer_service_log.log'),
+                            level=logging.ERROR)
 
     @staticmethod
     def _identifyWkbType(layer):
@@ -803,3 +804,25 @@ class LayerService:
 
         # Trigger repaint outside the editing block
         originalLayer.triggerRepaint()
+
+    def saveQgisProject(self, qgisProjectFileWidget, qgisProjectCrsWidget, qgisProjectLineEdit, trialStructureCheckBox):
+        try:
+            project = QgsProject.instance()
+            if os.path.exists(qgisProjectFileWidget.filePath()):
+                project.setCrs(qgisProjectCrsWidget.crs())
+                project.write(f'{qgisProjectFileWidget.filePath()}/{qgisProjectLineEdit.text()}.qgs')
+
+                if trialStructureCheckBox.isChecked():
+                    SystemService().createDirectoryStructure(qgisProjectFileWidget.filePath())
+
+                MessageService().messageBox('QGIS project', 'Project saved successfully!', 3, 1)
+            else:
+                MessageService().messageBox('QGIS project', 'Directory does not exists!', 5, 1)
+
+        except Exception as e:
+            warningMessage = f"Error saving project: {str(e)}"
+            MessageService().messageBox('QGIS project', warningMessage, 5, 1)
+
+        finally:
+            pass
+            # self.clearQgisProjectWidget()
