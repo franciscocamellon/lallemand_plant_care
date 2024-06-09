@@ -185,6 +185,7 @@ class FilteringHarvesterPointsProcessingAlgorithm(QgsProcessingAlgorithm):
         multiFeedback.pushInfo(self.tr(f'Initializing filter...\n'))
 
         filePath = self.project.homePath()
+        yieldMapPath = os.path.join(filePath, '00_Data', '00_Raw_Files', 'Yield_Map.shp')
         filterParameters = self.getYieldFilteringParameters(boundaryLayer, treatmentLayer, treatmentIdField[0],
                                                             harvesterLayer, idField[0], yieldField[0],
                                                             targetProjection[0], dateColumn[0], filePath)
@@ -193,16 +194,16 @@ class FilteringHarvesterPointsProcessingAlgorithm(QgsProcessingAlgorithm):
         output = AlgorithmRunner().runYieldMapFiltering(filterParameters, context=context, feedback=feedback)
 
         multiFeedback.pushInfo(self.tr(f'Selecting features...\n'))
-        filteredFeatures = self.layerService.getFeaturesByRequest(output,
-                                                                  "\"Biais_rendement\"='F - Pas de biais'")
-        yieldMapVector = self.layerService.createMemoryVectorLayer(output.wkbType(), 'Yield_Map',
-                                                                   output.crs().authid(),
+        filteredFeatures = self.layerService.getFeaturesByRequest(output, "\"Biais_rendement\"='F - Pas de biais'")
+
+        yieldMapVector = self.layerService.createMemoryVectorLayer(harvesterLayer.wkbType(), 'Yield_Map',
+                                                                   harvesterLayer.crs().authid(),
                                                                    fields=output.fields(),
                                                                    features=filteredFeatures)
 
-        self.layerService.saveVectorLayer(yieldMapVector, os.path.join(filePath, '00_Data', '00_Raw_Files', 'Yield_Map.shp'))
+        self.layerService.saveVectorLayer(yieldMapVector, yieldMapPath)
         multiFeedback.pushInfo(self.tr(f'Loading layer...\n'))
-        self.layerService.loadShapeFile(QGIS_TOC_GROUPS[0], os.path.join(filePath, '00_Data', '00_Raw_Files', 'Yield_Map.shp'))
+        self.layerService.loadShapeFile(QGIS_TOC_GROUPS[0], yieldMapPath)
 
         if reproject:
             crsOperations = self.layerService.getSuggestedCrs(harvesterLayer)
