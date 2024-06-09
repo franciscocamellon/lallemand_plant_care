@@ -210,9 +210,14 @@ class FarmerManager(QtWidgets.QDialog, Ui_FarmerDialog):
                 MessageService().messageBox('Deleting data', 'There is a trial related to this farmer.', 5, 1)
                 return
 
-            result = self.databaseFactory.postSqlExecutor(DELETE_FARMER_SQL.format(data[0]))
-            self.loadFarmerData()
-            MessageService().resultMessage(result, 'Farmer management', 'Data deleted successfully!')
+            reply = QtWidgets.QMessageBox.question(self, 'Confirmation', 'Are you sure you want to delete this farmer?',
+                                                   QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                                                   QtWidgets.QMessageBox.No)
+
+            if reply == QtWidgets.QMessageBox.Yes:
+                result = self.databaseFactory.postSqlExecutor(DELETE_FARMER_SQL.format(data[0]))
+                self.loadFarmerData()
+                MessageService().resultMessage(result, 'Farmer management', 'Data deleted successfully!')
         else:
             MessageService().messageBox('Deleting data', 'No data selected.', 5, 1)
 
@@ -227,8 +232,13 @@ class FarmerManager(QtWidgets.QDialog, Ui_FarmerDialog):
                 MessageService().messageBox('Deleting data', 'There is a trial related to this crop.', 5, 1)
                 return
 
-            result = self.databaseFactory.postSqlExecutor(DELETE_CROP_SQL.format(data[0]))
-            self.loadCropData()
-            MessageService().resultMessage(result, 'Crop management', 'Data deleted successfully!')
+            reply = QtWidgets.QMessageBox.question(self, 'Confirmation', 'Are you sure you want to delete this crop?',
+                                                   QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                                                   QtWidgets.QMessageBox.No)
+
+            if reply == QtWidgets.QMessageBox.Yes:
+                result = self.databaseFactory.postSqlExecutor(DELETE_CROP_SQL.format(data[0]))
+                self.loadCropData()
+                MessageService().resultMessage(result, 'Crop management', 'Data deleted successfully!')
         else:
             MessageService().messageBox('Deleting data', 'No data selected.', 5, 1)
