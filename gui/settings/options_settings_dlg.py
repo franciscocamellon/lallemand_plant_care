@@ -127,7 +127,7 @@ class OptionsSettingsPage(QgsOptionsPageWidget, Ui_Form):
         self.sizeBorderSpinBox.setValue(float(self.settings.value('LPC/border_size', self.treatment[4])))
         self.largeurCoupeSpinBox.setValue(float(self.settings.value('LPC/largeur_coupe', self.treatment[5])))
         self.sousEchantillonnageSpinBox.setValue(
-            float(self.settings.value('LPC/sous_echantillonnage', self.treatment[4])))
+            float(self.settings.value('LPC/sous_echantillonnage', self.treatment[6])))
 
     def getTreatmentPolygonsSettings(self):
         return (
