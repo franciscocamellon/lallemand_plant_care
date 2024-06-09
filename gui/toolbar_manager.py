@@ -27,7 +27,7 @@ from qgis.PyQt.QtWidgets import QWidget
 from qgis.core import QgsMapLayer
 
 from .filter.filtering_harvester_points import FilteringHarvesterPoints
-from .geostatistics_trial.geostatistics_trial import GeostatisticsTrial
+from .geostatistics_trial.geostatistics_trial_dlg import GeostatisticsTrial
 from .kriging.kriging_dlg import OrdinaryKriging
 from .layer_manager.load_files_dlg import LoadFiles
 from .lpc_team.farmer_manager_dlg import FarmerManager
