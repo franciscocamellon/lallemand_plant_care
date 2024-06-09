@@ -104,7 +104,7 @@ class SamplingLayersValidation(QObject):
         parameters = {
             'YIELD_FILTERED_LAYER': yieldLayer,
             'TREATMENT_FIELD': treatmentField[0].name(),
-            'YIELD_FIELD': yieldField[0].name(),
+            'YIELD_FIELD': None,
             'OUTPUT': 'TEMPORARY_OUTPUT'
         }
 
