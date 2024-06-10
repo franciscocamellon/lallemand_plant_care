@@ -69,8 +69,6 @@ class SamplingLayersValidation(QObject):
 
         t1Raster = self.getRasterLayers(['1_Krig_T1_80_perc_'])
         t2Raster = self.getRasterLayers(['1_Krig_T2_80_perc_'])
-        t1ErrorRaster = self.getRasterLayers(['1_Krig_T1_validation_error_'])
-        t2ErrorRaster = self.getRasterLayers(['1_Krig_T2_validation_error_'])
 
         parameters = {
             'T1_RASTER': t1Raster[0],
@@ -78,13 +76,25 @@ class SamplingLayersValidation(QObject):
             'T1_VALIDATION_FIELD': t1Field[0].name(),
             'T2_RASTER': t2Raster[0],
             'T2_VALIDATION_LAYER': t2ValidationLayer,
-            'T2_VALIDATION_FIELD': t2Field[0].name(),
-            'T1_ERROR_RASTER': t1ErrorRaster,
-            'T2_ERROR_RASTER': t2ErrorRaster,
-            'POINTS': True
+            'T2_VALIDATION_FIELD': t2Field[0].name()
         }
 
         self.algRunner.runCalculateError(parameters)
+
+    def runErrorCompensation(self):
+        t1Raster = self.getRasterLayers(['1_Krig_T1_80_perc_'])
+        t2Raster = self.getRasterLayers(['1_Krig_T2_80_perc_'])
+        t1ErrorRaster = self.getRasterLayers(['1_Krig_T1_validation_error_'])
+        t2ErrorRaster = self.getRasterLayers(['1_Krig_T2_validation_error_'])
+
+        parameters = {
+            'POINTS': True,
+            'T1_80_RASTER': t1Raster[0],
+            'T1_ERROR_RASTER': t1ErrorRaster[0],
+            'T2_80_RASTER': t2Raster[0],
+            'T2_ERROR_RASTER': t2ErrorRaster[0]
+        }
+        self.algRunner.runErrorCompensation(parameters)
 
     def runGainSurface(self):
         t1Raster = self.getRasterLayers(['T1_Final_Surface'])

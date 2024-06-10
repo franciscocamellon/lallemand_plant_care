@@ -67,6 +67,7 @@ class ToolbarManager(QWidget, Ui_Form):
         self.samplingPushButton.clicked.connect(self.sampling)
         self.gainSurfacePushButton.clicked.connect(self.gainSurface)
         self.presentationPushButton.clicked.connect(self.getPresentation)
+        self.errorCompensationPushButton.clicked.connect(self.errorCompensation)
 
     def unload(self):
         pass
@@ -142,6 +143,11 @@ class ToolbarManager(QWidget, Ui_Form):
         project = self.layerService.checkForSavedProject()
         if project:
             SamplingLayersValidation(project).runCalculateError()
+
+    def errorCompensation(self):
+        project = self.layerService.checkForSavedProject()
+        if project:
+            SamplingLayersValidation(project).runErrorCompensation()
 
     def gainSurface(self):
         project = self.layerService.checkForSavedProject()
