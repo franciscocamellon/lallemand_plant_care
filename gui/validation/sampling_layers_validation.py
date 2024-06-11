@@ -73,10 +73,10 @@ class SamplingLayersValidation(QObject):
         parameters = {
             'T1_RASTER': t1Raster[0],
             'T1_VALIDATION_LAYER': t1ValidationLayer,
-            'T1_VALIDATION_FIELD': t1Field[0].name(),
+            'T1_VALIDATION_FIELD': None,
             'T2_RASTER': t2Raster[0],
             'T2_VALIDATION_LAYER': t2ValidationLayer,
-            'T2_VALIDATION_FIELD': t2Field[0].name()
+            'T2_VALIDATION_FIELD': None
         }
 
         self.algRunner.runCalculateError(parameters)
