@@ -334,11 +334,14 @@ class LayerService:
     def createValidationVectorLayer(self, layer, fieldName):
         fields = self.krigingSettings[0]
         fieldsList = fields.split(';') if fields else list()
-        fieldsList.append('1Krig')
-        fieldsList.append('fid')
-        fieldsList.append(fieldName)
+        fieldsList.extend(['1Krig', 'fid'])
+
+        if fieldName not in fieldsList:
+            fieldsList.append(fieldName)
+
         fieldsToDelete = self.filterByFieldName(layer, fieldsList, inverse=True)
         newOutput = self.deleteFields(layer, fieldsToDelete)
+
         return self.createValidationFields(newOutput)
 
     def checkForSavedProject(self):
