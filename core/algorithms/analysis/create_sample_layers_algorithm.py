@@ -85,7 +85,7 @@ class CreateSampleLayersProcessingAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterField(
                 self.YIELD_FIELD,
-                self.tr('Yield field to histogram'),
+                self.tr('Yield field'),
                 parentLayerParameterName=self.YIELD_FILTERED_LAYER,
                 type=QgsProcessingParameterField.Any,
                 allowMultiple=False,
@@ -139,7 +139,7 @@ class CreateSampleLayersProcessingAlgorithm(QgsProcessingAlgorithm):
                                                              feedback)
                     self.layerService.applySymbology(percentualLayer, yieldField[0])
                 else:
-                    validationLayer = self.layerService.createValidationVectorLayer(sampleLayer)
+                    validationLayer = self.layerService.createValidationVectorLayer(sampleLayer, yieldField[0])
                     self.layerService.saveVectorLayer(validationLayer, samplePath)
                     self.layerService.loadShapeFile(group, samplePath)
 

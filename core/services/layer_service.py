@@ -311,6 +311,7 @@ class LayerService:
         provider = layer.dataProvider()
         provider.addAttributes(fields)
         layer.updateFields()
+        layer.commitChanges()
 
         return layer
 
@@ -326,14 +327,16 @@ class LayerService:
 
         provider.deleteAttributes(fieldsToDelete)
         layer.updateFields()
+        layer.commitChanges()
 
         return layer
 
-    def createValidationVectorLayer(self, layer):
+    def createValidationVectorLayer(self, layer, fieldName):
         fields = self.krigingSettings[0]
-        fieldsList = fields.split(';')
+        fieldsList = fields.split(';') if fields else list()
         fieldsList.append('1Krig')
         fieldsList.append('fid')
+        fieldsList.append(fieldName)
         fieldsToDelete = self.filterByFieldName(layer, fieldsList, inverse=True)
         newOutput = self.deleteFields(layer, fieldsToDelete)
         return self.createValidationFields(newOutput)
