@@ -333,7 +333,7 @@ class LayerService:
 
     def createValidationVectorLayer(self, layer, fieldName):
         fields = self.krigingSettings[0]
-        fieldsList = fields.split(';') if fields else list()
+        fieldsList = [field.strip() for field in fields.split(';') if field.strip()] if fields else list()
         fieldsList.extend(['1Krig', 'fid'])
 
         if fieldName not in fieldsList:
