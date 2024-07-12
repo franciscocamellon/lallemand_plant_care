@@ -167,6 +167,7 @@ class ReportService:
         reportDocument.save(output)
 
     def createPresentation(self, presentationData, filePath):
+        print(presentationData)
         doc = os.path.join(self.layerService.getPresentationPath(), 'presentation_template.pptx')
         reportPresentation = Presentation(doc)
         for slideIndex, slide in enumerate(reportPresentation.slides, start=1):
@@ -182,7 +183,13 @@ class ReportService:
                             placeholder = slide.placeholders[placeholderIndex]
                             if placeholderData is None:
                                 continue
-                            picture = placeholder.insert_picture(placeholderData)
+                            if os.path.isfile(placeholderData):
+                                try:
+                                    placeholder.insert_picture(placeholderData)
+                                except Exception as e:
+                                    print(f"Error inserting picture: {e}")
+                            else:
+                                print(f"Invalid file path for image: {placeholderData}")
 
         output = os.path.join(filePath, 'output_presentation.pptx')
         reportPresentation.save(output)

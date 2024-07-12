@@ -38,6 +38,7 @@ from ...constants import COMPOSER_LAYERS
 from ...services.composer_service import ComposerService
 from ...services.layer_service import LayerService
 from ...services.message_service import MessageService
+from ...services.statistics_service import StatisticsService
 
 
 class LoadComposerTemplatesAlgorithm(QgsProcessingAlgorithm):
@@ -49,10 +50,12 @@ class LoadComposerTemplatesAlgorithm(QgsProcessingAlgorithm):
     def __init__(self):
         super().__init__()
         self.project = QgsProject.instance()
+        self.statistics = StatisticsService()
         self.layerService = LayerService()
         self.messageService = MessageService()
         self.layers = self.project.instance().mapLayers().values()
         self.filteredLayers = self.layerService.filterByLayerName(list(self.layers), COMPOSER_LAYERS, inverse=True)
+
 
     def initAlgorithm(self, config=None):
 
@@ -90,6 +93,8 @@ class LoadComposerTemplatesAlgorithm(QgsProcessingAlgorithm):
         layerLayoutMapping = composerService.mapLayersToLayouts([self.filteredLayers[layerId] for layerId in layerIds])
 
         multiFeedback = QgsProcessingMultiStepFeedback(totalFeatures, feedback)
+        # gainLayer = QgsProject.instance().mapLayersByName('Gain_Points')[0]
+        # self.statistics.runStatistics(gainLayer)
 
         if not trialBoundsLayer:
             multiFeedback.reportError(self.tr('\nERROR: No valid extent layer...\n'))

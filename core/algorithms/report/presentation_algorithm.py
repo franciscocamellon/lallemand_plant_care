@@ -31,6 +31,7 @@ from qgis.core import (QgsProject,
                        QgsProcessing,
                        QgsProcessingParameterField,
                        QgsProcessingAlgorithm,
+                       QgsProcessingParameterNumber,
                        QgsProcessingParameterVectorLayer,
                        QgsProcessingParameterFile,
                        QgsProcessingParameterDefinition)
@@ -227,7 +228,7 @@ class PresentationProcessingAlgorithm(QgsProcessingAlgorithm):
                 12: self.systemService.filterByFileName(mapsPath, ['08_Model_T2']),
                 13: self.systemService.filterByFileName(variogramPath, ['0_Variograma_T1_T2_total_']),
                 14: self.systemService.filterByFileName(variogramPath, ['0_Variograma_T1_total_']),
-                15: self.systemService.filterByFileName(variogramPath, ['0_Variograma_T2_total_'])},
+                20: self.systemService.filterByFileName(variogramPath, ['0_Variograma_T2_total_'])},
             6: {
                 10: self.systemService.filterByFileName(mapsPath, ['04_T1_Sample_for_model_generation']),
                 11: self.systemService.filterByFileName(mapsPath, ['07_Model_T1']),

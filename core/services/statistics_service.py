@@ -91,53 +91,69 @@ class StatisticsService:
                   self.calculateStdDev(secondLayer, field)]
         return mean, stdDev
 
+    @staticmethod
+    def calculateVectorClasses(layer):
+        numberClasses = 4
+        minValue = 0 if layer.minimumValue(layer.fields().indexOf('yield')) < 0 else layer.minimumValue(
+            layer.fields().indexOf('yield'))
+        maxValue = layer.maximumValue(layer.fields().indexOf('yield'))
+        step = (maxValue - minValue) / numberClasses
+        classes = list()
+        for i in range(numberClasses + 1):
+            classes.append(int(round(minValue + i * step, 0)))
+
+        return classes
+
     def runStatistics(self, layer):
-        # Extract the data into a list
+        intervals = self.calculateVectorClasses(layer)
         valuesList = [feature['yield'] for feature in layer.getFeatures()]
 
-        # Area calculation
-        area = (self.krigingSettings[1][0]) * self.krigingSettings[1][1]
+        area = float(self.krigingSettings[1][0]) * float(self.krigingSettings[1][1])
         sq_area = [area for value in valuesList]
-
-        # Create DataFrame with 'yield' and 'area'
         df = pd.DataFrame({'yield': valuesList, 'area': sq_area})
 
-        # Define conditions for categorizing the data
         conditions = [
-            df['yield'] < 0,
-            (df['yield'] >= 0) & (df['yield'] < 0.5),
-            (df['yield'] >= 0.5) & (df['yield'] < 1),
-            df['yield'] >= 1
+            df['yield'] < intervals[0],
+            (df['yield'] >= intervals[0]) & (df['yield'] < intervals[1]),
+            (df['yield'] >= intervals[1]) & (df['yield'] < intervals[2]),
+            df['yield'] >= intervals[2]
         ]
-
-        # Define the choices for the intervals
-        choices = ['yield<0', '0<=yield<0.5', '0.5<=yield<1', 'yield>=1']
-
-        # Apply the conditions and choices to create 'interval' column
+        choices = [f'< {intervals[0]}', f'{intervals[0]} - {intervals[1]}', f'{intervals[1]} - {intervals[2]}', f'> {intervals[2]}']
         df['interval'] = np.select(conditions, choices, default='other')
 
-        # Calculate the total area
         self.surfaceGainData['TOTAL_AREA'] = df['area'].sum()
         self.surfaceGainData['TOTAL_YIELD_PRODUCTION'] = df['yield'].sum()
 
-        # Initialize a dictionary to store the results
         results = {}
-
-        # Iterate through the intervals and calculate required values
         for choice in choices:
-            self.statisticsInterval['SQ_AREA'] = df[df['interval'] == choice]['area'].sum()
-            self.statisticsInterval['PERC_AREA'] = (self.statisticsInterval['SQ_AREA'] / self.surfaceGainData['TOTAL_AREA']) * 100
-            self.statisticsInterval['YIELD_SUM'] = df[df['interval'] == choice]['yield'].sum()
-            self.statisticsInterval['YIELD_BY_PERC_AREA'] = self.statisticsInterval['YIELD_SUM'] / self.statisticsInterval['PERC_AREA'] if self.statisticsInterval['PERC_AREA'] != 0 else 0
+
+            interval_df = df[df['interval'] == choice]
+            sq_area_sum = interval_df['area'].sum()
+            perc_area = (sq_area_sum / self.surfaceGainData['TOTAL_AREA']) * 100
+            yield_sum = interval_df['yield'].sum()
+            yield_by_perc_area = yield_sum / perc_area if perc_area != 0 else 0
 
             results[choice] = {
-                'Total Area Sum': self.statisticsInterval['SQ_AREA'],
-                'Area Percent': self.statisticsInterval['PERC_AREA'],
-                'Yield Sum': self.statisticsInterval['YIELD_SUM'],
-                'Yield per Area Percent': self.statisticsInterval['YIELD_BY_PERC_AREA']
+                'Area Percent': round(perc_area, 2),
+                'Yield per Area Percent': round(yield_by_perc_area, 2)
             }
-            # 'intervalStrings':'',
-            # 'interval_area_percentage'
-            # 'interval_total'
 
-        return results
+        return self.formatStatistics(results)
+
+    def formatStatistics(self, stats):
+        intervals = []
+        area_percents = []
+        yields = []
+
+        for key, value in stats.items():
+            intervals.append(key)
+            area_percents.append(f"{value['Area Percent']:.3f}%")
+            yields.append(f"{value['Yield per Area Percent']:.3f}")
+
+        formatted_result = {
+            'interval_strings': '\n'.join(intervals),
+            'interval_area_percentage': '\n'.join(area_percents),
+            'interval_total': '\n'.join(yields)
+        }
+
+        return formatted_result

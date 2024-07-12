@@ -288,11 +288,12 @@ class LayerService:
 
     def yieldGainFrequencyHistogram(self, layer, path):
 
-        total, values = self.filterFeaturesByIntervals(layer)
+        values = list()
+        for feature in layer.getFeatures():
+            values.append(feature['yield'])
 
-        if total != 0:
-            percentages = self.getPercentualFromIntervals(total, values, True)
-            self.plotterService.yieldFrequencyHistogram(values, percentages, exportPng=True, path=path)
+        if values != 0:
+            self.plotterService.yieldFrequencyHistogram(values, exportPng=True, path=path)
 
     def _convertToSimpleGeometry(self, layer):
         convertedLayerType = self._identifyWkbType(layer)
@@ -591,12 +592,15 @@ class LayerService:
 
         return feature
 
-    def createSamplingLayerSymbology(self, layer, fieldName):
+    def createIntervalClasses(self, layer, fieldName):
         minValue = layer.minimumValue(layer.fields().indexOf(fieldName))
         maxValue = layer.maximumValue(layer.fields().indexOf(fieldName))
 
         numberClasses = int(self.symbologySettings[0])
-        classes = self.calculateVectorClasses(minValue, maxValue, numberClasses)
+        return self.calculateVectorClasses(minValue, maxValue, numberClasses)
+
+    def createSamplingLayerSymbology(self, layer, fieldName):
+        classes = self.createIntervalClasses(layer, fieldName)
         colors = self.symbologySettings[1]
         colors.reverse()
 
