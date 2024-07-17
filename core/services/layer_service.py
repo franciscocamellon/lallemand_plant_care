@@ -229,14 +229,23 @@ class LayerService:
 
 
     def getFeaturesByRequest(self, layer, expression, featureList=False):
+
+        self.messageService.logMessage(f'QGSExpression: {expression} - getFeaturesByRequest() linha 231', 2)
+        totalFeatures = [feature for feature in layer.getFeatures()]
+        self.messageService.logMessage(f'Total de feições: {len(totalFeatures)} - getFeaturesByRequest() linha 231', 2)
+        selectedByLoopFeatures = list()
+        for feature in layer.getFeatures():
+            if feature['Biais_rendement'] == 'F - Pas de biais':
+                selectedByLoopFeatures.append(feature)
+        self.messageService.logMessage(f'Feições selecionadas por loop: {len(selectedByLoopFeatures)} - getFeaturesByRequest() linha 231', 2)
         request = QgsExpression(expression)
         if featureList:
             requestedFeatures = [feature for feature in layer.getFeatures(QgsFeatureRequest(request))]
-            self.messageService.logMessage(f'Pontos filtrados: {len(requestedFeatures)} - getFeaturesByRequest() linha 235', 2)
+            self.messageService.logMessage(f'Feições selecionadas por request: {len(requestedFeatures)} - getFeaturesByRequest() linha 231', 2)
             return requestedFeatures
         else:
             requestedFeatures = layer.getFeatures(QgsFeatureRequest(request))
-            self.messageService.logMessage(f'Pontos filtrados: {len([feature for feature in layer.getFeatures(QgsFeatureRequest(request))])} - getFeaturesByRequest() linha 239', 2)
+            self.messageService.logMessage(f'Feições selecionadas por request: {len([feature for feature in layer.getFeatures(QgsFeatureRequest(request))])} - getFeaturesByRequest() linha 231', 2)
             return requestedFeatures
 
     def getFeatures(self, layer, value, featureList=False):
