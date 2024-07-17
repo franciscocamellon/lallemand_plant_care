@@ -195,6 +195,7 @@ class FilteringHarvesterPointsProcessingAlgorithm(QgsProcessingAlgorithm):
 
         multiFeedback.pushInfo(self.tr(f'Selecting features...\n'))
         filteredFeatures = self.layerService.getFeaturesByRequest(output, "\"Biais_rendement\"='F - Pas de biais'")
+        # filteredFeatures = self.layerService.getFeatures(output, 'F - Pas de biais')
 
         yieldMapVector = self.layerService.createMemoryVectorLayer(harvesterLayer.wkbType(), 'Yield_Map',
                                                                    harvesterLayer.crs().authid(),

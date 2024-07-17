@@ -227,13 +227,26 @@ class LayerService:
             fieldsDictionary[fields.lookupField(field.name())] = field.name()
         return fieldsDictionary
 
-    @staticmethod
-    def getFeaturesByRequest(layer, expression, featureList=False):
+
+    def getFeaturesByRequest(self, layer, expression, featureList=False):
         request = QgsExpression(expression)
         if featureList:
-            return [feature for feature in layer.getFeatures(QgsFeatureRequest(request))]
+            requestedFeatures = [feature for feature in layer.getFeatures(QgsFeatureRequest(request))]
+            self.messageService.logMessage(f'Pontos filtrados: {len(requestedFeatures)} - getFeaturesByRequest() linha 235', 2)
+            return requestedFeatures
         else:
-            return layer.getFeatures(QgsFeatureRequest(request))
+            requestedFeatures = layer.getFeatures(QgsFeatureRequest(request))
+            self.messageService.logMessage(f'Pontos filtrados: {len([feature for feature in layer.getFeatures(QgsFeatureRequest(request))])} - getFeaturesByRequest() linha 239', 2)
+            return requestedFeatures
+
+    def getFeatures(self, layer, value, featureList=False):
+        requestedFeatures = list()
+        for feature in layer.getFeatures():
+            if feature['Biais_rend'] == value:
+                requestedFeatures.append(feature)
+        self.messageService.logMessage(f'Pontos filtrados: {len(requestedFeatures)} - getFeatures() linha 243', 2)
+        return requestedFeatures
+
 
     @staticmethod
     def getPercentualFeaturesById(layer, value, featureList=False):
