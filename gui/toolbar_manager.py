@@ -27,7 +27,7 @@ from qgis.PyQt.QtWidgets import QWidget
 from qgis.core import QgsMapLayer
 
 from .filter.filtering_harvester_points import FilteringHarvesterPoints
-from .geostatistics_trial.geostatistics_trial import GeostatisticsTrial
+from .geostatistics_trial.geostatistics_trial_dlg import GeostatisticsTrial
 from .kriging.kriging_dlg import OrdinaryKriging
 from .layer_manager.load_files_dlg import LoadFiles
 from .lpc_team.farmer_manager_dlg import FarmerManager
@@ -65,7 +65,6 @@ class ToolbarManager(QWidget, Ui_Form):
         self.mapsPushButton.clicked.connect(self.composer)
         self.exportMapPushButton.clicked.connect(self.exportMaps)
         self.samplingPushButton.clicked.connect(self.sampling)
-        self.errorCompensationPushButton.clicked.connect(self.errorCompensation)
         self.gainSurfacePushButton.clicked.connect(self.gainSurface)
         self.presentationPushButton.clicked.connect(self.getPresentation)
 
@@ -143,11 +142,6 @@ class ToolbarManager(QWidget, Ui_Form):
         project = self.layerService.checkForSavedProject()
         if project:
             SamplingLayersValidation(project).runCalculateError()
-
-    def errorCompensation(self):
-        project = self.layerService.checkForSavedProject()
-        if project:
-            SamplingLayersValidation(project).runErrorCompensation()
 
     def gainSurface(self):
         project = self.layerService.checkForSavedProject()

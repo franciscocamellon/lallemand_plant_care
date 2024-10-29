@@ -25,6 +25,7 @@
 from qgis.PyQt.QtCore import QCoreApplication
 from qgis.core import (QgsProject,
                        QgsProcessing,
+                       QgsProcessingParameterBoolean,
                        QgsProcessingParameterField,
                        QgsProcessingParameterRasterLayer,
                        QgsProcessingOutputVectorLayer,
@@ -46,6 +47,9 @@ class CalculateErrorProcessingAlgorithm(QgsProcessingAlgorithm):
     T2_VALIDATION_LAYER = 'T2_VALIDATION_LAYER'
     T1_VALIDATION_FIELD = 'T1_VALIDATION_FIELD'
     T2_VALIDATION_FIELD = 'T2_VALIDATION_FIELD'
+    T1_ERROR_RASTER = 'T1_ERROR_RASTER'
+    T2_ERROR_RASTER = 'T2_ERROR_RASTER'
+    POINTS = 'POINTS'
     T1_OUTPUT = 'T1_OUTPUT'
     T2_OUTPUT = 'T2_OUTPUT'
 
@@ -118,6 +122,28 @@ class CalculateErrorProcessingAlgorithm(QgsProcessingAlgorithm):
             )
         )
 
+        self.addParameter(
+            QgsProcessingParameterRasterLayer(
+                self.T1_ERROR_RASTER,
+                self.tr('T1 error raster'),
+                [QgsProcessing.TypeRaster]
+            )
+        )
+
+        self.addParameter(
+            QgsProcessingParameterRasterLayer(
+                self.T2_ERROR_RASTER,
+                self.tr('T2 error raster'),
+                [QgsProcessing.TypeRaster]
+            )
+        )
+
+        self.addParameter(
+            QgsProcessingParameterBoolean(
+                self.POINTS, self.tr("Export final surface points")
+            )
+        )
+
         self.addOutput(
             QgsProcessingOutputVectorLayer(
                 self.T1_OUTPUT,
@@ -144,6 +170,10 @@ class CalculateErrorProcessingAlgorithm(QgsProcessingAlgorithm):
         t1ValidationField = self.parameterAsFields(parameters, self.T1_VALIDATION_FIELD, context)
         t2ValidationField = self.parameterAsFields(parameters, self.T2_VALIDATION_FIELD, context)
 
+        t1ErrorRaster = self.parameterAsRasterLayer(parameters, self.T1_ERROR_RASTER, context)
+        t2ErrorRaster = self.parameterAsRasterLayer(parameters, self.T2_ERROR_RASTER, context)
+        exportPoints = self.parameterAsBool(parameters, self.POINTS, context)
+
         parameters = self.getParameters(t1Raster, t1ValidationLayer, t1ValidationField, t2Raster, t2ValidationLayer, t2ValidationField)
 
         outputList = list()
@@ -165,6 +195,9 @@ class CalculateErrorProcessingAlgorithm(QgsProcessingAlgorithm):
             self.layerService.updateOutputLayer(values[1], layerWithCleanFields)
 
             outputList.append(layerWithCleanFields)
+
+        self.algRunner.runErrorCompensation(t1Raster, t1ErrorRaster, t2Raster, t2ErrorRaster, exportPoints,
+                                            context=context, feedback=feedback)
 
         return {self.T1_OUTPUT: outputList[0], self.T2_OUTPUT: outputList[1]}
 
@@ -190,7 +223,7 @@ class CalculateErrorProcessingAlgorithm(QgsProcessingAlgorithm):
         Returns the translated algorithm name, which should be used for any
         user-visible display of the algorithm name.
         """
-        return self.tr('Calculate square error')
+        return self.tr('Calculate square error and error compensation')
 
     def group(self):
         """

@@ -109,9 +109,14 @@ class RegisterLpcTeam(QtWidgets.QDialog, Ui_LpcTeamManagerDialog):
                 MessageService().messageBox('Deleting data', 'There is a trial related to this professional.', 5, 1)
                 return
 
-            result = self.databaseFactory.postSqlExecutor(DELETE_TEAM_SQL.format(data[0]))
-            self.loadData()
-            MessageService().resultMessage(result, 'Deleting data', 'Data deleted successfully!')
+            reply = QtWidgets.QMessageBox.question(self, 'Confirmation', 'Are you sure you want to delete this member?',
+                                                   QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                                                   QtWidgets.QMessageBox.No)
+
+            if reply == QtWidgets.QMessageBox.Yes:
+                result = self.databaseFactory.postSqlExecutor(DELETE_TEAM_SQL.format(data[0]))
+                self.loadData()
+                MessageService().resultMessage(result, 'Deleting data', 'Data deleted successfully!')
         else:
             MessageService().messageBox('Deleting data', 'No data selected.', 5, 1)
 

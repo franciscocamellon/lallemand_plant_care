@@ -120,7 +120,8 @@ class AlgorithmRunner(QObject):
         output = processing.run("saga:addrastervaluestopoints", parameters, context=context, feedback=feedback)
         return self._getLayerFromContext(output, context, field='RESULT')
 
-    def runBasicStatisticsForFields(self, layer, field, context=None, feedback=None):
+    @staticmethod
+    def runBasicStatisticsForFields(layer, field, context=None, feedback=None):
 
         parameters = {
             'INPUT_LAYER': layer,
@@ -147,6 +148,17 @@ class AlgorithmRunner(QObject):
             'ERROR_FIELD': errorField
         }
         return processing.run("lpc:rmse", parameters, context=context, feedback=feedback)
+
+    @staticmethod
+    def runErrorCompensation(t1Raster, t1ErrorRaster, t2Raster, t2ErrorRaster, exportPoints, context=None, feedback=None):
+        parameters = {
+            'T1_80_RASTER': t1Raster,
+            'T1_ERROR_RASTER': t1ErrorRaster,
+            'T2_80_RASTER': t2Raster,
+            'T2_ERROR_RASTER': t2ErrorRaster,
+            'POINTS': exportPoints
+        }
+        return processing.run("lpc:calculateerrorcompensation", parameters, context=context, feedback=feedback)
 
     @staticmethod
     def runFilterTreatments(layer, yieldField, t1output, t2output, context=None, feedback=None):
@@ -243,12 +255,6 @@ class AlgorithmRunner(QObject):
     def runHarvesterFilter(parameters=None):
 
         dialog = createAlgorithmDialog('lpc:filteringharvesterpoints', parameters)
-        dialog.show()
-        dialog.exec_()
-
-    @staticmethod
-    def runErrorCompensation(parameters):
-        dialog = createAlgorithmDialog('lpc:calculateerrorcompensation', parameters)
         dialog.show()
         dialog.exec_()
 

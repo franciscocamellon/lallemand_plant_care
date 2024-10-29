@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>607</width>
-    <height>41</height>
+    <width>611</width>
+    <height>50</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -414,26 +414,6 @@
            <width>22</width>
            <height>22</height>
           </size>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="errorCompensationPushButton">
-         <property name="maximumSize">
-          <size>
-           <width>30</width>
-           <height>30</height>
-          </size>
-         </property>
-         <property name="toolTip">
-          <string>Error compensation</string>
-         </property>
-         <property name="text">
-          <string/>
-         </property>
-         <property name="icon">
-          <iconset resource="../../resources.qrc">
-           <normaloff>:/plugins/lallemand_plant_care/icons/error_compensation.png</normaloff>:/plugins/lallemand_plant_care/icons/error_compensation.png</iconset>
          </property>
         </widget>
        </item>

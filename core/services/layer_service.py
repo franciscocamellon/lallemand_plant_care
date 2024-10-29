@@ -78,7 +78,8 @@ class LayerService:
 
     @staticmethod
     def _initializeLogging():
-        logging.basicConfig(filename=os.path.join(os.path.dirname(__file__), 'log', 'layer_service_log.log'), level=logging.ERROR)
+        logging.basicConfig(filename=os.path.join(os.path.dirname(__file__), 'log', 'layer_service_log.log'),
+                            level=logging.ERROR)
 
     @staticmethod
     def _identifyWkbType(layer):
@@ -638,6 +639,16 @@ class LayerService:
         return label
 
     @staticmethod
+    def createRasterClassLabels(index, classInterval):
+        if index == 0:
+            label = f"< {classInterval[index]}"
+        elif index == 3:
+            label = f"> {classInterval[index]}"
+        else:
+            label = f"{classInterval[index]} - {classInterval[index + 1]}"
+        return label
+
+    @staticmethod
     def calculateVectorClasses(minValue, maxValue, numberClasses):
         step = (maxValue - minValue) / numberClasses
         classes = [round((maxValue - i * step), 1) for i in range(5)]
@@ -646,7 +657,7 @@ class LayerService:
     @staticmethod
     def calculateClasses(minValue, maxValue, numberClasses):
         step = (maxValue - minValue) / (numberClasses - 1)
-        classes = [round(minValue + i * step, 10) for i in range(numberClasses)]
+        classes = [round(minValue + i * step, 1) for i in range(numberClasses)]
         return classes
 
     def createRasterRenderer(self, raster):
@@ -656,8 +667,15 @@ class LayerService:
         numberClasses = int(self.symbologySettings[0])
 
         classes = self.calculateClasses(minValue, maxValue, numberClasses)
+
+        label = list()
+        for index, value in enumerate(classes):
+            label.append(self.createRasterClassLabels(index, classes))
+
+        classes_and_labels = zip(classes, label)
+
         colors = self.symbologySettings[1]
-        colorList = self.createColorRampItemList(classes, colors)
+        colorList = self.createColorRampItemList(classes_and_labels, colors)
 
         legendSettings = self.createRasterLegendSettings()
         colorRamp = self.createRasterColorRampShader(colorList, legendSettings)
@@ -673,9 +691,10 @@ class LayerService:
     def createColorRampItemList(classes, colors):
         colorItemList = list()
         rampItemDict = zip(classes, colors)
+
         for value, color in rampItemDict:
             colorItemList.append(
-                QgsColorRampShader.ColorRampItem(value, QColor(color), f'{value:.1f}'))
+                QgsColorRampShader.ColorRampItem(value[0], QColor(color), f'{value[1]}'))
         return colorItemList
 
     @staticmethod
@@ -785,3 +804,25 @@ class LayerService:
 
         # Trigger repaint outside the editing block
         originalLayer.triggerRepaint()
+
+    def saveQgisProject(self, qgisProjectFileWidget, qgisProjectCrsWidget, qgisProjectLineEdit, trialStructureCheckBox):
+        try:
+            project = QgsProject.instance()
+            if os.path.exists(qgisProjectFileWidget.filePath()):
+                project.setCrs(qgisProjectCrsWidget.crs())
+                project.write(f'{qgisProjectFileWidget.filePath()}/{qgisProjectLineEdit.text()}.qgs')
+
+                if trialStructureCheckBox.isChecked():
+                    SystemService().createDirectoryStructure(qgisProjectFileWidget.filePath())
+
+                MessageService().messageBox('QGIS project', 'Project saved successfully!', 3, 1)
+            else:
+                MessageService().messageBox('QGIS project', 'Directory does not exists!', 5, 1)
+
+        except Exception as e:
+            warningMessage = f"Error saving project: {str(e)}"
+            MessageService().messageBox('QGIS project', warningMessage, 5, 1)
+
+        finally:
+            pass
+            # self.clearQgisProjectWidget()

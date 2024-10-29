@@ -29,7 +29,7 @@
    <item row="0" column="0">
     <widget class="QTabWidget" name="farmerTabWidget">
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="farmerTab">
       <attribute name="title">
@@ -165,12 +165,12 @@
            <property name="minimumSize">
             <size>
              <width>0</width>
-             <height>0</height>
+             <height>242</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>16777215</width>
+             <width>340</width>
              <height>16777215</height>
             </size>
            </property>
@@ -467,8 +467,8 @@
                  <string>  Add</string>
                 </property>
                 <property name="icon">
-                 <iconset>
-                  <normaloff>../../icons/user.png</normaloff>../../icons/user.png</iconset>
+                 <iconset resource="../../resources.qrc">
+                  <normaloff>:/plugins/lallemand_plant_care/icons/user.png</normaloff>:/plugins/lallemand_plant_care/icons/user.png</iconset>
                 </property>
                </widget>
               </item>
@@ -554,8 +554,8 @@
                  <string>  Edit</string>
                 </property>
                 <property name="icon">
-                 <iconset>
-                  <normaloff>../../icons/edit.png</normaloff>../../icons/edit.png</iconset>
+                 <iconset resource="../../resources.qrc">
+                  <normaloff>:/plugins/lallemand_plant_care/icons/edit.png</normaloff>:/plugins/lallemand_plant_care/icons/edit.png</iconset>
                 </property>
                 <property name="iconSize">
                  <size>
@@ -586,8 +586,8 @@
                  <string>  Delete</string>
                 </property>
                 <property name="icon">
-                 <iconset>
-                  <normaloff>../../icons/delete.png</normaloff>../../icons/delete.png</iconset>
+                 <iconset resource="../../resources.qrc">
+                  <normaloff>:/plugins/lallemand_plant_care/icons/delete.png</normaloff>:/plugins/lallemand_plant_care/icons/delete.png</iconset>
                 </property>
                 <property name="iconSize">
                  <size>
@@ -1027,8 +1027,8 @@
                  <string>  Add</string>
                 </property>
                 <property name="icon">
-                 <iconset>
-                  <normaloff>../../icons/user.png</normaloff>../../icons/user.png</iconset>
+                 <iconset resource="../../resources.qrc">
+                  <normaloff>:/plugins/lallemand_plant_care/icons/user.png</normaloff>:/plugins/lallemand_plant_care/icons/user.png</iconset>
                 </property>
                </widget>
               </item>
@@ -1114,8 +1114,8 @@
                  <string>  Edit</string>
                 </property>
                 <property name="icon">
-                 <iconset>
-                  <normaloff>../../icons/edit.png</normaloff>../../icons/edit.png</iconset>
+                 <iconset resource="../../resources.qrc">
+                  <normaloff>:/plugins/lallemand_plant_care/icons/edit.png</normaloff>:/plugins/lallemand_plant_care/icons/edit.png</iconset>
                 </property>
                 <property name="iconSize">
                  <size>
@@ -1146,8 +1146,8 @@
                  <string>  Delete</string>
                 </property>
                 <property name="icon">
-                 <iconset>
-                  <normaloff>../../icons/delete.png</normaloff>../../icons/delete.png</iconset>
+                 <iconset resource="../../resources.qrc">
+                  <normaloff>:/plugins/lallemand_plant_care/icons/delete.png</normaloff>:/plugins/lallemand_plant_care/icons/delete.png</iconset>
                 </property>
                 <property name="iconSize">
                  <size>

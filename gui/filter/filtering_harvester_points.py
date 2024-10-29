@@ -61,7 +61,7 @@ class FilteringHarvesterPoints(QObject):
             'HARVESTER_POINTS_LAYER': harvesterLayers[0],
             'REPROJECT': reproject,
             'ID_FIELD': idFields[0].name(),
-            'YIELD_FIELD': yieldField[0].name(),
+            'YIELD_FIELD': None,
             'TREATMENT_POLYGONS': treatmentPolygon[0],
             'TREATMENT_ID_FIELD': 'Num',
             'BOUNDARY_POLYGON': contour[0],
