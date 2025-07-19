@@ -60,6 +60,7 @@ class SamplingLayersValidation(QObject):
             return rasterLayer
         else:
             self.messageService.warningMessage('Sampling validation', f'There is no kriging raster layer loaded!')
+            return False
 
     def runCalculateError(self):
         t1ValidationLayer = self.verifyLoadedLayer('T1_validation')
@@ -87,14 +88,17 @@ class SamplingLayersValidation(QObject):
         t1ErrorRaster = self.getRasterLayers(['1_Krig_T1_validation_error_'])
         t2ErrorRaster = self.getRasterLayers(['1_Krig_T2_validation_error_'])
 
-        parameters = {
-            'POINTS': True,
-            'T1_80_RASTER': t1Raster[0],
-            'T1_ERROR_RASTER': t1ErrorRaster[0],
-            'T2_80_RASTER': t2Raster[0],
-            'T2_ERROR_RASTER': t2ErrorRaster[0]
-        }
-        self.algRunner.runErrorCompensation(parameters)
+        if not all([t1Raster, t2Raster, t1ErrorRaster, t2ErrorRaster]):
+            return
+        else:
+            parameters = {
+                'POINTS': True,
+                'T1_80_RASTER': t1Raster[0],
+                'T1_ERROR_RASTER': t1ErrorRaster[0],
+                'T2_80_RASTER': t2Raster[0],
+                'T2_ERROR_RASTER': t2ErrorRaster[0]
+            }
+            self.algRunner.runErrorCompensation(parameters)
 
     def runGainSurface(self):
         t1Raster = self.getRasterLayers(['T1_Final_Surface'])
