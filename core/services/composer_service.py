@@ -29,7 +29,7 @@ from collections import OrderedDict
 from qgis.PyQt.QtCore import Qt, QRectF
 from qgis.PyQt.QtGui import QColor, QFont
 from qgis.PyQt.QtXml import QDomDocument
-from qgis.core import (
+from qgis.core import (QgsProject,
     QgsPrintLayout,
     QgsLayoutPoint,
     QgsLayoutItemMapGrid,
@@ -45,6 +45,7 @@ from qgis.core import (
 from .layer_service import LayerService
 from .message_service import MessageService
 from ..constants import REFERENCE_POINTS, COMPOSER_LAYOUTS, QGIS_TOC_GROUPS
+from .statistics_service import StatisticsService
 
 
 class ComposerService:
@@ -57,6 +58,7 @@ class ComposerService:
         self.fontName = 'Times new Roman'
         self.filePath = self.project.homePath()
         self.layerService = LayerService()
+        self.statistics = StatisticsService()
         self._hideGroupsOnLegend(project)
         self._initializeLogging()
 
@@ -179,7 +181,7 @@ class ComposerService:
         height = layer_extent.height()
 
         # Calcula o tamanho do buffer como uma porcentagem da largura ou altura da extensão da camada
-        buffer_percentage = 0.5  # Por exemplo, 10% de buffer
+        buffer_percentage = 0.7  # Por exemplo, 10% de buffer
         # buffer_width = width * buffer_percentage
         # buffer_height = height * buffer_percentage
         #
@@ -226,6 +228,25 @@ class ComposerService:
         self._setItemLabelFont(dataOwner, self.fontName, 8)
         self._setItemPosition(dataOwner, 170, 131, 45, 4)
         dataOwner.refresh()
+
+    def updateYieldLegend(self, layout):
+        gainLayer = QgsProject.instance().mapLayersByName('Gain_Points')[0]
+        stats = self.statistics.runStatistics(gainLayer)
+
+        intervalStrings = layout.itemById('interval_strings')
+        intervalStrings.setText(stats['interval_strings'])
+        intervalStrings.refresh()
+
+        intervalAreaPercentage = layout.itemById('interval_area_percentage')
+        intervalAreaPercentage.setText(stats['interval_area_percentage'])
+        intervalAreaPercentage.refresh()
+
+        intervalTotal = layout.itemById('interval_total')
+        intervalTotal.setText(stats['interval_total'])
+        intervalTotal.refresh()
+
+
+
 
     def updateItemMap(self, itemMap, layer, contour):
 
@@ -309,6 +330,9 @@ class ComposerService:
             self.updateItemLegend(itemLegend, itemMap, 'Yield (kg)', layer, contour)
 
         self.updateCrsLabelGroup(layout, layer)
+
+        if layout.name() == '11_Yield_gain_using_T2':
+            self.updateYieldLegend(layout)
 
     @staticmethod
     def overrideExportSettings(layout):

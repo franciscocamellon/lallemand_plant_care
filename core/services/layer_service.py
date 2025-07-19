@@ -227,13 +227,35 @@ class LayerService:
             fieldsDictionary[fields.lookupField(field.name())] = field.name()
         return fieldsDictionary
 
-    @staticmethod
-    def getFeaturesByRequest(layer, expression, featureList=False):
+
+    def getFeaturesByRequest(self, layer, expression, featureList=False):
+
+        self.messageService.logMessage(f'QGSExpression: {expression} - getFeaturesByRequest() linha 231', 2)
+        totalFeatures = [feature for feature in layer.getFeatures()]
+        self.messageService.logMessage(f'Total de feições: {len(totalFeatures)} - getFeaturesByRequest() linha 231', 2)
+        selectedByLoopFeatures = list()
+        for feature in layer.getFeatures():
+            if feature['Biais_rendement'] == 'F - Pas de biais':
+                selectedByLoopFeatures.append(feature)
+        self.messageService.logMessage(f'Feições selecionadas por loop: {len(selectedByLoopFeatures)} - getFeaturesByRequest() linha 231', 2)
         request = QgsExpression(expression)
         if featureList:
-            return [feature for feature in layer.getFeatures(QgsFeatureRequest(request))]
+            requestedFeatures = [feature for feature in layer.getFeatures(QgsFeatureRequest(request))]
+            self.messageService.logMessage(f'Feições selecionadas por request: {len(requestedFeatures)} - getFeaturesByRequest() linha 231', 2)
+            return requestedFeatures
         else:
-            return layer.getFeatures(QgsFeatureRequest(request))
+            requestedFeatures = layer.getFeatures(QgsFeatureRequest(request))
+            self.messageService.logMessage(f'Feições selecionadas por request: {len([feature for feature in layer.getFeatures(QgsFeatureRequest(request))])} - getFeaturesByRequest() linha 231', 2)
+            return requestedFeatures
+
+    def getFeatures(self, layer, value, featureList=False):
+        requestedFeatures = list()
+        for feature in layer.getFeatures():
+            if feature['Biais_rend'] == value:
+                requestedFeatures.append(feature)
+        self.messageService.logMessage(f'Pontos filtrados: {len(requestedFeatures)} - getFeatures() linha 243', 2)
+        return requestedFeatures
+
 
     @staticmethod
     def getPercentualFeaturesById(layer, value, featureList=False):
@@ -288,11 +310,12 @@ class LayerService:
 
     def yieldGainFrequencyHistogram(self, layer, path):
 
-        total, values = self.filterFeaturesByIntervals(layer)
+        values = list()
+        for feature in layer.getFeatures():
+            values.append(feature['yield'])
 
-        if total != 0:
-            percentages = self.getPercentualFromIntervals(total, values, True)
-            self.plotterService.yieldFrequencyHistogram(values, percentages, exportPng=True, path=path)
+        if values != 0:
+            self.plotterService.yieldFrequencyHistogram(values, exportPng=True, path=path)
 
     def _convertToSimpleGeometry(self, layer):
         convertedLayerType = self._identifyWkbType(layer)
@@ -311,6 +334,7 @@ class LayerService:
         provider = layer.dataProvider()
         provider.addAttributes(fields)
         layer.updateFields()
+        layer.commitChanges()
 
         return layer
 
@@ -326,16 +350,21 @@ class LayerService:
 
         provider.deleteAttributes(fieldsToDelete)
         layer.updateFields()
+        layer.commitChanges()
 
         return layer
 
-    def createValidationVectorLayer(self, layer):
+    def createValidationVectorLayer(self, layer, fieldName):
         fields = self.krigingSettings[0]
-        fieldsList = fields.split(';')
-        fieldsList.append('1Krig')
-        fieldsList.append('fid')
+        fieldsList = [field.strip() for field in fields.split(';') if field.strip()] if fields else list()
+        fieldsList.extend(['1Krig', 'fid'])
+
+        if fieldName not in fieldsList:
+            fieldsList.append(fieldName)
+
         fieldsToDelete = self.filterByFieldName(layer, fieldsList, inverse=True)
         newOutput = self.deleteFields(layer, fieldsToDelete)
+
         return self.createValidationFields(newOutput)
 
     def checkForSavedProject(self):
@@ -585,12 +614,15 @@ class LayerService:
 
         return feature
 
-    def createSamplingLayerSymbology(self, layer, fieldName):
+    def createIntervalClasses(self, layer, fieldName):
         minValue = layer.minimumValue(layer.fields().indexOf(fieldName))
         maxValue = layer.maximumValue(layer.fields().indexOf(fieldName))
 
         numberClasses = int(self.symbologySettings[0])
-        classes = self.calculateVectorClasses(minValue, maxValue, numberClasses)
+        return self.calculateVectorClasses(minValue, maxValue, numberClasses)
+
+    def createSamplingLayerSymbology(self, layer, fieldName):
+        classes = self.createIntervalClasses(layer, fieldName)
         colors = self.symbologySettings[1]
         colors.reverse()
 

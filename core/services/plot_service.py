@@ -24,6 +24,7 @@
 import os
 
 import matplotlib.pyplot as plt
+import matplotlib.patches as mPatches
 import numpy as np
 
 from qgis.PyQt.QtGui import QPalette, QColor
@@ -165,15 +166,94 @@ class PlotterService:
         plt.close()
 
     @staticmethod
-    def yieldFrequencyHistogram(values, labels, exportPng=False, path=None):
-        colors = ['#bfbcbc', '#ffff00', '#55ff00', '#267300']
+    def yieldFrequencyHistogram(values, intervals=False, exportPng=False, path=None):
+        total = len(values)
+
         plt.figure()
-        plt.hist(values, bins=12, histtype='bar', color=colors, edgecolor='black', label=labels, rwidth=1)
-        plt.xlabel('Yield (kg)')
+        n, bins, patches = plt.hist(values, bins=50, edgecolor='black')
+
+        for i in range(len(patches)):
+            if bins[i] < 0:
+                patches[i].set_facecolor('#bfbcbc')
+            # elif 0 <= bins[i] < 0.5:
+            elif 0 <= bins[i] < 50:
+                patches[i].set_facecolor('#ffff00')
+            # elif 0.5 <= bins[i] < 1:
+            elif 50 <= bins[i] < 100:
+                patches[i].set_facecolor('#55ff00')
+            else:
+                patches[i].set_facecolor('#267300')
+
+        grey_percentage = (n[bins[:-1] < 0].sum() / total) * 100
+        yellow_percentage = (n[(bins[:-1] >= 0) & (bins[:-1] < 50)].sum() / total) * 100
+        lightgreen_percentage = (n[(bins[:-1] >= 50) & (bins[:-1] < 100)].sum() / total) * 100
+        green_percentage = (n[bins[:-1] >= 100].sum() / total) * 100
+
+        # Create legend patches
+        grey_patch = mPatches.Patch(color='grey', label=f' {grey_percentage:.2f}%')
+        yellow_patch = mPatches.Patch(color='yellow', label=f' {yellow_percentage:.2f}%')
+        lightgreen_patch = mPatches.Patch(color='lightgreen', label=f' {lightgreen_percentage:.2f}%')
+        green_patch = mPatches.Patch(color='green', label=f' {green_percentage:.2f}%')
+
+        plt.legend(handles=[grey_patch, yellow_patch, lightgreen_patch, green_patch], loc='upper right',
+                   title='Percentages')
+
+        plt.xlabel('Yield')
         plt.ylabel('Frequency')
         plt.title('Yield Gain Histogram')
-        plt.legend(title="")
 
         if exportPng:
             plt.savefig(path)
         plt.close()
+
+    @staticmethod
+    def yieldFrequencyHistogram_new(values, intervals=False, exportPng=False, path=None):
+        total = len(values)
+        # Converter values para um array NumPy
+        values = np.array(values)
+
+        # Criar o histograma
+        plt.figure(figsize=(10, 6))
+        n, bins, patches = plt.hist(values, bins=50, edgecolor='black')
+
+        # Aplicar cores às barras
+        for i in range(len(patches)):
+            bin_center = (bins[i] + bins[i + 1]) / 2  # Valor médio do intervalo
+            if bin_center < 0:
+                patches[i].set_facecolor('#bfbcbc')  # Cinza
+            elif 0 <= bin_center < 50:
+                patches[i].set_facecolor('#ffff00')  # Amarelo
+            elif 50 <= bin_center < 100:
+                patches[i].set_facecolor('#55ff00')  # Verde claro
+            else:
+                patches[i].set_facecolor('#267300')  # Verde escuro
+
+        # Cálculo de porcentagens usando numpy
+        grey_percentage = (values < 0).sum() / total * 100
+        yellow_percentage = ((values >= 0) & (values < 50)).sum() / total * 100
+        lightgreen_percentage = ((values >= 50) & (values < 100)).sum() / total * 100
+        green_percentage = (values >= 100).sum() / total * 100
+
+        # Criar patches de legenda
+        grey_patch = mPatches.Patch(color='#bfbcbc', label=f'Cinza: {grey_percentage:.2f}%')
+        yellow_patch = mPatches.Patch(color='#ffff00', label=f'Amarelo: {yellow_percentage:.2f}%')
+        lightgreen_patch = mPatches.Patch(color='#55ff00', label=f'Verde Claro: {lightgreen_percentage:.2f}%')
+        green_patch = mPatches.Patch(color='#267300', label=f'Verde Escuro: {green_percentage:.2f}%')
+
+        # Adicionar legenda
+        plt.legend(handles=[grey_patch, yellow_patch, lightgreen_patch, green_patch], loc='upper right',
+                   title='Percentages')
+
+        # Configurações do gráfico
+        plt.xlabel('Yield')
+        plt.ylabel('Frequency')
+        plt.title('Yield Gain Histogram')
+
+        # Exportar ou mostrar o gráfico
+        if exportPng and path:
+            plt.savefig(path)
+        else:
+            plt.show()
+        plt.close()
+
+

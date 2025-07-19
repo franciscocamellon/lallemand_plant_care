@@ -149,16 +149,16 @@ class AlgorithmRunner(QObject):
         }
         return processing.run("lpc:rmse", parameters, context=context, feedback=feedback)
 
-    @staticmethod
-    def runErrorCompensation(t1Raster, t1ErrorRaster, t2Raster, t2ErrorRaster, exportPoints, context=None, feedback=None):
-        parameters = {
-            'T1_80_RASTER': t1Raster,
-            'T1_ERROR_RASTER': t1ErrorRaster,
-            'T2_80_RASTER': t2Raster,
-            'T2_ERROR_RASTER': t2ErrorRaster,
-            'POINTS': exportPoints
-        }
-        return processing.run("lpc:calculateerrorcompensation", parameters, context=context, feedback=feedback)
+    # @staticmethod
+    # def runErrorCompensation(t1Raster, t1ErrorRaster, t2Raster, t2ErrorRaster, exportPoints, context=None, feedback=None):
+    #     parameters = {
+    #         'T1_80_RASTER': t1Raster,
+    #         'T1_ERROR_RASTER': t1ErrorRaster,
+    #         'T2_80_RASTER': t2Raster,
+    #         'T2_ERROR_RASTER': t2ErrorRaster,
+    #         'POINTS': exportPoints
+    #     }
+    #     return processing.run("lpc:calculateerrorcompensation", parameters, context=context, feedback=feedback)
 
     @staticmethod
     def runFilterTreatments(layer, yieldField, t1output, t2output, context=None, feedback=None):
@@ -267,5 +267,11 @@ class AlgorithmRunner(QObject):
     @staticmethod
     def runCalculateError(parameters):
         dialog = createAlgorithmDialog('lpc:calculateerror', parameters)
+        dialog.show()
+        dialog.exec_()
+
+    @staticmethod
+    def runErrorCompensation(parameters):
+        dialog = createAlgorithmDialog('lpc:calculateerrorcompensation', parameters)
         dialog.show()
         dialog.exec_()
